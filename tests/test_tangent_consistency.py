@@ -5,15 +5,22 @@ internal force vector given by ``update_fint(..., nonlinear=1)``. If the two
 drift apart, a Newton-Raphson iteration built on them still converges, but
 linearly instead of quadratically.
 
-The main check is a directional Taylor test,
+The main check is a directional Taylor test of the internal forces against
+the tangent, completed by a central finite-difference Jacobian. Every element
+is distorted and arbitrarily oriented in space, the shells use an
+unsymmetric laminate with a material direction different from the element
+direction, and the beams use an offset reference axis, so that all the
+coupling terms carry weight.
+
+Notes
+-----
+The relative error of the Taylor test, for a direction ``d`` and a step
+``h``, ::
 
     |fint(u + h d) - fint(u) - h KT d| / |h KT d|
 
-which falls proportionally to h for a consistent tangent and plateaus for an
-inconsistent one. Every element is distorted and arbitrarily oriented in
-space, the shells use an unsymmetric laminate with a material direction
-different from the element direction, and the beams use an offset reference
-axis, so that all the coupling terms carry weight.
+falls proportionally to h for a consistent tangent and plateaus for an
+inconsistent one.
 """
 import sys
 sys.path.append('..')

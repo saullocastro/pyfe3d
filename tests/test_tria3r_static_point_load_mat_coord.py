@@ -1,3 +1,15 @@
+r"""Static deflection of a single-ply orthotropic plate of Tria3R under a
+point load, invariance under the material direction
+
+Simply supported rectangular plate ``a = 3``, ``b = 7``, under a point load
+at its centre. The material direction given to ``update_rotation_matrix``
+is rotated by ``thetadeg`` and the ply angle by ``-thetadeg``, which leaves
+the fibres along the same direction of the plate; the maximum deflection
+must then be the one of ``thetadeg = 0`` for every angle, with
+``rtol=1e-5``, and the internal forces must balance the external and
+reaction forces.
+
+"""
 import sys
 sys.path.append('..')
 

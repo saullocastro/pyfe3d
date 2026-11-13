@@ -1,3 +1,12 @@
+r"""Linear buckling of a simply supported plate modelled with Quad4R under a
+given membrane stress, against the exact solution of Leissa (1969)
+
+The geometric stiffness of the plate, ``a/b = 4``, comes from
+``Quad4R.update_KG_given_stress`` with a uniform ``N_xx``, and the
+buckling load is compared with Leissa (1969), Eq. (10.46), within 1 per
+cent.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -15,19 +24,32 @@ def test_linear_buckling(mode=0, refinement=3):
     r"""Linear buckling of a simply supported plate, ``a/b = 4``, under a
     uniform compression ``N_xx``
 
-    The reference is the exact solution of Leissa, A. W., Vibration of Plates,
-    NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq. (10.46), the buckling load for
+    The buckling load is compared with the exact solution of Leissa (1969),
+    Sec. 10.2.1, p. 277, Eq. (10.46), with ``rtol=0.01``.
+
+    Notes
+    -----
+    The reference is the exact solution of [1]_, Sec. 10.2.1, p. 277,
+    Eq. (10.46), the buckling load for
     which the frequency of Eq. (10.44) vanishes, minimised over the number
     ``m`` of half-waves along ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c =
     (m*b/a + a/(m*b))**2``. With 92x44 elements the buckling load is above the
     reference by 0.11 %, with 62x30 elements 0.30 %, with 30x14 elements
     1.48 %, with 124x60 elements 0.02 %, with 186x90 elements 0.04 % below it,
     measured on 2026-10-29 with the physical stabilisation of the bending and
-    of the transverse shear of Belytschko and Leviathan (1994) that Quad4R uses
-    since 0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the hourglass
-    stiffnesses of Brockman (1987), 0.39, 1.11 and 5.7 % above it with 92x44,
-    62x30 and 30x14 elements.
+    of the transverse shear of Belytschko and Leviathan (1994) [2]_ that
+    Quad4R uses, see :mod:`pyfe3d.quad4r`.
+
+    References
+    ----------
+    .. [1] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+    .. [2] Belytschko, T., and Leviathan, I., Physical stabilization of the
+       4-node shell element with one point quadrature, Computer Methods in
+       Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+       https://doi.org/10.1016/0045-7825(94)90052-3
+
     """
+
     data = Quad4RData()
     probe = Quad4RProbe()
     nx = refinement*31

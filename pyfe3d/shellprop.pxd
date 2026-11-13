@@ -53,10 +53,11 @@ cdef class ShellProp:
     cdef int _ts_nplies
     cdef double [:, ::1] _ts_plydata
     # NOTE Fourier coefficients of the transverse shear compliance in the
-    #      element frame (Rohwer, 1988), see get_constitutive_element
+    #      element frame, see get_constitutive_element
     cdef bint _ts_element_frame
     cdef double _ts_fourier[33]
-    # NOTE through-thickness transverse shear distribution (Rohwer, 1988)
+    # NOTE through-thickness transverse shear distribution, see
+    #      calc_transverse_shear_stress
     cdef bint _ts_ready
     cdef double [::1] _ts_z
     cdef double [:, :, :, ::1] _ts_fcoef

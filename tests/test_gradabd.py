@@ -1,5 +1,11 @@
 """Gradients of GradABD against central finite differences
 
+The derivatives of the stiffnesses of shellprop_from_lamination_parameters
+with respect to the lamination parameters and the thickness, for an
+orthotropic ply, are compared with central finite differences.
+
+Notes
+-----
 The stiffnesses of shellprop_from_lamination_parameters are linear in the
 lamination parameters and polynomial in the thickness, so central finite
 differences reproduce their derivatives to round-off. An orthotropic ply is

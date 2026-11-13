@@ -1,7 +1,10 @@
 r"""Tests for :mod:`pyfe3d.solver.arpackutils`: ``ncv <= 32`` against the
 ``dsteqr`` bug of Intel MKL 2024.2.0 to 2025.0.0
 
-With the Quad4 plate of ``test_solver.py``.
+The detection of the LAPACK library, of the MKL version and of a faulty
+``dsteqr`` is checked with mocked inputs; the capped ARPACK calls are checked
+on the Quad4 plate of ``test_solver.py`` against the eigenpairs of the dense
+solver, and the reproducibility of the restarts on a nilpotent operator.
 """
 import inspect
 import sys
@@ -121,6 +124,8 @@ def test_lapack_name_from_config():
 
 
 def test_parse_mkl_version():
+    """The version tuple parsed from the version strings of MKL, ``None``
+    when there is none"""
     parse = arpackutils._parse_mkl_version
     assert parse('2025.0-Product') == (2025, 0, 0)
     assert parse('Version 2024.2.2-Product Build 20240823') == (2024, 2, 2)
@@ -128,14 +133,28 @@ def test_parse_mkl_version():
 
 
 def faulty_environment():
-    """MKL 2024.2.0 to 2025.0.0 identified at runtime"""
+    """The LAPACK of SciPy is Intel MKL 2024.2.0 to 2025.0.0, identified at
+    runtime
+
+    An Intel MKL may be loaded in the process, e.g. by ``mkl-service`` or for
+    PARDISO, while SciPy is linked to another LAPACK such as OpenBLAS: its
+    version then says nothing about the ``dsteqr`` of SciPy.
+    """
+    if not arpackutils.lapack_is_mkl():
+        return False
     version = arpackutils.mkl_version()
     first, last = arpackutils.MKL_FAULTY_VERSIONS
     return version is not None and first <= version <= last
 
 
 def test_dsteqr_probe_agrees_with_mkl_version():
-    """The functional probe of dsteqr detects the faulty MKL versions"""
+    """The functional probe of dsteqr detects the faulty MKL versions
+
+    When the LAPACK of SciPy is Intel MKL 2024.2.0 to 2025.0.0, the probe
+    reports a faulty ``dsteqr`` and ``ncv`` is capped at 32; with any other
+    LAPACK, including an OpenBLAS SciPy next to a loaded MKL 2025.0.0, the
+    probe reports a correct ``dsteqr`` (or cannot run).
+    """
     if faulty_environment():
         assert arpackutils.dsteqr_is_faulty() is True
         assert arpackutils.arpack_max_ncv() == 32

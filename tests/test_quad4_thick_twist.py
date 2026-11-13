@@ -1,49 +1,73 @@
 r"""Thick Quad4 elements, `h/\ell \ge 1`: twist, bending and rank
 
-Up to version 0.11, :class:`pyfe3d.Quad4` integrated the transverse shear of
-the elements with `h/\ell \ge 1` with the "modified one-point shear" rule of
+Pure twist and bending must be exact on both sides of the gate `h/\ell = 1`
+of the thin and thick elements, a constant transverse shear must be
+reproduced on a distorted element, the rank of the thick element must be
+that of the six rigid-body modes, and the tip twist of a clamped strip must
+be continuous across the gate, its twist rate compared with the Saint-Venant
+value (Timoshenko and Goodier, 1951) within grade A of MacNeal and Harder
+(1985); for the default ``shear_model = 1`` and for
+``shear_model = 0``.
 
-    Hughes, T. J. R., Taylor, R. L. and Kanoknukulchai, W., 1977, "A simple
-    and efficient finite element for plate bending", IJNME, 11(10), pp.
-    1529-1543, pp. 1541-1542. doi:10.1002/nme.1620111005
-
-two-by-two quadrature for the `(\partial w/\partial x)^2` and `(\partial
+Notes
+-----
+For the elements with `h/\ell \ge 1`, Hughes, Taylor and Kanoknukulchai
+(1977), pp. 1541-1542, propose the "modified one-point shear" rule: two-by-two
+quadrature for the `(\partial w/\partial x)^2` and `(\partial
 w/\partial y)^2` terms and one point for the rest. In a state of pure twist,
 `w = \kappa x y`, `r_x = \kappa x`, `r_y = -\kappa y`, the transverse shear
 strains `\gamma_{xz} = w_{,x} + r_y` and `\gamma_{yz} = w_{,y} - r_x` vanish
 everywhere, but the rule integrates `w_{,x}^2 = \kappa^2 y^2` with two-by-two
 and the terms that cancel it at the centroid only, storing `A_{55}
 \ell^4 \kappa^2/12` in a square element of side `\ell`, i.e. `(5/12)(\ell/h)^2`
-times its twist energy for an isotropic plate, 42 % at the gate. Measured
-with the old rule:
+times its twist energy for an isotropic plate, 42 % at the gate, such that
+a mesh refined across the gate would become abruptly stiffer in torsion.
+:class:`pyfe3d.Quad4` uses instead, for `h/\ell \ge 1`, the assumed
+transverse shear strains of the MITC4 element of Dvorkin and Bathe (1984)
+and Bathe and Dvorkin (1985); with ``shear_model = 0`` its thin elements,
+`h/\ell < 1`, keep the one-point rule. With the default ``shear_model =
+1`` the thin elements take the assumed strains as well and there is no
+gate; the tests below check both.
 
-    h/l       U_twist/U_exact
-    0.99         1.00000
-    1.00         1.41667
-    1.20         1.28935
-    2.00         1.10417
-
-A mesh refined across the gate therefore became abruptly stiffer in torsion.
 The tip twist (x100) of the isotropic I-beam of Yu et al. (2005), Table 5,
 as a cantilever of length 10 under a unit tip torque, meshed with 20 + 20
-elements across the flanges and 20 along the web, was 3.005, 2.764 and 2.368
-with 100, 150 and 200 elements along the length, the web and then the
-flanges crossing `h/\ell = 1`, against 3.003 for Quad4R and 2.987 for
-Tria3DSG. With the assumed transverse shear strains of the MITC4 element,
+elements across the flanges and 20 along the web, with the walls at their
+mid-planes (flanges at `z = \pm 0.23`), `E = 10^7`, `\nu = 0.3`, the
+clamped root, the unit torque applied as moments about the beam axis at the
+tip nodes, uniform per unit length of the contour, and the twist taken as
+the mean rotation about the axis of the tip nodes, is, with 100, 150 and
+200 elements along the length (with ``shear_model = 0``, the web and then
+the flanges crossing `h/\ell = 1`)::
 
-    Dvorkin, E. N. and Bathe, K. J., 1984, "A continuum mechanics based
-    four-node shell element for general non-linear analysis", Engineering
-    Computations, 1(1), pp. 77-88. doi:10.1108/eb023562
+    Quad4, shear_model = 0   2.9995  2.9983  2.9906
+    Quad4, default           2.9881  2.9896  2.9906
+    Quad4R                   2.9853  2.9881  2.9897
+    Tria3DSG                 2.9578  2.9723  2.9788
 
-    Bathe, K. J. and Dvorkin, E. N., 1985, "A four-node plate bending element
-    based on Mindlin/Reissner plate theory and a mixed interpolation", IJNME,
-    21(2), pp. 367-383. doi:10.1002/nme.1620210213
+the Tria3DSG mesh splitting each quadrilateral along its diagonal from the
+first node.
 
-used since 0.12.0 for `h/\ell \ge 1`, the I-beam gives 3.005, 3.005 and
-2.999, and the thin elements, `h/\ell < 1`, are unchanged, with the
-attribute ``shear_model = 0`` of :class:`pyfe3d.Quad4`. With the default
-``shear_model = 1``, also since 0.12.0, the thin elements take the assumed
-strains as well and there is no gate; the tests below check both.
+References
+----------
+Hughes, T. J. R., Taylor, R. L. and Kanoknukulchai, W., 1977, "A simple
+and efficient finite element for plate bending", IJNME, 11(10), pp.
+1529-1543. doi:10.1002/nme.1620111005
+
+Dvorkin, E. N. and Bathe, K. J., 1984, "A continuum mechanics based
+four-node shell element for general non-linear analysis", Engineering
+Computations, 1(1), pp. 77-88. doi:10.1108/eb023562
+
+Bathe, K. J. and Dvorkin, E. N., 1985, "A four-node plate bending element
+based on Mindlin/Reissner plate theory and a mixed interpolation", IJNME,
+21(2), pp. 367-383. doi:10.1002/nme.1620210213
+
+MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
+problems to test finite element accuracy", Finite Elements in Analysis and
+Design, 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
+
+Yu, W., Hodges, D. H., Volovoi, V. V. and Fuchs, E. D., 2005, "A
+generalized Vlasov theory for composite beams", Thin-Walled Structures,
+43(9), pp. 1493-1511. doi:10.1016/j.tws.2005.02.003
 
 """
 import sys
@@ -92,6 +116,8 @@ def nodal(xy, f):
 def test_pure_twist_and_bending_are_exact_on_both_sides_of_the_gate():
     r"""Rectangles centred at the origin, both drilling models
 
+    Notes
+    -----
     Pure twist, `w = \kappa x y`, and pure bending in both directions are
     exact for the bilinear fields of a rectangle, and the element must store
     exactly the energy of the plate, `D_{66} (2\kappa)^2/2` and `D
@@ -130,6 +156,8 @@ def test_pure_twist_and_bending_are_exact_on_both_sides_of_the_gate():
 def test_constant_transverse_shear_on_a_distorted_element():
     r"""`w = a x + b y` with zero rotations, a constant transverse shear
 
+    Notes
+    -----
     The energy is `(A_{55} a^2 + A_{44} b^2) A/2` for both rules, the
     one-point rule of the thin elements with ``shear_model = 0`` and the
     assumed strains, also on a distorted element.
@@ -155,6 +183,8 @@ def test_rank_of_the_thick_element():
     r"""Only the six rigid-body modes for `h/\ell \ge 1`, and for any
     `h/\ell` with the default ``shear_model = 1``
 
+    Notes
+    -----
     The one-point rule of the thin elements with ``shear_model = 0`` leaves
     the two zero-energy modes of Hughes et al. (1977), see
     ``tests/test_quad4_spurious_shear_mode.py``.
@@ -233,16 +263,15 @@ def strip_twist(nx, ny, Lx=2., b=0.5, h=0.04, E=10.e6, nu=0.3,
 def test_strip_torsion_is_continuous_across_the_gate():
     r"""Clamped strip 2 x 0.5, h = 0.04, square elements, unit end torque
 
+    Notes
+    -----
     Tip twist with 12 elements across the width, `h/\ell = 0.96`, and with
     14, `h/\ell = 1.12`: 0.048122 and 0.048278 with the default
     ``shear_model = 1``, the assumed strains of the MITC4 element on both
     meshes; 0.048880 and 0.048278 with ``shear_model = 0``, one point for
-    the thin elements; 0.048880 and 0.036544 with the modified one-point
-    shear rule of Hughes et al. (1977) above the gate, as up to 0.11, whose
-    spurious twist stiffness made the finer mesh 25 % stiffer. Continuity
-    across the gate is asserted within 2 % for both values of
-    ``shear_model``, the grade A of MacNeal and Harder (1985), see below;
-    the old rule fails it by 25 %.
+    the thin elements. Continuity across the gate is asserted within 2 %
+    for both values of ``shear_model``, the grade A of MacNeal and Harder
+    (1985), see below.
 
     The reference is the Saint-Venant twist rate `\theta' = T/(G J)` of the
     `b \times h` rectangle, `b/h = 12.5`, with the series of

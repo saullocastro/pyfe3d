@@ -1,3 +1,14 @@
+r"""Natural frequencies of a pre-stressed cantilever modelled with BeamLR
+
+A compressive tip load of half the Euler load gives the pre-stress through a
+linear static solution; the linear buckling load is compared with the Euler
+load with shear deformation (Timoshenko and Gere, 1961, Eq. (2-57)) and the
+first three bending frequencies under the load, in the plane of ``Izz``,
+with the exact ones of a Timoshenko beam under axial load (Abramovich, 2017,
+Eqs. (5.52), (5.53)), for the consistent and the lumped mass matrices. The
+reference functions are checked against Table 3.6 of Petyt (2010) and the
+Euler-Bernoulli characteristic equation of Bokaian (1988).
+"""
 import sys
 sys.path.append('..')
 
@@ -23,8 +34,13 @@ def roots_by_sign_change(f, num, Omega_max):
 def euler_bernoulli_cantilever(p, num):
     r"""Frequency coefficients ``Omega = omega*sqrt(rho*A*L**4/(E*I))`` of an
     Euler-Bernoulli cantilever under the compressive load ``P``, ``p =
-    P*L**2/(E*I)``, roots of the characteristic equation of Bokaian (1988),
-    Table 1, clamped-free beam, with ``U = p/2``"""
+    P*L**2/(E*I)``
+
+    Notes
+    -----
+    Roots of the characteristic equation of Bokaian (1988), Table 1,
+    clamped-free beam, with ``U = p/2``.
+    """
     U = p/2
     def f(Omega):
         M = np.sqrt(-U + np.sqrt(U**2 + Omega**2))
@@ -39,6 +55,11 @@ def timoshenko_cantilever(S, r2, p, num):
     Timoshenko cantilever under the compressive load ``P``, ``S =
     kappa*G*A*L**2/(E*I)``, ``r2 = I/(A*L**2)``, ``p = P*L**2/(E*I)``
 
+    Returns the first ``num`` coefficients, from the roots of the
+    characteristic determinant of the clamped-free beam.
+
+    Notes
+    -----
     Exact solution of Eqs. (5.52) and (5.53) of Abramovich (2017), the
     equations (3.241) of Petyt (2010) with the axial load, written for ``y
     = [v/L, theta, M*L/(E*I), Q*L**2/(E*I)]``, ``Q = kappa*A*G*(v' -
@@ -63,36 +84,33 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     r"""First three bending frequencies of a cantilever under a compressive
     tip load equal to half of its Euler load, in the plane of ``Izz``
 
+    The linear buckling load is compared with the Euler load with shear
+    deformation and the frequencies under the load with the exact ones of a
+    Timoshenko beam under axial load, for the consistent (``mtype=0``) and
+    the lumped (``mtype=1``) mass matrices, with ``50*refinement`` nodes.
+
+    Notes
+    -----
     The pre-stress comes from a linear static solution under the tip load
     ``P = 0.5*pi**2*E*I/(4*L**2)``, half of the Euler load of the
-    cantilever, Eq. (2-4) of Timoshenko, S. P., Gere, J. M., Theory of
-    Elastic Stability, 2nd ed., McGraw-Hill, 1961, Sec. 2.1, p. 48; with
+    cantilever, Eq. (2-4) of Timoshenko and Gere (1961), Sec. 2.1, p. 48;
+    with
     shear deformation the buckling load is ``P_e/(1 + n*P_e/(A*G))``, Eq.
     (2-57), Sec. 2.17, p. 133, ``n = 1.2`` for a rectangular cross section
     (p. 132), i.e. 0.018 % below ``P_e`` for this beam. The buckling load
     of BeamLR converges to Eq. (2-57) as the square of the element length,
     1.71e-4, 4.20e-5 and 1.04e-5 above it with 49, 99 and 199 elements
-    (``refinement`` 1, 2 and 4), hence the tolerance 5e-4. Up to pyfe3d
-    0.11, BeamLR took the slopes of its geometric stiffness matrix from the
-    rotations and its buckling load converged to ``P_e``, without the
-    reduction due to shear deformation (2.6e-4 and 2.0e-4 above Eq. (2-57)
-    with 49 and 99 elements).
+    (``refinement`` 1, 2 and 4), hence the tolerance 5e-4.
 
     The frequencies under the axial load are compared with the exact ones of
     a Timoshenko beam, with shear deformation and rotary inertia, as BeamLR,
     from the equations of motion (5.52) and (5.53), p. 206, and the
-    boundary conditions of a free end of Table 5.3, p. 208, of Abramovich,
-    H., Vibration of composite columns and plates, in: Abramovich, H. (ed.),
-    Stability and Vibrations of Thin-Walled Composite Structures, Elsevier,
-    2017, pp. 191-222, https://doi.org/10.1016/B978-0-08-100410-4.00005-3,
-    see :func:`timoshenko_cantilever`. Without axial load the function
-    reproduces the exact coefficients of Table 3.6, p. 100, of Petyt, M.,
-    Introduction to Finite Element Vibration Analysis, 2nd ed., Cambridge
-    University Press, 2010, to 0.008 %; without shear deformation and rotary
-    inertia, the roots of the characteristic equation of the clamped-free
-    beam of Table 1, p. 51, of Bokaian, A., Natural frequencies of beams
-    under compressive axial loads, J. Sound Vib., 126(1), 1988, pp. 49-65,
-    https://doi.org/10.1016/0022-460X(88)90397-5:
+    boundary conditions of a free end of Table 5.3, p. 208, of Abramovich
+    (2017), see :func:`timoshenko_cantilever`. Without axial load the
+    function reproduces the exact coefficients of Table 3.6, p. 100, of
+    Petyt (2010) to 0.008 %; without shear deformation and rotary inertia,
+    the roots of the characteristic equation of the clamped-free beam of
+    Table 1, p. 51, of Bokaian (1988):
     ``Omega**2 - Omega*U*sinh(M)*sin(N) + (2*U**2 + Omega**2)*cosh(M)*cos(N)
     = 0``, ``U = P*L**2/(2*E*I)``, ``M, N = (-+U + (U**2 +
     Omega**2)**0.5)**0.5``. For this beam, ``L/r = 208``, shear deformation
@@ -111,10 +129,24 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     ==========  ========  ============================  ===========================
 
     hence the tolerances 5e-3 (consistent) and 5e-4 (lumped) with 49
-    elements. Up to pyfe3d 0.11, with the slopes of the geometric stiffness
-    matrix taken from the rotations, the frequencies stopped converging at
-    0.009 to 0.027 % above the reference with 199 elements, since the
-    buckling load converged to ``P_e`` instead of Eq. (2-57).
+    elements.
+
+    References
+    ----------
+    Timoshenko, S. P., Gere, J. M., Theory of Elastic Stability, 2nd ed.,
+    McGraw-Hill, 1961.
+
+    Abramovich, H., Vibration of composite columns and plates, in:
+    Abramovich, H. (ed.), Stability and Vibrations of Thin-Walled Composite
+    Structures, Elsevier, 2017, pp. 191-222,
+    https://doi.org/10.1016/B978-0-08-100410-4.00005-3.
+
+    Petyt, M., Introduction to Finite Element Vibration Analysis, 2nd ed.,
+    Cambridge University Press, 2010, https://doi.org/10.1017/CBO9780511761195.
+
+    Bokaian, A., Natural frequencies of beams under compressive axial
+    loads, J. Sound Vib., 126(1), 1988, pp. 49-65,
+    https://doi.org/10.1016/0022-460X(88)90397-5.
     """
     L = 3
     E = 203.e9 # Pa
@@ -126,21 +158,19 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     scf = 5/6.
     G = scf*E/2/(1+0.3)
 
-    # NOTE Euler load, Eq. (2-4) of Timoshenko and Gere (1961), and with
-    #      shear deformation, Eq. (2-57)
+    # NOTE Euler load, and with shear deformation
     Pe = np.pi**2*E*Izz/(4*L**2)
     Pcr_shear = Pe/(1 + Pe/(G*A))
     load_fraction = 0.5
     p_load = load_fraction*Pe*L**2/(E*Izz)
 
-    # NOTE exact coefficients of Table 3.6 of Petyt (2010), kappa = 2/3,
+    # NOTE Timoshenko coefficients without axial load, kappa = 2/3,
     #      E/G = 8/3, r_z/L = 0.08 and 0.02
     for rL, coeffs in [(0.08, [3.284, 15.488, 34.301]),
                        (0.02, [3.500, 21.353, 57.474])]:
         assert np.allclose(timoshenko_cantilever(2/3/(8/3)/rL**2, rL**2, 0, 3),
                            coeffs, rtol=1e-4)
-    # NOTE the Euler-Bernoulli limit is the characteristic equation of
-    #      Bokaian (1988)
+    # NOTE the Euler-Bernoulli limit of the Timoshenko reference
     coeff_eb = euler_bernoulli_cantilever(p_load, 3)
     assert np.allclose(timoshenko_cantilever(np.inf, 0, p_load, 3), coeff_eb,
                        rtol=1e-8)

@@ -1,5 +1,13 @@
 """Stiffness constants of MatLamina against the inverse of the compliance
 
+The three-dimensional stiffness constants ``Cij`` and the constitutive
+constants ``q11`` to ``q33``, of plane stress by default and
+three-dimensional after ``rebuild(plane_stress=False)``, are compared with
+the inverse of the compliance matrix of an orthotropic material (Jones,
+1999, Eqs. (2.61) to (2.64)).
+
+Notes
+-----
 For an orthotropic material in its principal axes, the stiffness matrix is
 the inverse of the compliance matrix, with ``S11 = 1/E1``, ``S12 =
 -nu12/E1``, ``S13 = -nu13/E1``, ``S22 = 1/E2``, ``S23 = -nu23/E2``, ``S33 =
@@ -8,10 +16,14 @@ the inverse of the compliance matrix, with ``S11 = 1/E1``, ``S12 =
 
 The constitutive constants ``q11`` to ``q33`` are by default those of plane
 stress, ``sigma33 = 0``: the inverse of the reduced compliance with ``S11 =
-1/E1``, ``S12 = -nu12/E1``, ``S22 = 1/E2`` (Jones, R. M., Mechanics of
-Composite Materials, 2nd ed., 1999, Eqs. (2.61) and (2.62), p. 71), equal
-to the condensed ``Cij - Ci3 Cj3/C33``, Eq. (2.64), p. 72; after
-``rebuild(plane_stress=False)`` they are the three-dimensional ``Cij``.
+1/E1``, ``S12 = -nu12/E1``, ``S22 = 1/E2`` (Jones, 1999, Eqs. (2.61)
+and (2.62), p. 71), equal to the condensed ``Cij - Ci3 Cj3/C33``, Eq.
+(2.64), p. 72; after ``rebuild(plane_stress=False)`` they are the
+three-dimensional ``Cij``.
+
+References
+----------
+Jones, R. M., Mechanics of Composite Materials, 2nd ed., 1999.
 """
 import sys
 sys.path.append('..')

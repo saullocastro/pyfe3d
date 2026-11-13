@@ -1,3 +1,13 @@
+r"""Linear buckling of a single-ply orthotropic plate of Tria3R, invariance
+under the material direction
+
+The material direction given to ``update_rotation_matrix`` is rotated by
+``thetadeg`` and the ply angle by ``-thetadeg``, which leaves the fibres
+along the same direction of the plate; the buckling load, ``KG`` from a
+prestress analysis, must then be the one of ``thetadeg = 0`` for every
+angle, with ``rtol=1e-5``.
+
+"""
 import sys
 sys.path.append('..')
 

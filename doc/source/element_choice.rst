@@ -12,7 +12,12 @@ Shells
 The shell elements are flat, with first-order shear deformation theory
 (FSDT) kinematics, the constitutive matrices of a :class:`.ShellProp`, see
 :doc:`shell_properties`, and the von Kármán membrane strains in the
-geometrically non-linear analyses.
+geometrically non-linear analyses, see :doc:`shell_formulation`. They
+differ in how they avoid shear locking and spurious modes, in their
+membrane and in their cost; the theory of each one is in
+:doc:`shell_quad4`, :doc:`shell_quad4r`, :doc:`shell_tria3dsg` and
+:doc:`shell_tria3r`, and that of the drilling rotation in
+:doc:`shell_drilling`.
 
 .. list-table::
     :header-rows: 1
@@ -26,11 +31,11 @@ geometrically non-linear analyses.
         the MITC4 element against shear locking, two-by-two bending, and
         the drilling enrichment of the in-plane displacement field, see
         :mod:`.quad4`; only the six rigid-body modes have zero energy and
-        the element passes the membrane and bending patch tests. Up to
-        0.11, and with ``shear_model = 0``, the transverse shear of the
-        elements with `h/\ell < 1` was integrated with one point, after
-        Hughes et al. (1977), whose two zero-energy modes made a strip one
-        element wide too flexible in torsion, see the zero-energy modes in
+        the element passes the membrane and bending patch tests. With
+        ``shear_model = 0``, the transverse shear of the elements with
+        `h/\ell < 1` is integrated with one point, after Hughes et al.
+        (1977), whose two zero-energy modes make a strip one element wide
+        too flexible in torsion, see the zero-energy modes in
         the Notes of :mod:`.quad4`. The geometric stiffness takes the
         slopes of `w` at the two-by-two points by default, and at the
         centroid with ``shear_model = 0`` or ``centroid_slopes = 1``, such
@@ -52,12 +57,10 @@ geometrically non-linear analyses.
         Brockman (1987), with the membrane moduli of a laminate, and the
         one-element-deep strips of MacNeal and Harder lock in in-plane
         bending. ``hgfactor_physical`` and ``hgfactor_membrane`` of
-        :meth:`.Quad4R.update_KC0` multiply the two. Up to 0.11 the
-        hourglass modes of `w`, `r_x` and `r_y` had Brockman's artificial
-        stiffnesses, set with ``hgfactor_w``, ``hgfactor_rx`` and
-        ``hgfactor_ry``, which also stiffened a uniform twist, by up to 78 %
-        of its energy whatever the mesh where the element areas were large
-        in the unit of length.
+        :meth:`.Quad4R.update_KC0` multiply the two. Brockman's artificial
+        stiffnesses on the hourglass modes of `w`, `r_x` and `r_y` would
+        also stiffen a uniform twist, by up to 78 % of its energy whatever
+        the mesh where the element areas are large in the unit of length.
     * - :class:`.Tria3DSG`
       - 3
       - Discrete shear gap transverse shear field, free of shear locking
@@ -73,7 +76,7 @@ geometrically non-linear analyses.
         :mod:`.tria3r`.
     * - :class:`.Tria3R`
       - 3
-      - The recommended triangle. Since 0.12.0 the same discrete shear gap
+      - The recommended triangle. The same discrete shear gap
         transverse shear field as :class:`.Tria3DSG`, ``shear_model = 1``,
         free of shear locking without a tuning parameter, with the membrane
         enriched by the drilling rotations of Allman: identical to
@@ -81,9 +84,8 @@ geometrically non-linear analyses.
         vibration, better in in-plane bending, on the Scordelis-Lo roof and
         on the twisted beam, stiffer on the coarse meshes of the pinched
         hemisphere, and assembled in half the time, see :mod:`.tria3r`.
-        ``shear_model = 0`` with ``alpha_shear_locking = 0.7`` reproduces
-        the centroid-sampled shear of the versions up to 0.11, which does not
-        converge on thin plates and shells: -14 % on the deflection of a
+        ``shear_model = 0`` with ``alpha_shear_locking = 0.7`` gives the
+        centroid-sampled shear, which does not converge on thin plates and shells: -14 % on the deflection of a
         simply supported plate with `a/h = 1000`.
 
 Practical rules:
@@ -104,8 +106,7 @@ Practical rules:
 - The drilling rotation `r_z` of all the shells has, by default, a
   physics-based stiffness, ``drilling_model = 0``, without user parameter.
   ``drilling_model = 1`` selects the fictitious penalty of Nastran,
-  controlled by ``K6ROT``, which reproduces the results of versions older
-  than 0.10.0.
+  controlled by ``K6ROT``.
 - The aerodynamic matrices of the piston theory, ``update_KA_beta``,
   ``update_KA_gamma`` and ``update_CA``, exist for :class:`.Quad4` and
   :class:`.Quad4R` only.
@@ -128,7 +129,7 @@ in-plane axis moves the nodes of the facet in an alternating in-plane
 pattern, which strains it, and the facet alone is too stiff in warped
 meshes.
 
-Since version 0.12.0 the attribute ``warp_offsets`` of both elements,
+The attribute ``warp_offsets`` of both elements,
 ``1`` by default, links the facet to the nodes by rigid offsets along its
 normal, `u^f_a = u_a - \tilde{z}_a r_{y,a}` and `v^f_a = v_a + \tilde{z}_a
 r_{x,a}` in element coordinates, `\boldsymbol{u}^f = \boldsymbol{J}
@@ -145,7 +146,7 @@ and ``KC0`` annihilates the six rigid motions of the warped nodes, see the
 Notes of :class:`.Quad4`, :meth:`.Quad4.update_KG` and
 :meth:`.Quad4.update_KCNL`. Flat elements
 give the same results, bit for bit, with ``warp_offsets`` ``0`` and ``1``,
-and ``0`` reproduces the versions up to 0.11. The correction is derived in
+and ``0`` uses the facet alone. The correction is derived in
 pyfe3d; MacNeal (1978), p. 180, and Cook (1994), p. 552, correct warped
 quadrilaterals differently, balancing the moment of the offset membrane
 forces with normal nodal forces, and Belytschko, Wong and Chiang (1992),
@@ -170,8 +171,9 @@ out of plane, normalised by those of their Table 3:
 
 The remaining error of :class:`.Quad4R` is that of its in-plane bending
 with one element across the width. With 6x1 :class:`.Quad4` elements,
-warping ratio 0.049, the tip displacements are 0.6 % from those of a 96x16
-mesh, against 74 to 91 % without the offsets. On the same beam, the offsets
+warping ratio 0.049, the tip displacements are within 1 % of those of a
+96x16 mesh, and more than 70 % too small without the offsets. On the same
+beam, the offsets
 also bring the linear buckling load under an axial tip load and the first
 natural frequency of coarse meshes to those of fine meshes, see
 :doc:`eigenvalue_analyses`. ``tests/test_quad_warp_offsets.py`` checks the
@@ -179,8 +181,8 @@ correction and the twisted beam.
 
 Practical rules for warped quadrilaterals:
 
-- Keep the default ``warp_offsets = 1``; ``0`` serves only to reproduce
-  earlier results. The offsets were measured up to the warping ratio of
+- Keep the default ``warp_offsets = 1``; with ``0`` the facet alone is too
+  stiff in warped meshes. The offsets were measured up to the warping ratio of
   0.049 above, and :class:`.CorotationalShell` warns above 0.07, the
   ratio up to which its exact offsets were verified: beyond it, refine the
   mesh or use triangles.
@@ -211,32 +213,28 @@ Beams, truss and spring
         equations of the beam with an uncoupled section, such that one
         element gives the exact tip deflection of a cantilever with shear
         deformation, and the nodal displacements of a frame under nodal
-        loads, see :doc:`ex_beam_frame`. With couplings in the sectional
+        loads, see ``tests/test_beamc_frame.py``. With couplings in the sectional
         stiffness matrix other than extension-twist, e.g. an axis off the
         centroid or the bending-shear couplings of a composite section, its
         shape functions are derived from the same equations with the full
         matrix, evaluated numerically for each element, and one element
         remains exact under nodal loads, see the Notes of
-        :class:`.BeamC`. Since version 0.12.0 its von Kármán axial
+        :class:`.BeamC`. Its von Kármán axial
         strain takes the element mean of `(v_{,x}^2 + w_{,x}^2)/2`, after
         Crisfield (1991), Section 7.1.3, which removes its membrane
-        locking: the central deflection of a beam clamped at both ends,
-        with a linear deflection three times its height, is 0.60 % below
-        the converged one with 4 elements, against 8.1 % before, and the
-        lower limit load of the arch of Fung and Kaplan (1952) with 40
-        elements is within 0.38 % of theirs, against 5.8 %, see the Notes
-        of :class:`.BeamC` and
+        locking: the lower limit load of the arch of Fung and Kaplan (1952)
+        with 40 elements is within 0.38 % of theirs, against 5.8 % with
+        the pointwise strain, see the Notes of :class:`.BeamC` and
         ``tests/test_solver_arc_length_fung_kaplan.py``.
     * - :class:`.BeamLR`
       - Timoshenko kinematics with linear interpolation and reduced
         integration; it converges to the same solutions with mesh
         refinement, quadratically, and needs many more elements, see
-        ``tests/test_timoshenko_beam_literature.py``. Since version 0.12.0
-        its buckling load includes the reduction due to shear deformation,
-        see :doc:`ex_linear_buckling_column`, and its constant slopes leave
+        ``tests/test_timoshenko_beam_literature.py``. Its buckling load includes the reduction due to shear deformation,
+        see ``tests/test_beam_linear_buckling_3D_column.py``, and its constant slopes leave
         it free of membrane locking in the geometrically non-linear
         cantilever under an end moment, as :class:`.BeamC` with its
-        averaged axial strain, see :doc:`tut-nonlinear-benchmarks`. Its
+        averaged axial strain, see ``tests/test_nonlinear_benchmarks_sze2004.py``. Its
         interpolation does not depend on the sectional stiffness matrix,
         and it converges as fast with strong bending-shear couplings, e.g.
         of composite box beams, as without them, while :class:`.BeamC` is
@@ -350,35 +348,16 @@ the element is integrated, with the same values for every element:
 Any other value, and ``2`` for an element without a reduced-integration
 mass matrix, raises a ``ValueError``. Each matrix is the integral over
 the element of the inertia of the section between the interpolated
-velocities: for the shells, `I_\rho`, `I_{\rho z}` and `I_{\rho z^2}`, the
-``intrho``, ``intrhoz`` and ``intrhoz2`` of the :class:`.ShellProp`, which
-include the offset, see :doc:`shell_properties`; for the beams, the
-integrals of the :class:`.BeamProp`. The consistent matrices integrate it
-exactly. The lumped matrices integrate it with the points at the nodes,
-where each shape function is 1 at its own node and 0 at the others, such
-that, for the shells, node `i` carries the weight `w_i` times
-
-.. math::
-
-    \begin{bmatrix}
-        I_\rho & 0 & 0 & 0 & I_{\rho z} & 0 \\
-        0 & I_\rho & 0 & -I_{\rho z} & 0 & 0 \\
-        0 & 0 & I_\rho & 0 & 0 & 0 \\
-        0 & -I_{\rho z} & 0 & I_{\rho z^2} & 0 & 0 \\
-        I_{\rho z} & 0 & 0 & 0 & I_{\rho z^2} & 0 \\
-        0 & 0 & 0 & 0 & 0 & 0
-    \end{bmatrix}
-
-in element coordinates, for `u, v, w, r_x, r_y, r_z`, with `w_i = A/3` for
-the triangles and the Jacobian determinant at the node for the
-quadrilaterals, and no coupling between nodes. A lumped shell matrix is
-diagonal only without offset, when `I_{\rho z} = 0`; with an offset, the
-coupling keeps the centre of mass of the element at the offset. A warped
-quadrilateral adds the coupling of its rigid offsets, see `Warped
-quadrilaterals`_. The mass,
-first moment and rotary inertia given by each scheme are discussed in the
-Notes of ``update_M``, e.g. :meth:`.Tria3R.update_M` and
-:meth:`.Quad4R.update_M`. The lumped beam matrices are diagonal, without
+velocities: for the shells, the integrals ``intrho``, ``intrhoz`` and
+``intrhoz2`` of the :class:`.ShellProp`, which include the offset; for the
+beams, the integrals of the :class:`.BeamProp`. The consistent matrices
+integrate it exactly, and the lumped matrices with the points at the
+nodes, such that they couple no different nodes. A lumped shell matrix is
+block-diagonal per node, diagonal only when ``intrhoz`` is zero, and keeps
+the centre of mass of the element at the offset; the mass, first moment
+and rotary inertia of each scheme are derived in :doc:`shell_mass`, and a
+warped quadrilateral adds the coupling of its rigid offsets, see `Warped
+quadrilaterals`_. The lumped beam matrices are diagonal, without
 the first moments ``intrhoy``, ``intrhoz`` and the product ``intrhoyz`` of
 the section, see :meth:`.BeamC.update_M`.
 

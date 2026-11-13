@@ -2,26 +2,35 @@ r"""Tests for :func:`pyfe3d.solver.natural_frequency`: verification, dense
 fallback, rigid-body modes and unsymmetric matrices
 
 With analytic matrices and the Quad4 plate of ``test_solver.py``;
-:func:`pyfe3d.solver.natural_frequency` returns `\omega_n`.
+:func:`pyfe3d.solver.natural_frequency` returns `\omega_n`. The unsymmetric
+matrices are those of Ziegler's double pendulum under a follower force,
+Ziegler (1952), whose flutter load ``P_f`` and frequencies below it are
+checked against their analytical values.
 
-Ziegler's double pendulum: two rigid bars of length ``l``, rotational springs
-``k`` at the base and at the middle hinge, masses ``2m`` at the middle hinge
-and ``m`` at the tip, and a follower force ``P`` at the tip, tangential to
-the upper bar. With the absolute rotations of the bars as
+Notes
+-----
+Ziegler's double pendulum [1]_: two rigid bars of length ``l``, rotational
+springs ``k`` at the base and at the middle hinge, masses ``2m`` at the
+middle hinge and ``m`` at the tip, and a follower force ``P`` at the tip,
+tangential to the upper bar. With the absolute rotations of the bars as
 degrees-of-freedom:
 
 .. math::
 
-    \boldsymbol{M} = m l^2 \begin{bmatrix} 3 & 1 \\ 1 & 1 \end{bmatrix}, \qquad
-    \boldsymbol{K}(P) = \begin{bmatrix} 2k - P l & -k + P l \\ -k & k \end{bmatrix}
+    \boldsymbol{M} = m l^2 \begin{bmatrix} 3 & 1 \ 1 & 1 \end{bmatrix}, \qquad
+    \boldsymbol{K}(P) = \begin{bmatrix} 2k - P l & -k + P l \ -k & k \end{bmatrix}
 
 The stiffness matrix is unsymmetric and never singular, ``det K = k**2``,
 and the system loses stability by flutter at ``P_f = (7/2 - sqrt(2)) k/l``,
 the smallest root of the discriminant of ``det(K - omega**2 M) = 0`` in
 ``omega**2``, where two natural frequencies coalesce.
 
-Reference: H. Ziegler. "Die Stabilitätskriterien der Elastomechanik".
-Ingenieur-Archiv, 20(1), 49-56, 1952. https://doi.org/10.1007/BF00536796
+References
+----------
+.. [1] Ziegler, H., Die Stabilitätskriterien der Elastomechanik,
+   Ingenieur-Archiv, 20(1), 49-56, 1952.
+   https://doi.org/10.1007/BF00536796
+
 """
 import sys
 sys.path.append('..')
@@ -286,13 +295,14 @@ def test_near_buckling(symmetric, precondition):
                                             precondition=precondition,
                                             max_dense_size=0)
     w2 = np.real(omegan)**2
-    # NOTE M u = (1/omega**2) K u, accurate for the lowest omega**2
+    # NOTE reference from the problem with M and K swapped, of eigenvalues
+    #      1/omega**2, accurate for the lowest omega**2
     mu = eigh(M.toarray(), K.toarray(), eigvals_only=True)
     w2_ref = np.sort(1/mu[mu > 0])[:3]
     np.testing.assert_allclose(w2, w2_ref, rtol=1e-4)
     assert np.all(w2[:2] < 1e-5*w2[2])
-    # NOTE ||K u|| + omega**2 ||M u|| is about 5000 eps times the
-    #      matrix-norm scale, which amplifies the relative residual
+    # NOTE the sum of the norms of K u and omega**2 M u is about 5000 eps
+    #      times the matrix-norm scale, which amplifies the relative residual
     u = np.real(eigvecs[:, :2])
     d = (np.linalg.norm(K @ u, axis=0)
          + w2[:2]*np.linalg.norm(M @ u, axis=0))
@@ -338,7 +348,8 @@ def test_check_freq_backward_error():
                                'blade_stiffened_penalty_KG.npz')).tocsr()
     mu, u = eigen._eigh_condensed(K, KG, 4)
     lam = -1/mu
-    # NOTE (K + lam KG) u = 0 checked as (K - omega**2 M) u = 0
+    # NOTE buckling eigenpairs checked as frequency eigenpairs, with -KG as
+    #      the mass matrix and lam as omega**2
     assert eigen._check_freq(K, -KG, lam, u, 1e-6, False) is None
     lam = lam*(1 - 1e-3)
     res = eigen._relative_residuals(K, KG, lam, u)
@@ -602,9 +613,9 @@ def test_K_not_positive_definite_message():
 def reentrant_plate():
     r"""``KC0uu``, ``Muu`` and ``KGuu`` of the hard simply supported plate of
     ``test_quad4r_natural_freq_distorted.py``, 40x50 ``Quad4R`` elements,
-    with the former distortion of that test, the same random fraction, up
-    to 0.4 of the element size, along `x` and `y`, which makes elements
-    re-entrant, and the number of re-entrant elements"""
+    with the inner nodes moved by the same random fraction, up to 0.4 of
+    the element size, along `x` and `y`, which makes elements re-entrant,
+    and the number of re-entrant elements"""
     from scipy.sparse import coo_matrix
     from pyfe3d.shellprop_utils import isotropic_plate
     from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
@@ -675,18 +686,12 @@ def reentrant_plate():
 
 
 def test_reentrant_elements():
-    r"""The re-entrant elements of the former distortion of
-    ``test_quad4r_natural_freq_distorted.py`` make the stiffness matrix of
-    the 40x50 mesh indefinite, measured with 119 re-entrant elements of 2000
-    and 3 negative pivots: the frequency analysis, for which the solvers
-    fail, the linear buckling analysis and the linear static analysis raise
-    errors that say so, with the likely causes, instead of the former
-    message of the frequency analysis, "Frequency analysis failed, no
-    eigenvalue solver passed the verification. Attempted: eigsh() in
-    shift-invert mode: 6 eigenvalues omega**2 lower than 5.56422e+07 exist,
-    3 were found; eigh(): dense fallback skipped, size 11822 >
-    max_dense_size=2000. Try sparse_solver=False or a larger
-    max_dense_size.", and the former results of the two others"""
+    r"""The re-entrant elements of :func:`reentrant_plate` make the
+    stiffness matrix of the 40x50 mesh indefinite, measured with 119
+    re-entrant elements of 2000 and 3 negative pivots: the frequency
+    analysis, for which the solvers fail, the linear buckling analysis and
+    the linear static analysis raise errors that say so, with the likely
+    causes"""
     from pyfe3d.solver import linear_buckling, linear_static
     K, M, KG, num_reentrant = reentrant_plate()
     assert num_reentrant > 0

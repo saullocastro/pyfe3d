@@ -1,8 +1,8 @@
 r"""Interactive 3D view of the torsion of a thin-walled channel
 
-Shown, up to the marked line, in cross_sectional_analysis.rst; the last
-lines write the figure for the documentation and are run by conf.py at the
-start of every build.
+Run by conf.py at the start of every build of the documentation; the last
+lines write the figure, which cross_sectional_analysis.rst shows without
+the script.
 """
 import numpy as np
 import plotly.graph_objects as go

@@ -1,3 +1,13 @@
+r"""Natural frequency of a simply supported plate of Tria3R on a distorted
+mesh, against Leissa (1969)
+
+Rectangular plate whose inner nodes are moved by random fractions of the
+element size, each quadrilateral cell split into two triangles, with the
+default discrete shear gap field of Tria3R and the reduced mass matrix; the
+fundamental frequency is checked against the exact solution of Leissa
+(1969) and against a value pre-determined by this test.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -17,19 +27,21 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0, refinement=1):
 
     The inner nodes are moved along ``x`` and ``y`` by independent random
     fractions, up to 0.25, of the element size, which keeps every element
-    convex, as asserted at its four corners. Before, the coordinates passed
-    to the elements were copied before the distortion, so that the regular
-    mesh was analysed, and the distortion moved the nodes by the same
-    fraction, up to 0.4, along ``x`` and ``y``, which made up to 7 % of the
-    elements re-entrant.
+    convex, as asserted at its four corners.
 
-    The reference is the exact solution of Leissa, A. W., Vibration of
-    Plates, NASA SP-160, 1969, Sec. 4.1, p. 44, Eq. (4.20),
-    ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with ``m = n = 1``
-    and Leissa's ``rho`` the mass per unit area, here ``rho*h``.
+    The frequency is compared with the exact solution of Leissa (1969),
+    Eq. (4.20), and, for ``refinement=1``, with a value pre-determined by
+    this test.
+
+    Notes
+    -----
+    The reference is the exact solution of Leissa [1]_, Sec. 4.1, p. 44,
+    Eq. (4.20), ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with
+    ``m = n = 1`` and Leissa's ``rho`` the mass per unit area, here
+    ``rho*h``.
 
     The edges are soft simply supported, rotations free. With the default
-    transverse shear since 0.12.0, the discrete shear gap field of
+    transverse shear, the discrete shear gap field of
     ``shear_model = 1``, the error against the reference, measured with
     this test (quadrilaterals split in two triangles, the inner nodes
     distorted with the same seed, time on one thread), is:
@@ -46,12 +58,21 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0, refinement=1):
     the soft simple support of the Mindlin plate. ``refinement=1`` is
     compared with the value pre-determined by this test, with ``rtol=1e-4``
     for the round-off of the eigensolver, and with grade B of MacNeal and
-    Harder (1985), p. 14, as the bound against the reference; from
+    Harder [2]_, p. 14, as the bound against the reference; from
     ``refinement=2`` grade A is asserted against the reference alone.
-    Before 0.12.0, with the centroid-sampled shear and
-    ``alpha_shear_locking = 0.7``, the frequency was 1.65 % above the
-    reference with 8x10 elements and rose to 3.58 % with 16x20 before
+    With the centroid-sampled shear of ``shear_model = 0`` and
+    ``alpha_shear_locking = 0.7``, the frequency is 1.65 % above the
+    reference with 8x10 elements and rises to 3.58 % with 16x20 before
     falling to 1.82 % with 48x60.
+
+    References
+    ----------
+    .. [1] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+    .. [2] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
+
     """
     data = Tria3RData()
     probe = Tria3RProbe()
@@ -206,7 +227,8 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0, refinement=1):
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 
-        # NOTE Leissa (1969), Eq. (4.20), with rho*h the mass per unit area
+        # NOTE reference frequency of the simply supported plate, with rho*h
+        #      the mass per unit area
         m = 1
         n = 1
         D = E*h**3/(12*(1 - nu**2))

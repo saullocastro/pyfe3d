@@ -1,3 +1,11 @@
+r"""Spring element against analytical solutions
+
+:class:`.Spring` is checked against the analytical displacements of springs
+in series and in parallel, against the analytical global stiffness matrix,
+probe displacements and internal forces of a spring in an arbitrary
+orientation, and for the absence of energy under rigid motions.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -9,6 +17,20 @@ from pyfe3d import Spring, SpringData, SpringProbe, INT, DOUBLE, DOF
 
 
 def test_spring():
+    r"""Springs in parallel and in series against the analytical displacements
+
+    Two springs in parallel between nodes 1 and 2 and one spring between
+    nodes 2 and 3, for each of the six DOFs, with node 1 fixed and a force
+    or moment at node 3; the internal forces must balance the external
+    forces and the reactions.
+
+    Notes
+    -----
+    With the stiffness `k` of each spring for a given DOF and the load `f`
+    at node 3, the parallel pair has the stiffness `2k`, so that
+    `u_2 = f/(2k)` and `u_3 = u_2 + f/k = 3 f/(2k)`.
+
+    """
     springdata = SpringData()
     springprobe = SpringProbe()
 
@@ -119,13 +141,26 @@ def test_spring():
 def test_spring_arbitrary_orientation():
     r"""Spring in an arbitrary orientation against the analytical matrix
 
-    The global matrix must be `\boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top`, with `\boldsymbol{K}_e` of the Notes of
-    :class:`.Spring` and `\boldsymbol{T}` block diagonal with four copies of the matrix
-    `\boldsymbol{T}_{3\times 3}` of the entries `T_{ij}` stored in ``r11, ..., r33``,
-    whose columns are the element axes (``R`` and ``Rb`` below); the
-    displacements of the probe must be `\boldsymbol{T}^\top \boldsymbol{u}`, the internal forces `\boldsymbol{K} \boldsymbol{u}`,
-    and the matrix symmetric, without energy for a rigid translation and for
-    equal rotations of the two nodes.
+    The global stiffness matrix, the rotation matrix, the probe
+    displacements and the internal forces are checked against their
+    analytical counterparts; the matrix must be symmetric, without energy
+    for a rigid translation and for equal rotations of the two nodes, and
+    each stiffness must act only along its element axis.
+
+    Notes
+    -----
+    The global matrix must be `\boldsymbol{T} \boldsymbol{K}_e
+    \boldsymbol{T}^\top`, with `\boldsymbol{K}_e` of the Notes of
+    :class:`.Spring` and `\boldsymbol{T}` block diagonal with four copies of
+    the matrix `\boldsymbol{T}_{3\times 3}` of the entries `T_{ij}` stored in
+    ``r11, ..., r33``, whose columns are the element axes (``R`` and ``Rb``
+    below); the displacements of the probe must be `\boldsymbol{T}^\top
+    \boldsymbol{u}` and the internal forces `\boldsymbol{K} \boldsymbol{u}`.
+    With only the stiffness `k_i` non-zero, the energy is `k_i
+    (\boldsymbol{e}_i \cdot (\boldsymbol{u}_2 - \boldsymbol{u}_1))^2/2`, with
+    `\boldsymbol{e}_i` its element axis, i.e. `2 k_i` for a relative
+    displacement of magnitude 2 along `\boldsymbol{e}_i` and zero normal to
+    it.
 
     """
     springdata = SpringData()
@@ -196,8 +231,8 @@ def test_spring_arbitrary_orientation():
     assert np.allclose(springprobe.finte, Ke @ ue_ref)
     assert np.allclose(fint, KC0 @ u)
 
-    # one stiffness at a time: the relative displacement along the element
-    # axis of that stiffness, k_i (e_i . (u2 - u1))
+    # one stiffness at a time: only the relative displacement along the
+    # element axis of that stiffness has energy
     for i in range(6):
         spring.kxe, spring.kye, spring.kze = 0., 0., 0.
         spring.krxe, spring.krye, spring.krze = 0., 0., 0.
@@ -210,7 +245,7 @@ def test_spring_arbitrary_orientation():
         d = np.zeros(N)
         d[2*DOF+off:2*DOF+off+3] = -e
         d[0+off:0+off+3] = e
-        # relative displacement 2 e, energy k_i (2)**2/2
+        # relative displacement of magnitude 2 along the element axis
         assert np.isclose(0.5*d @ KC0 @ d, 0.5*stiff[i]*2**2)
         # a relative displacement normal to e_i gives no energy
         for j in range(3):

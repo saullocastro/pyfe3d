@@ -1,3 +1,12 @@
+r"""Linear buckling of a simply supported plate of Tria3R, ``KG`` from a
+prestress analysis, against Leissa (1969)
+
+Rectangular plate ``a/b = 4`` under uniform compression, each quadrilateral
+cell split into two triangles, with the default discrete shear gap field of
+Tria3R; the buckling load is checked against the exact solution of Leissa
+(1969) and against a value pre-determined by this test.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -16,13 +25,18 @@ def test_tria3r_linear_buckling_plate(plot=False, mode=0, refinement=1):
     uniform compression ``N_xx`` from a prestress analysis, ``KG`` from the
     displacements
 
-    The reference is the exact solution of Leissa, A. W., Vibration of
-    Plates, NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq. (10.46), minimised
-    over the number ``m`` of half-waves along ``x``:
-    ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c = (m*b/a + a/(m*b))**2``. With
-    ``b/h = 167`` the Mindlin plate buckles 0.02 % below it.
+    The buckling load is compared with the exact solution of Leissa (1969),
+    Eq. (10.46), and, for ``refinement=1``, with a value pre-determined by
+    this test.
 
-    With the default transverse shear since 0.12.0, the discrete shear gap
+    Notes
+    -----
+    The reference is the exact solution of Leissa [1]_, Sec. 10.2.1,
+    p. 277, Eq. (10.46), minimised over the number ``m`` of half-waves along
+    ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c = (m*b/a + a/(m*b))**2``.
+    With ``b/h = 167`` the Mindlin plate buckles 0.02 % below it.
+
+    With the default transverse shear, the discrete shear gap
     field of ``shear_model = 1``, the buckling load converges to the
     reference, measured with this test (quadrilaterals split in two
     triangles, time on one thread):
@@ -36,13 +50,22 @@ def test_tria3r_linear_buckling_plate(plot=False, mode=0, refinement=1):
 
     ``refinement=1`` is compared with the value pre-determined by this test,
     with ``rtol=1e-4`` for the round-off of the eigensolver, and with grade B
-    of MacNeal and Harder (1985), p. 14, as the bound against the
+    of MacNeal and Harder [2]_, p. 14, as the bound against the
     reference; from ``refinement=2`` grade A is asserted against the
-    reference alone. Before 0.12.0, with the centroid-sampled shear and
-    ``alpha_shear_locking = 0.7``, the load was 4.9 % above the reference
+    reference alone. With the centroid-sampled shear of ``shear_model = 0``
+    and ``alpha_shear_locking = 0.7``, the load is 4.9 % above the reference
     with 30x14 elements and 13.4 % above with 92x44, see
     :mod:`pyfe3d.tria3r`. The prestress system is solved directly; the
-    preconditioned conjugate gradient used before does not converge on it.
+    preconditioned conjugate gradient does not converge on it.
+
+    References
+    ----------
+    .. [1] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+    .. [2] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
+
     """
     data = Tria3RData()
     probe = Tria3RProbe()

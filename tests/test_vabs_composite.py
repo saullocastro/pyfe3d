@@ -23,11 +23,27 @@ labelling of the axes and ply angles in those papers, as explained in the
 docstrings of the two tests, which check the magnitudes and assert the
 opposite signs explicitly.
 
-References: Yu, W., Hodges, D. H., and Ho, J. C., International Journal of
-Engineering Science, 59, pp. 40-64, 2012; Yu, W., and Hodges, D. H.,
-Journal of the American Helicopter Society, 50(1), pp. 46-55, 2005; Yu, W.,
-Hodges, D. H., Volovoi, V., and Cesnik, C. E. S., International Journal of
-Solids and Structures, 39(19), pp. 5101-5121, 2002.
+Notes
+-----
+The reference values are those of Table 2 of Yu et al. (2012) [1]_, of
+Table 3 and Eq. (26) of Yu and Hodges (2005) [2]_ and of Table 2 of Yu et
+al. (2002) [3]_; each test gives the table, the data and the tolerance.
+
+References
+----------
+.. [1] Yu, W., Hodges, D. H., and Ho, J. C., "Variational asymptotic beam
+   sectional analysis -- An updated version", International Journal of
+   Engineering Science, 59, pp. 40--64, 2012.
+   https://doi.org/10.1016/j.ijengsci.2012.03.006
+.. [2] Yu, W., and Hodges, D. H., "Generalized Timoshenko Theory of the
+   Variational Asymptotic Beam Sectional Analysis", Journal of the American
+   Helicopter Society, 50(1), pp. 46--55, 2005.
+   https://doi.org/10.4050/1.3092842
+.. [3] Yu, W., Hodges, D. H., Volovoi, V. V., and Cesnik, C. E. S., "On
+   Timoshenko-like modeling of initially curved and twisted composite
+   beams", International Journal of Solids and Structures, 39(19),
+   pp. 5101--5121, 2002. https://doi.org/10.1016/S0020-7683(02)00399-2
+
 """
 import sys
 import os
@@ -65,15 +81,39 @@ def pipe_mesh(ns, na, nt, etype, L=2., Ri=0.3, Ro=0.5):
 
 @pytest.mark.slow
 def test_CUS_Yu2012_Table2():
-    r"""Box beam CUS: outer width ``0.953 in.``, height ``0.53 in.``,
-    thickness ``0.03 in.``, six plies at 15 degrees in every wall, Table 1
-    of Yu et al. (2012). The mesh has 15 and 10 elements along the width and
-    the height and 6 across the walls, the same numbers as the VABS mesh
-    described on p. 5112 of Yu et al. (2002), to which Yu et al. (2012),
-    p. 56, refer, here with 8-node instead of 6-node quadrilaterals. All
-    nine entries agree with the VABS 3.2 column of Table 2 to its four
-    digits. With a finer mesh, ``S22`` and ``S33`` decrease by up to
-    0.3 %."""
+    r"""Box beam CUS: Timoshenko stiffness against the VABS 3.2 column of
+    Table 2 of Yu et al. (2012), and the classical stiffness with both
+    warping constraints
+
+    Outer width ``0.953 in.``, height ``0.53 in.``, thickness ``0.03 in.``,
+    six plies at 15 degrees in every wall. The mesh has 15 and 10 elements
+    along the width and the height and 6 across the walls, here with 8-node
+    elements. All nine entries agree with the VABS 3.2 column of Table 2 to
+    its four digits. With a finer mesh, ``S22`` and ``S33`` decrease by up
+    to 0.3 %.
+
+    Notes
+    -----
+    Geometry, lay-up and material are those of Table 1 of [1]_, the
+    reference stiffnesses the VABS 3.2 column of its Table 2, pp. 56-57; [1]_
+    state on p. 56 that "the other components are negligible", which the
+    test asserts. The numbers of elements are those of the VABS mesh
+    described on p. 5112 of [2]_, to which [1]_, p. 56, refer, with 8-node
+    instead of 6-node quadrilaterals. The constraints ``'yu2002'`` are those
+    of [2]_.
+
+    References
+    ----------
+    .. [1] Yu, W., Hodges, D. H., and Ho, J. C., "Variational asymptotic
+       beam sectional analysis -- An updated version", International
+       Journal of Engineering Science, 59, pp. 40--64, 2012.
+       https://doi.org/10.1016/j.ijengsci.2012.03.006
+    .. [2] Yu, W., Hodges, D. H., Volovoi, V. V., and Cesnik, C. E. S., "On
+       Timoshenko-like modeling of initially curved and twisted composite
+       beams", International Journal of Solids and Structures, 39(19),
+       pp. 5101--5121, 2002. https://doi.org/10.1016/S0020-7683(02)00399-2
+
+    """
     D = orthotropic(E1=20.59e6, E2=1.42e6, E3=1.42e6, G12=0.87e6,
                     G13=0.87e6, G23=0.696e6, nu12=0.30, nu13=0.30, nu23=0.34)
     x2, x3, els, wall, layer, theta1 = vm.box(0.953, 0.53, 0.03, 15, 10, 6, 8)
@@ -86,7 +126,7 @@ def test_CUS_Yu2012_Table2():
            (3, 3): 1.679e4, (4, 4): 6.621e4, (5, 5): 1.725e5}
     for (i, j), v in ref.items():
         assert '%.3e' % Kt[i, j] == '%.3e' % v, (i, j, Kt[i, j], v)
-    # NOTE "the other components are negligible", Yu et al. (2012), p. 56
+    # NOTE the other components are negligible, as stated in the reference
     for i in range(6):
         for j in range(i, 6):
             if (i, j) not in ref:
@@ -95,7 +135,7 @@ def test_CUS_Yu2012_Table2():
     assert np.allclose(classical_from_timoshenko(Kt), sec.Kc, rtol=1e-9,
                        atol=1e-9*np.abs(sec.Kc).max())
     assert np.allclose(pyfe3d_to_yu(yu_to_pyfe3d(Kt)), Kt)
-    # NOTE same classical stiffness with the constraints of Yu et al. (2002)
+    # NOTE same classical stiffness with the constraints 'yu2002'
     Kc = sec.Kc.copy()
     sec.calc_stiffness('yu2002')
     assert np.allclose(sec.Kc, Kc, rtol=1e-10, atol=1e-10*np.abs(Kc).max())
@@ -103,25 +143,44 @@ def test_CUS_Yu2012_Table2():
 
 @pytest.mark.slow
 def test_pipe_Yu2005_Table3():
-    r"""Anisotropic pipe of Fig. 4 and Table 2 of Yu and Hodges (2005): two
-    layers of thickness ``0.1 in.``, 0 degrees outside and 90 degrees
+    r"""Anisotropic pipe of Yu and Hodges (2005): mass properties against
+    their Eq. (26), Timoshenko stiffness against the VABS and SVBT columns
+    of their Table 3
+
+    Two layers of thickness ``0.1 in.``, 0 degrees outside and 90 degrees
     inside in the straight walls, -45 degrees outside and 45 degrees inside
     in the half circles, ``El = 20.59e6 psi``, ``Et = 1.42e6 psi``, ``Glt =
     Gtn = 8.7e5 psi``, ``nu_lt = nu_tn = 0.42``, ``rho = 0.057 lb
     sec^2/in.^4``.
 
-    The mass properties of Eq. (26) are reproduced to their six digits. The
-    stiffnesses agree with the VABS column of Table 3 within 0.5 % and with
-    the SVBT column within 0.3 %. The magnitudes of the extension-twist and
-    shear-bending couplings ``S14``, ``S25`` and ``S36`` agree, but with the
-    ply angles read from Fig. 4 their signs are opposite to those of
-    Table 3; the signs of Table 3 are obtained with the opposite ply angles
-    in the half circles. Yu and Hodges (2005) do not state the convention
-    of the ply angles of Fig. 4. With the convention of pyfe3d,
-    :func:`pyfe3d.vabs.rotate_material`, which reproduces all signs of the
-    CUS box of Yu et al. (2012), the outer -45 degree layer dominates and
-    gives a negative ``S14``; the difference is attributed to the labelling
-    of the ply angles of Fig. 4, and the convention of pyfe3d is kept.
+    The mass properties are reproduced to their six digits. The
+    stiffnesses agree with the VABS column within 0.5 % and with the SVBT
+    column within 0.3 %. The magnitudes of the extension-twist and
+    shear-bending couplings ``S14``, ``S25`` and ``S36`` agree, but their
+    signs are opposite to those of the table; its signs are obtained with
+    the opposite ply angles in the half circles, which is also asserted.
+
+    Notes
+    -----
+    Geometry and lay-up are those of Fig. 4 and Table 2 of [1]_, the mass
+    properties those of its Eq. (26) and the stiffnesses those of its
+    Table 3, pp. 51-52. With the ply angles read from Fig. 4 the signs of
+    ``S14``, ``S25`` and ``S36`` are opposite to those of Table 3. [1]_ do
+    not state the convention of the ply angles of Fig. 4. With the
+    convention of pyfe3d, :func:`pyfe3d.vabs.rotate_material`, which
+    reproduces all signs of the CUS box of Yu et al. (2012), see
+    :func:`test_CUS_Yu2012_Table2`, the outer -45 degree layer dominates
+    and gives a negative ``S14``; the difference is attributed to the
+    labelling of the ply angles of Fig. 4, and the convention of pyfe3d is
+    kept.
+
+    References
+    ----------
+    .. [1] Yu, W., and Hodges, D. H., "Generalized Timoshenko Theory of the
+       Variational Asymptotic Beam Sectional Analysis", Journal of the
+       American Helicopter Society, 50(1), pp. 46--55, 2005.
+       https://doi.org/10.4050/1.3092842
+
     """
     D = orthotropic(20.59e6, 1.42e6, 1.42e6, 8.7e5, 8.7e5, 8.7e5,
                     0.42, 0.42, 0.42)
@@ -172,24 +231,44 @@ def test_pipe_Yu2005_Table3():
 
 @pytest.mark.slow
 def test_CAS1_Yu2002_Table2():
-    r"""Box beam CAS1 of Table 1 of Yu et al. (2002), same geometry as the
-    CUS box, ``nu_lt = nu_tn = 0.42``, ``Glt = 8.7e5 psi``, ``Gtn = 6.96e5
-    psi``; right wall ``[15/-15]_3``, left wall ``[-15/15]_3``, upper wall
-    ``[-15]_6``, lower wall ``[15]_6``, read from the inner surface, as the
-    layers of Table 2 of Yu and Hodges (2005). The classical stiffness is
-    compared with the column VABS_R of Table 2, which is the inverse of the
-    4 x 4 classical block of the flexibility, i.e. the classical stiffness.
+    r"""Box beam CAS1 of Yu et al. (2002): classical stiffness against the
+    column VABS_R of their Table 2
+
+    Same geometry as the CUS box, ``nu_lt = nu_tn = 0.42``, ``Glt = 8.7e5
+    psi``, ``Gtn = 6.96e5 psi``; right wall ``[15/-15]_3``, left wall
+    ``[-15/15]_3``, upper wall six plies at -15 degrees, lower wall six
+    plies at 15 degrees, read from the inner surface.
 
     The magnitudes of the five main entries agree to the three digits of
     the table, those of the small couplings ``S46`` and ``S56`` within
     0.5 %. The signs of ``S45``, ``S46`` and of the extension-shear
     coupling ``S12`` of the Timoshenko matrix are opposite to those of
-    Table 2; they are those of Table 2 if the walls named upper and right
-    are those at negative `x_3` and `x_2`, i.e. for the section rotated by
-    180 degrees. Yu et al. (2002) show no sketch of the axes of CAS1; the
-    difference is attributed to the labelling of the walls, and the
-    convention of pyfe3d, which reproduces all signs of the CUS box, is
-    kept.
+    the table; they are those of the table for the section rotated by 180
+    degrees, which is also asserted.
+
+    Notes
+    -----
+    The section is CAS1 of Table 1 of [1]_, p. 5112; the lay-ups are read
+    from the inner surface, as the layers of Table 2 of [2]_. The column
+    VABS_R of Table 2 of [1]_ is the inverse of the 4 x 4 classical block of
+    the flexibility, i.e. the classical stiffness. The signs of the table
+    are obtained if the walls named upper and right are those at negative
+    `x_3` and `x_2`, i.e. for the section rotated by 180 degrees. [1]_ show
+    no sketch of the axes of CAS1; the difference is attributed to the
+    labelling of the walls, and the convention of pyfe3d, which reproduces
+    all signs of the CUS box, see :func:`test_CUS_Yu2012_Table2`, is kept.
+
+    References
+    ----------
+    .. [1] Yu, W., Hodges, D. H., Volovoi, V. V., and Cesnik, C. E. S., "On
+       Timoshenko-like modeling of initially curved and twisted composite
+       beams", International Journal of Solids and Structures, 39(19),
+       pp. 5101--5121, 2002. https://doi.org/10.1016/S0020-7683(02)00399-2
+    .. [2] Yu, W., and Hodges, D. H., "Generalized Timoshenko Theory of the
+       Variational Asymptotic Beam Sectional Analysis", Journal of the
+       American Helicopter Society, 50(1), pp. 46--55, 2005.
+       https://doi.org/10.4050/1.3092842
+
     """
     D = orthotropic(20.59e6, 1.42e6, 1.42e6, 8.7e5, 8.7e5, 6.96e5,
                     0.42, 0.42, 0.42)

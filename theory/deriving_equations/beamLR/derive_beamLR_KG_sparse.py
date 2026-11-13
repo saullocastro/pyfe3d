@@ -150,15 +150,16 @@ N = var('N', real=True)
 # the slopes are taken from the interpolations of v and w
 Sv_x = 2/L*Nv.diff(xi)
 Sw_x = 2/L*Nw.diff(xi)
-#NOTE up to pyfe3d 0.11 the slopes were taken from the rotations, v,x = rz
-#     and w,x = -ry, i.e. Nrz and -Nry here, which neglects the shear
-#     deformation: the buckling load of a clamped-free column converged to
-#     the Euler load P_e instead of P_e/(1 + P_e/(kappa*G*A)), Eq. (2-57) of
-#     Timoshenko and Gere (1961), 59 % above it for P_e/(kappa*G*A) = 0.59.
+#NOTE taking the slopes from the rotations, v,x = rz and w,x = -ry, i.e.
+#     Nrz and -Nry here, neglects the shear deformation: the buckling load
+#     of a clamped-free column converges to the Euler load P_e instead of
+#     P_e/(1 + P_e/(kappa*G*A)), Eq. (2-57) of Timoshenko and Gere (1961),
+#     59 % above it for P_e/(kappa*G*A) = 0.59.
 #     With Sv_x and Sw_x the matrix is that of a string, N/L*[[1, -1], [-1,
 #     1]] for v and for w, and the buckling load converges to Eq. (2-57) as
 #     the square of the element length; for slender columns its
-#     discretization error is about twice that of the former matrix
+#     discretization error is about twice that of the matrix with the slopes
+#     from the rotations
 #NOTE the slopes enter the von Kármán strain as two separate squares,
 #     exx = u,x + (v,x**2 + w,x**2)/2, so the geometric stiffness is
 #     N*(Sv_x.T*Sv_x + Sw_x.T*Sw_x). Using the square of the sum,

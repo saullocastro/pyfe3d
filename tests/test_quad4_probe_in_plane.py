@@ -1,3 +1,10 @@
+r"""In-plane strain of the probe of Quad4
+
+The membrane strain `\varepsilon_{xx}` evaluated by
+:class:`.Quad4Probe` at the centroid of an element of a plate compressed by
+opposite edge forces is compared with the strain of the displacement field
+solved for the plate.
+"""
 import sys
 sys.path.append('..')
 
@@ -11,6 +18,9 @@ from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
 def test_quad4_probe_in_plane(plot=False):
+    """``exx*a`` from ``Quad4Probe.BLexx`` must equal the difference of the
+    extreme values of `u` of a plate under uniform compression; ``plot``
+    plots the field of `u`"""
     data = Quad4Data()
     probe = Quad4Probe()
     nx = 7

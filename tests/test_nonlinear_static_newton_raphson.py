@@ -1,14 +1,24 @@
 """Geometrically nonlinear static analyses with a full Newton-Raphson method
 
-Since KT = KC0 + KCNL(u) + KG(u) is the exact Jacobian of the internal forces
-given by ``update_fint(..., nonlinear=1)``, the Newton-Raphson iteration
-converges quadratically. Two classical problems where the membrane action
-stiffens the structure are verified:
+The residuals of the Newton-Raphson iterations must show quadratic
+convergence, the nonlinear deflection must be below 0.7 times the linear one
+(membrane stiffening), and the different elements must agree within 5 %, in
+two classical problems where the membrane action stiffens the structure:
 
 - simply supported square plate with immovable edges under uniform pressure,
   with the Quad4, Quad4R, Tria3R and Tria3DSG elements
 - beam clamped at both ends under a central transverse load, arbitrarily
   oriented in space, with the BeamC and BeamLR elements
+
+The triangles are also compared with Quad4R under mesh refinement.
+
+Notes
+-----
+Since KT = KC0 + KCNL(u) + KG(u) is the exact Jacobian of the internal forces
+given by ``update_fint(..., nonlinear=1)``, the Newton-Raphson iteration
+converges quadratically: in the asymptotic range the number of correct
+digits doubles at each iteration, checked as ``r1 < r0**1.6`` until the
+round-off floor.
 """
 import sys
 sys.path.append('..')
@@ -270,11 +280,10 @@ def test_triangles_under_refinement():
     """Which triangle converges to the quadrilateral answer, nonlinearly
 
     The nonlinear plate is refined and the triangles are compared with
-    Quad4R. Tria3DSG and the default Tria3R since 0.12.0, which takes the
-    discrete shear gap field of Tria3DSG, ``shear_model = 1``, close the gap.
-    Tria3R with ``shear_model = 0`` and ``alpha_shear_locking = 0.7``, the
-    centroid-sampled shear that was its default up to 0.11, set explicitly
-    here, settles about two and a half per cent away from the quadrilateral
+    Quad4R. Tria3DSG and the default Tria3R, which takes the discrete shear
+    gap field of Tria3DSG, ``shear_model = 1``, close the gap. Tria3R with
+    ``shear_model = 0`` and ``alpha_shear_locking = 0.7``, the
+    centroid-sampled shear, set explicitly here, settles about two and a half per cent away from the quadrilateral
     and stops improving, which is the same signature that stabilisation
     leaves on the linear problem in ``tests/test_tria3dsg.py`` and on the
     buckling problem in ``tests/test_quad4_linear_buckling_cylinder_displ.py``.
@@ -313,8 +322,8 @@ def test_triangles_under_refinement():
             assert dsg[k + 1] < dsg[k], (key, dsg)
         assert dsg[0]/dsg[-1] > 5., (key, dsg)
         assert dsg[-1] < 0.005, (key, dsg)
-    # NOTE whereas the legacy Tria3R stalls: its last two meshes agree
-    #      with each other
+    # NOTE whereas Tria3R with shear_model = 0 stalls: its last two
+    #      meshes agree with each other
     #      much better than either agrees with the quadrilateral
     assert t3r[-1] > 0.02, t3r
     assert abs(t3r[-1] - t3r[-2]) < 0.1*t3r[-1], t3r

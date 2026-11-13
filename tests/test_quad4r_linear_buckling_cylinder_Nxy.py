@@ -1,3 +1,12 @@
+r"""Torsional buckling of cylinders modelled with Quad4R
+
+Linear buckling of closed cylinders under a uniform shear flow ``N_xy``:
+the laminated cylinders Z11 and Z33 against the semi-analytical
+predictions of Castro et al. (2014), Fig. 13, and a moderately long
+isotropic cylinder against the formula of Batdorf, Stein and Schildcrout
+(1947), both also against values pre-determined by the same tests.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -46,15 +55,22 @@ def _cylindrical_transformation(ncoords):
 
 
 def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
-    r"""Torsional buckling of the laminated cylinders Z11 and Z33 of
+    r"""Torsional buckling of the laminated cylinders Z11 and Z33 of Castro
+    et al. (2014)
 
-        Saullo G. P. Castro, Christian Mittelstedt, Francisco A. C. Monteiro, Mariano
-        A. Arbelo, Gerhard Ziegmann, Richard Degenhardt. "Linear buckling predictions
-        of unstiffened laminated composite cylinders and cones under various loading
-        and boundary conditions using semi-analytical models". Composite Structures,
-        118, 303-315, 2014. https://doi.org/10.1016/j.compstruct.2014.07.037
+    The critical torque ``-Tcr`` of both cylinders, with the boundary
+    condition CC2, is compared with the pure-torsion intercepts of the
+    FSDT-BC2 curves of Castro et al. (2014), Fig. 13, and with values
+    pre-determined by this same test. The default ``refinement=1`` compares
+    ``-Tcr`` with the pre-determined 18864.8 and 10883.3 Nm, with a
+    tolerance for the round-off of other platforms only, and with Fig. 13
+    within grade C, 20 per cent, of MacNeal and Harder (1985), p. 14, as a
+    sanity bound. ``refinement=2`` compares with 17183.0 and 9569.9 Nm and
+    grade B, 10 per cent, and ``refinement=3`` with grade A, 2 per cent.
 
-    The paper gives the geometry (Table 4, p. 307, R = 250 mm, H = 510 mm,
+    Notes
+    -----
+    The paper [1]_ gives the geometry (Table 4, p. 307, R = 250 mm, H = 510 mm,
     ply thickness 0.125 mm), the material Geier1997 (Table 3, p. 307), the
     stacking sequences (Table 4, from inwards to outwards), the boundary
     condition CC2, ``v = w = w,x = 0`` with ``u`` free (Table 1, p. 304), the
@@ -77,7 +93,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     relative difference to the intercept of Fig. 13 of the same sign, with
     the wall time of the test, both laminates, on a machine shared with
     other jobs, measured on 2026-10-29 with the default stabilisation of
-    Quad4R since 0.12.0, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994)::
+    Quad4R, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994) [2]_::
 
         refinement ntheta elements  Z11, Nxy < 0      Z33, Nxy < 0     time
            0.5       40      480   26930.5 +60.3 %   17906.1 +94.6 %     2 s
@@ -96,27 +112,43 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     and 9136 Nm, see
     tests/test_quad4_linear_buckling_cylinder_Nxy.py, where the model is also
     run with ``Nxy > 0`` and reproduces the negative intercepts. The
-    geometric stiffness taking the slopes of `w` at the centroid, in
-    version 0.12.0, changed none of these values: under a pure shear
-    prestress it coincides with that of the two-by-two quadrature on
-    rectangles. Up to 0.11 this test used a thousandth of the hourglass
-    stiffnesses of Brockman (1987), and gave 18537.7 and 10509.2 Nm with
-    ``refinement=1``, 17113.2 and 9480.9 Nm with ``refinement=2``, and the
-    extrapolated values 16684 and 9136 Nm.
+    geometric stiffness takes the slopes of `w` at the centroid; under a
+    pure shear prestress it coincides with that of the two-by-two
+    quadrature on rectangles.
 
-    The figure is matched within grade A, 2 per cent, of MacNeal, R. H.,
-    and Harder, R. L., "A proposed standard set of problems to test finite
-    element accuracy", Finite Elements in Analysis and Design, 1(1), 3-20,
-    1985, p. 14, only from ``refinement=3``, too expensive for every run.
-    The default ``refinement=1`` therefore compares ``-Tcr`` with the
+    The figure is matched within grade A, 2 per cent, of MacNeal and Harder
+    [3]_, p. 14, only from ``refinement=3``, too expensive for every run,
+    which is why the default ``refinement=1`` compares ``-Tcr`` with the
     values of the table pre-determined by this same test, 18864.8 and
     10883.3 Nm, with a tolerance for the round-off of other platforms only,
     and with Fig. 13 within grade C, 20 per cent, as a sanity bound.
-    ``refinement=2`` compares with 17183.0 and 9569.9 Nm and grade B, 10 per
-    cent, and ``refinement=3`` with grade A.
+
+    In the code, the stacking sequences are those of Table 4 of [1]_, from
+    inwards to outwards, the material Geier1997 that of Table 3, the shear
+    correction factor 5/6 is forced according to the beginning of Section 6,
+    and the boundary condition CC2 is that of Table 1. In Fig. 1 and
+    Eq. (13) of [1]_ a positive torque T gives a negative shear force per
+    unit length ``Nxy``, so ``-Tcr`` is the positive torque T of the paper.
+
+    References
+    ----------
+    .. [1] Castro, S. G. P., Mittelstedt, C., Monteiro, F. A. C., Arbelo,
+       M. A., Ziegmann, G., and Degenhardt, R., Linear buckling predictions
+       of unstiffened laminated composite cylinders and cones under various
+       loading and boundary conditions using semi-analytical models,
+       Composite Structures, 118, 303-315, 2014.
+       https://doi.org/10.1016/j.compstruct.2014.07.037
+    .. [2] Belytschko, T., and Leviathan, I., Physical stabilization of the
+       4-node shell element with one point quadrature, Computer Methods in
+       Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+       https://doi.org/10.1016/0045-7825(94)90052-3
+    .. [3] MacNeal, R. H., and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
 
     """
-    # NOTE stacking sequences from Table 4 of Castro et al., from inwards to
+    # NOTE stacking sequences of the reference, see Notes, from inwards to
     #      outwards. The element normal of this mesh points outwards and the
     #      element x axis is the cylinder axis, so the plies are listed from
     #      the bottom to the top of the laminate. That the sign conventions
@@ -128,8 +160,8 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         'Z11' : [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37],
         'Z33' : [0, 0, 19, -19, 37, -37, 45, -45, 51, -51],
     }
-    # NOTE intercepts of the FSDT-BC2 CC2 curves of Fig. 13 of Castro et al.
-    #      with the axis of zero axial load, positive torque, in Nm
+    # NOTE intercepts of the FSDT-BC2 CC2 curves of the reference, see
+    #      Notes, with the axis of zero axial load, positive torque, in Nm
     reference_T = {
         'Z11' : 16.8e3,
         'Z33' : 9.2e3,
@@ -141,8 +173,8 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         1: {'Z11': 18864.768, 'Z33': 10883.319},
         2: {'Z11': 17182.984, 'Z33': 9569.858},
     }
-    # NOTE sanity bounds of the relative difference to Fig. 13 of Castro et
-    #      al., the grades of MacNeal and Harder (1985), p. 14: C (20 %) with
+    # NOTE sanity bounds of the relative difference to the reference, the
+    #      grades A, B and C, see Notes: C (20 %) with
     #      ntheta = 80, B (10 %) with ntheta = 160 and A (2 %) with
     #      ntheta = 240, which the table of the docstring shows to be met
     grade = {1: 0.20, 2: 0.10, 3: 0.02}
@@ -164,7 +196,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         print('ntheta', ntheta)
         print('nlength', nlength)
 
-        # NOTE material Geier1997 of Table 3 of Castro et al.
+        # NOTE material Geier1997 of the reference, see Notes
         E11 = 123.55e9
         E22 = 8.708e9
         nu12 = 0.319
@@ -174,7 +206,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         plyt = 0.125e-3
         laminaprop = (E11, E22, nu12, G12, G13, G23)
 
-        # NOTE forcing 5/6 according to Castro et al., beginning of Section 6
+        # NOTE forcing the shear correction factor 5/6 of the reference
         prop = laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop,
                                shear_correction='constant')
 
@@ -215,8 +247,8 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         KGv = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=DOUBLE)
         N = DOF*nlength*ntheta
 
-        # NOTE in Fig. 1 and Eq. (13) of Castro et al. a positive torque (T)
-        #      gives a negative shear force per unit length Nxy. The sign
+        # NOTE in the reference a positive torque (T) gives a negative shear
+        #      force per unit length Nxy, see Notes. The sign
         #      must be consistent with the sign of the ply angles because it
         #      changes the buckling load of an unsymmetric laminate
         Nxy = -1000/b
@@ -255,7 +287,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
         print('sparse KC0 and KG created')
 
-        # NOTE boundary condition CC2 of Table 1 of Castro et al.,
+        # NOTE boundary condition CC2 of the reference, see Notes,
         #      v = w = w,x = 0 at both edges, with the axial displacement u
         #      and the rotation about the radial direction free. These are
         #      constraints on the radial and circumferential directions,
@@ -274,17 +306,16 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         # NOTE removing the rigid axial translation with a single node
         middle = np.where(isclose(z, L/2))[0]
         bk[2::DOF][middle[0]] = True
-        # NOTE earlier versions of this test held the axial displacement of the
-        #      whole ring of nodes at mid-length and both rotations at the
-        #      edges, which is not CC2. That ring constraint stiffens the
-        #      torsional mode, whose buckles are inclined helices crossing
-        #      the mid-length: for the enriched Quad4 at ntheta = 80 it raised
-        #      Tcr of Z11 from -18980.9 to -22193.3 Nm, +16.9 per cent, and
-        #      holding the rotation about the radial direction at the edges
-        #      added another 1.1 per cent. Together they were the 16 per cent (Z11) and
-        #      23 per cent (Z33) by which the converged values exceeded
-        #      Fig. 13, -19197.8 and -11093.7 Nm at ntheta = 320 with
-        #      this element
+        # NOTE holding the axial displacement of the whole ring of nodes at
+        #      mid-length and both rotations at the edges is not CC2. That
+        #      ring constraint stiffens the torsional mode, whose buckles are
+        #      inclined helices crossing the mid-length: for the enriched
+        #      Quad4 at ntheta = 80 it raises Tcr of Z11 from -18980.9 to
+        #      -22193.3 Nm, +16.9 per cent, and holding the rotation about
+        #      the radial direction at the edges adds another 1.1 per cent.
+        #      Together they make the converged values exceed Fig. 13 by 16
+        #      per cent (Z11) and 23 per cent (Z33), -19197.8 and -11093.7 Nm
+        #      at ntheta = 320 with this element
 
         bu = ~bk
 
@@ -345,7 +376,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
             plotter.parallel_projection = True
             plotter.show()
 
-        # NOTE -Tcr is the positive torque T of Castro et al.
+        # NOTE -Tcr is the positive torque T of the reference
         error = -Tcr/reference_T[cyl] - 1
         print('relative difference to Fig. 13 of Castro et al.', error)
         if refinement in predetermined:
@@ -358,20 +389,26 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     r"""Torsional buckling of a moderately long isotropic cylinder with simply
     supported edges
 
+    The critical shear flow ``N_xy`` of a cylinder with ``R = 250 mm``,
+    ``L = 4*R``, ``t = 4 mm`` and ``nu = 0.3`` is compared with the
+    straight-line formula of Batdorf, Stein and Schildcrout (1947), p. 3,
+    also Eq. (25) of NASA SP-8007, and with a value pre-determined by this
+    same test. The default ``refinement=1``, ``ntheta = 64``, compares
+    ``N_xy`` with the pre-determined value, with a tolerance for the
+    round-off of other platforms only, and the ratio with the formula within
+    grade B, 10 per cent, of MacNeal and Harder (1985), p. 14; from
+    ``refinement=2`` the ratio is checked within grade A, 2 per cent.
+
+    Notes
+    -----
     The critical shear stress is ``tau_cr = k_s*pi**2*D/(L**2*t)`` with the
     straight-line approximation ``k_s = 0.85*Z**(3/4)`` for simply supported
-    edges, ``Z = L**2/(R*t)*sqrt(1 - nu**2)``, from
-
-        Batdorf, S. B., Stein, M., Schildcrout, M., "Critical stress of
-        thin-walled cylinders in torsion", NACA TN 1344, 1947, p. 3, with the
-        symbols on p. 2 and the range of validity ``100 < Z < 10*R**2/t**2``
-        on p. 4,
-
-    and the same equation with the correlation factor set to one is
-    Eq. (25), Sec. 4.2.4, p. 11, of NASA SP-8007, Buckling of thin-walled
-    circular cylinders, 1965, revised 1968, valid there for
+    edges, ``Z = L**2/(R*t)*sqrt(1 - nu**2)``, from [1]_, p. 3, with the
+    symbols on p. 2 and the range of validity ``100 < Z < 10*R**2/t**2``
+    on p. 4, and the same equation with the correlation factor set to one
+    is Eq. (25), Sec. 4.2.4, p. 11, of [2]_, valid there for
     ``50 < Z < 78*(R/t)**2*(1 - nu**2)``. The simply supported edges of
-    Batdorf et al. are ``w = w,xx = v = 0`` with ``u`` unrestrained (TN 1344,
+    [1]_ are ``w = w,xx = v = 0`` with ``u`` unrestrained (TN 1344,
     p. 8), which is what the constraints below impose.
 
     Here ``R = 250 mm``, ``L = 4*R``, ``t = 4 mm`` and ``nu = 0.3``, so that
@@ -390,10 +427,9 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
            3          192     23424    585175.2   0.9905   252 s
         extrapolated                              0.984
 
-    measured on 2026-10-29 with the default stabilisation of Quad4R since
-    0.12.0, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994); up to 0.11, with the hourglass stiffnesses of Brockman
-    (1987), 765745.5, 659117.4, 623627.9, 599769.1, 591694.8 and 585982.2
-    N/m, extrapolated 0.984 as well. The extrapolation fits ``a +
+    measured on 2026-10-29 with the default stabilisation of Quad4R, the
+    physical stabilisation of the bending and of the transverse shear of
+    Belytschko and Leviathan (1994) [3]_. The extrapolation fits ``a +
     c*ntheta**-p`` to the three finest meshes (p = 2.0). The converged element is therefore 1.6 per cent below the
     formula, which is within the accuracy of the formula itself: it is a
     straight-line fit of Batdorf's Galerkin solution of a Donnell-type
@@ -416,16 +452,26 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     used here. The extrapolated values of Quad4 and Quad4R on the cylinder
     of this test are both 0.984.
 
-    The default ``refinement=1``, ``ntheta = 64``, compares ``N_xy`` with
-    the value of the table pre-determined by this same test, with a
-    tolerance for the round-off of other platforms only, and the ratio with
-    the formula within grade B, 10 per cent, of MacNeal, R. H., and Harder,
-    R. L., "A proposed standard set of problems to test finite element
-    accuracy", Finite Elements in Analysis and Design, 1(1), 3-20, 1985,
-    p. 14; from ``refinement=2`` the ratio is checked within grade A, 2 per
-    cent.
+    The grades B, 10 per cent, and A, 2 per cent, are those of MacNeal and
+    Harder [4]_, p. 14.
+
+    References
+    ----------
+    .. [1] Batdorf, S. B., Stein, M., and Schildcrout, M., Critical stress of
+       thin-walled cylinders in torsion, NACA TN 1344, 1947.
+    .. [2] NASA SP-8007, Buckling of thin-walled circular cylinders, 1965,
+       revised 1968.
+    .. [3] Belytschko, T., and Leviathan, I., Physical stabilization of the
+       4-node shell element with one point quadrature, Computer Methods in
+       Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+       https://doi.org/10.1016/0045-7825(94)90052-3
+    .. [4] MacNeal, R. H., and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
 
     """
+
     data = Quad4RData()
     probe = Quad4RProbe()
 
@@ -512,7 +558,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
     KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
 
-    # NOTE simply supported edges of Batdorf et al., w = v = 0 with u and the
+    # NOTE simply supported edges of the reference, w = v = 0 with u and the
     #      rotations free: for a cylinder along the global z axis the radial
     #      and circumferential translations are the global x and y ones
     bk = np.zeros(N, dtype=bool)
@@ -545,7 +591,8 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     if refinement in predetermined:
         assert isclose(Nxy_cr, predetermined[refinement], rtol=1e-4)
     # NOTE sanity bounds of the relative difference to the formula, the
-    #      grades of MacNeal and Harder (1985), p. 14: B (10 %) with
+    #      grades of the docstring: B (10 %) with
+
     #      ntheta = 64 and A (2 %) from ntheta = 128, which the table of
     #      the docstring shows to be met
     grade = {1: 0.10, 2: 0.02, 3: 0.02}

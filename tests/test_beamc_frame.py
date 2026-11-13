@@ -2,10 +2,25 @@ r"""Linear static analysis of an L-shaped frame of BeamC elements
 
 A column along `Y`, clamped at its base, of height `H`, and a beam along `X`
 of length `L`, rigidly connected at the top of the column, loaded at the
-free end of the beam. With the shear deformation of the Timoshenko theory,
-the axial deformation and the Saint-Venant torsion, the displacements of the
-free end follow from the principle of virtual work (unit-load method). For
-the in-plane load `F_Y = -P`:
+free end of the beam. With 1 and 4 elements per member, the displacements
+of the free end under an in-plane load `F_Y = -P` and an out-of-plane load
+`F_Z = P` are compared with the closed form of the unit-load method
+(Megson, 2019, Eq. 15.25), and the internal forces at the base with the
+support reactions.
+
+Notes
+-----
+With the shear deformation of the Timoshenko theory, the axial deformation
+and the Saint-Venant torsion, the displacements of the free end follow from
+the principle of virtual work with a unit virtual load at the free end in
+the direction of the displacement (unit-load method), whose internal
+virtual work sums, over the members, the axial, shear, bending and torsion
+terms `\int N_A N_v/(E A) dx`, `\int S_A S_v/(G A) dx`, `\int M_A M_v/(E
+I) dx` and `\int T_A T_v/(G J) dx` of Megson (2019), Section 15.2,
+Eq. (15.25), p. 481 (the terms are Eqs. 15.12, 15.17, 15.21 and 15.22,
+pp. 478-480; the unit-load method, p. 485), with the form factor of the
+shear term taken as 1, `A` being the shear area, and the torsion constant
+`J` in place of the polar moment. For the in-plane load `F_Y = -P`:
 
 .. math::
 
@@ -25,6 +40,13 @@ their weak axis and twists the column with the torque `P L`:
 The consistent shape functions of BeamC solve the equilibrium equations of
 the Timoshenko beam, such that these nodal displacements are exact with any
 number of elements per member.
+
+References
+----------
+Megson, T. H. G., 2019, "Virtual Work and Energy Methods", Chapter 15 of
+Structural and Stress Analysis, 4th ed., Butterworth-Heinemann (Elsevier),
+Oxford, pp. 467-524. doi:10.1016/B978-0-08-102586-4.00015-9
+
 """
 import sys
 sys.path.append('..')

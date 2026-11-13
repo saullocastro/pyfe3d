@@ -1,3 +1,9 @@
+r"""Natural frequency of a simply supported plate modelled with Quad4
+
+The fundamental frequency with the consistent, lumped and reduced mass
+matrices is compared with the exact solution of Leissa (1969), Eq. (4.20),
+within 1 %.
+"""
 import sys
 sys.path.append('..')
 
@@ -16,8 +22,13 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
     ``b = 0.5``, ``h = 0.01``, with the consistent, lumped and reduced mass
     matrices
 
-    The reference is the exact solution of Leissa, A. W., Vibration of
-    Plates, NASA SP-160, 1969, Sec. 4.1, p. 44, Eq. (4.20),
+    The frequency is compared with the exact solution of Leissa (1969),
+    ``rtol = 0.01``, for ``mtype`` 0, 1 and 2.
+
+    Notes
+    -----
+    The reference is the exact solution of Leissa (1969), Sec. 4.1, p. 44,
+    Eq. (4.20),
     ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with ``m = n = 1``
     and Leissa's ``rho`` the mass per unit area, here ``rho*h``.
 
@@ -26,11 +37,8 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
     zero, for which the Navier mode is also exact for the Mindlin plate: with
     ``a/h = 30``, the rotary inertia and ``A44 = A55 = 5/6 G h``, its
     frequency is 0.28 % below the reference, from the characteristic equation
-    (76) of Wittrick, W. H., Analytical, three-dimensional elasticity
-    solutions to some plate problems, and some observations on Mindlin's
-    plate theory, International Journal of Solids and Structures, 23(4),
-    441-464, 1987, Sec. 3.2, p. 457, and the elements converge to that
-    value. With the soft simple support used before, rotations free, they
+    (76) of Wittrick (1987), Sec. 3.2, p. 457, and the elements converge to that
+    value. With the soft simple support, rotations free, they
     converge to about 1 % below the reference, through the boundary layer
     of the Mindlin plate along the edges.
 
@@ -38,6 +46,15 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
     0.03 to 0.33 % below the reference, with 17x21 elements from 0.40 %
     below to 0.31 % above it, with 8x10 elements from 0.78 % below to 2.42 %
     above it, with 35x43 elements 0.14 to 0.31 % below it.
+
+    References
+    ----------
+    Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+
+    Wittrick, W. H., Analytical, three-dimensional elasticity solutions to
+    some plate problems, and some observations on Mindlin's plate theory,
+    International Journal of Solids and Structures, 23(4), 1987, pp.
+    441-464.
     """
     data = Quad4Data()
     probe = Quad4Probe()
@@ -159,7 +176,7 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 
-        # NOTE Leissa (1969), Eq. (4.20), with rho*h the mass per unit area
+        # NOTE exact solution, with rho*h the mass per unit area
         m = 1
         n = 1
         D = E*h**3/(12*(1 - nu**2))

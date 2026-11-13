@@ -1,3 +1,9 @@
+r"""Quad4 in the thin limit
+
+The normalized central deflection of a simply supported square plate under a
+central point load at a very large element aspect ratio must equal that at
+the thin limit of the mesh, for ``shear_model = 0`` and ``1``.
+"""
 import sys
 sys.path.append('..')
 
@@ -66,9 +72,13 @@ def test_quad4_thin_limit():
 
     With elements of side `\ell = a/8`, the normalized deflection at
     `\ell/h = 1.25 \times 10^5`, ten times the maximum aspect ratio
-    `10^5/8` of Hughes et al. (1977) in single precision, is the one at
-    `\ell/h = 1.25 \times 10^3`, the thin limit of the mesh.
+    `10^5/8` of Hughes, Taylor and Kanoknukulchai (1977) in single
+    precision, is the one at `\ell/h = 1.25 \times 10^3`, the thin limit of
+    the mesh, to ``rtol = 1e-4`` with ``shear_model = 0`` and ``3e-4`` with
+    ``shear_model = 1``.
 
+    Notes
+    -----
     Relative change from `\ell/h = 1.25 \times 10^3`, measured on
     2026-10-30:
 
@@ -82,9 +92,16 @@ def test_quad4_thin_limit():
     sign with ``shear_model = 1`` (2.3e-5, -9.6e-5 and 3.0e-4 at `6
     \times 10^4`, `1.25 \times 10^5` and `2.5 \times 10^5`). The
     two-by-two transverse shear of the assumed strains of the MITC4
-    element, the default since 0.12.0, accumulates about twenty times the
+    element, the default, accumulates about twenty times the
     round-off of the one-point rule of ``shear_model = 0``, and is asserted
     within 3e-4 instead of 1e-4.
+
+    References
+    ----------
+    Hughes, T. J. R., Taylor, R. L., and Kanoknukulchai, W., A simple and
+    efficient finite element for plate bending, International Journal for
+    Numerical Methods in Engineering, 11(10), 1977, pp. 1529-1543,
+    https://doi.org/10.1002/nme.1620111005.
 
     """
     a = 1.

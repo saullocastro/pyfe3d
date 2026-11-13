@@ -53,14 +53,32 @@ def _weights(an, kC0):
 def _abs_matrix(kC0):
     r"""Elementwise absolute value `|\boldsymbol{K}_{C0}|` of the linear stiffness matrix
     ``kC0``, sparse, for the round-off floor of the convergence criteria,
-    see :func:`.roundoff_floor`"""
+    see :func:`.roundoff_floor`
+
+    Notes
+    -----
+    The product `|\boldsymbol{K}_{C0}| \, |\boldsymbol{c}|` bounds the
+    magnitude of the terms summed in each component of the internal force
+    vector, whose rounding error sets the round-off floor of the residual,
+    see :mod:`.convergence`. The matrix is computed once per analysis.
+
+    """
     return abs(csr_matrix(kC0))
 
 
 def _norm(v, w):
     r"""Norm of the convergence criterion: `\|v\|_{\boldsymbol{d}}` with the
     weights ``w`` of Crisfield's criterion, the Euclidean norm when ``w`` is
-    ``None``"""
+    ``None``
+
+    Notes
+    -----
+    The merit function `\phi` of the line search of :func:`_NR_iterations`
+    is the square of this norm of the residual, the norm of the convergence
+    criterion, such that the line search and the convergence check measure
+    the residual in the same way, see :func:`.scaled_norm`.
+
+    """
     if w is None:
         return float(np.linalg.norm(v))
     return scaled_norm(v, w)
@@ -340,8 +358,8 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
         eta = 1.
         fint = None
         if an.line_search:
-            # NOTE sufficient decrease of phi(eta) = ||R(eta)||**2, assuming
-            #      phi'(0) = -2*phi(0), exact for a Newton direction
+            # NOTE backtracking until the sufficient-decrease test of the
+            #      squared residual norm is satisfied
             fint = callbacks.calc_fint(pb, c + dc + varc, total)
             phi0 = Rnorm**2
             phi1 = _norm(fint - fext_total, w)**2

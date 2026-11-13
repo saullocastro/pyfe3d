@@ -1,3 +1,8 @@
+r"""Panel flutter of a simply supported plate modelled with Quad4R, piston
+theory with aerodynamic damping, against the analytical relation between
+the damped and the undamped eigenvalues
+
+"""
 import sys
 sys.path.append('..')
 
@@ -16,6 +21,17 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
     along `X`, with the piston theory, see ``update_KA_beta`` of
     :class:`.Quad4R`, and the aerodynamic damping
 
+    Verified: the aerodynamic damping matrix equals the mass matrix on `w`
+    times `a = \mu/(\rho h)`; at each Mach number the damped eigenvalues
+    `\lambda` of :func:`.complex_frequency` agree with those obtained
+    analytically from the undamped ones; the modes decay with
+    `Re(\lambda) = -a/2` before the coalescence and grow where `\mu < 0`;
+    and the flutter onset with the damping, found by bisection, lies at a
+    higher Mach number than the coalescence of the undamped analysis, with
+    `\lambda` purely imaginary there.
+
+    Notes
+    -----
     The equations of motion are `\boldsymbol{M} \ddot{\boldsymbol{u}} + \boldsymbol{C} \dot{\boldsymbol{u}} +
     \boldsymbol{K} \boldsymbol{u} = \boldsymbol{0}`, with `\boldsymbol{K} = \boldsymbol{K}_{C0} - \beta \boldsymbol{K}_{A_\beta} - \gamma
     \boldsymbol{K}_{A_\gamma}` and the damping matrix `\boldsymbol{C} = -\mu \boldsymbol{C}_A`. For this plate
@@ -36,7 +52,9 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
       higher Mach number, where a pair `\omega^2` satisfies `|Im(\omega^2)|
       = a \sqrt{Re(\omega^2)}`, i.e. `\lambda = i \sqrt{Re(\omega^2)}`,
       found by bisection.
+
     """
+
     data = Quad4RData()
     probe = Quad4RProbe()
     nx = refinement*21
@@ -210,7 +228,8 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
     assert abs(CAuu[~wu, :]).sum() == 0
 
     def matrices(Mach_):
-        """K and C at the Mach number Mach_, and a = mu/(rho*h)"""
+        """``K`` and ``C`` at the Mach number ``Mach_``, and ``a = mu/(rho*h)``"""
+
         v = Mach_*v_sound
         beta = rho_air*v**2/np.sqrt(Mach_**2 - 1)
         gamma = beta/(2*radius*np.sqrt(Mach_**2 - 1))
