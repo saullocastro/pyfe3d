@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Co-rotational formulation for large rotations &#8212; pyfe3d 0.12.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'corotational_formulation';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Cross-sectional analysis of beams" href="cross_sectional_analysis.html" />
+    <link rel="prev" title="Truss and spring elements" href="truss_spring.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#" aria-current="page">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Co-rotational formulation for large rotations</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="co-rotational-formulation-for-large-rotations">
+<h1>Co-rotational formulation for large rotations<a class="headerlink" href="#co-rotational-formulation-for-large-rotations" title="Link to this heading">#</a></h1>
+<p>The elements of pyfe3d are formulated in element axes fixed in the initial
+configuration, with linear strains or the von Kármán strains of moderate
+rotations, see <a class="reference internal" href="beam_theory.html"><span class="doc">Beam theory and the beam elements</span></a>. Large displacements and rotations with
+small strains are obtained without changing them, with the
+element-independent co-rotational (EICR) formulation of Felippa and Haugen
+(2005) and Nour-Omid and Rankin (1991), implemented in
+<a class="reference internal" href="corotational.html#module-pyfe3d.corotational" title="pyfe3d.corotational"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code></a>: the motion of each element is split into a rigid
+motion, followed by a co-rotational (CR) frame, and a small deformational
+motion relative to it, to which the linear element responds. This chapter
+presents the finite rotations, the kinematics of the split, the internal
+force and the consistent tangent stiffness matrix, and the frames of the
+beams, the truss and the spring; how a model is assembled and solved is in
+<a class="reference internal" href="nonlinear_analyses.html"><span class="doc">Non-linear static analyses</span></a>.</p>
+<section id="finite-rotations">
+<h2>Finite rotations<a class="headerlink" href="#finite-rotations" title="Link to this heading">#</a></h2>
+<p><strong>Rotation vector and rotation matrix.</strong> The rotational degrees of freedom
+of a node of a <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel" title="pyfe3d.corotational.CorotationalModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalModel</span></code></a> are the components of its total
+rotation vector <span class="math notranslate nohighlight">\(\boldsymbol{\psi}\)</span>, of angle <span class="math notranslate nohighlight">\(\psi = |\boldsymbol{\psi}|\)</span>
+about the axis of <span class="math notranslate nohighlight">\(\boldsymbol{\psi}\)</span>, added by the solvers like the
+translations. With <span class="math notranslate nohighlight">\(\mathrm{Spin}(\boldsymbol{a}) \boldsymbol{b} =
+\boldsymbol{a} \times \boldsymbol{b}\)</span> (<a class="reference internal" href="corotational.html#pyfe3d.corotational.spin" title="pyfe3d.corotational.spin"><code class="xref py py-func docutils literal notranslate"><span class="pre">spin()</span></code></a>, and its inverse
+<a class="reference internal" href="corotational.html#pyfe3d.corotational.axial" title="pyfe3d.corotational.axial"><code class="xref py py-func docutils literal notranslate"><span class="pre">axial()</span></code></a>), the nodal rotation matrix is the exponential map, Rodrigues’
+formula (<a class="reference internal" href="corotational.html#pyfe3d.corotational.expso3" title="pyfe3d.corotational.expso3"><code class="xref py py-func docutils literal notranslate"><span class="pre">expso3()</span></code></a>):</p>
+<div class="math notranslate nohighlight" id="equation-cr-exp">
+<span class="eqno">(1)<a class="headerlink" href="#equation-cr-exp" title="Link to this equation">#</a></span>\[\boldsymbol{R} = \exp(\mathrm{Spin}(\boldsymbol{\psi})) =
+\boldsymbol{I} + \frac{\sin \psi}{\psi} \mathrm{Spin}(\boldsymbol{\psi})
++ \frac{1 - \cos \psi}{\psi^2} \mathrm{Spin}(\boldsymbol{\psi})^2\]</div>
+<p>Its inverse for angles up to <span class="math notranslate nohighlight">\(\pi\)</span>, <a class="reference internal" href="corotational.html#pyfe3d.corotational.logso3" title="pyfe3d.corotational.logso3"><code class="xref py py-func docutils literal notranslate"><span class="pre">logso3()</span></code></a>, extracts the quaternion
+of <span class="math notranslate nohighlight">\(\boldsymbol{R}\)</span> with Spurrier’s algorithm, accurate at every angle,
+including 0 and <span class="math notranslate nohighlight">\(\pi\)</span>. Below the angles <a class="reference internal" href="corotational.html#pyfe3d.corotational.SERIES_ANGLE" title="pyfe3d.corotational.SERIES_ANGLE"><code class="xref py py-data docutils literal notranslate"><span class="pre">SERIES_ANGLE</span></code></a> and
+<a class="reference internal" href="corotational.html#pyfe3d.corotational.SERIES_ANGLE_ETA_MU" title="pyfe3d.corotational.SERIES_ANGLE_ETA_MU"><code class="xref py py-data docutils literal notranslate"><span class="pre">SERIES_ANGLE_ETA_MU</span></code></a>, the coefficients of these matrices are
+evaluated with their Taylor series, which avoid the cancellation of the
+closed forms.</p>
+<p><strong>Variations.</strong> A variation of the rotation of a node is a spatial spin
+<span class="math notranslate nohighlight">\(\delta \boldsymbol{\omega}\)</span>, <span class="math notranslate nohighlight">\(\delta \boldsymbol{R} \boldsymbol{R}^\top =
+\mathrm{Spin}(\delta \boldsymbol{\omega})\)</span>, related to the variation of the
+rotation vector by (<a class="reference internal" href="corotational.html#pyfe3d.corotational.Lambda" title="pyfe3d.corotational.Lambda"><code class="xref py py-func docutils literal notranslate"><span class="pre">Lambda()</span></code></a>)</p>
+<div class="math notranslate nohighlight" id="equation-cr-lambda">
+<span class="eqno">(2)<a class="headerlink" href="#equation-cr-lambda" title="Link to this equation">#</a></span>\[\delta \boldsymbol{\omega} = \boldsymbol{\Lambda}(\boldsymbol{\psi})
+\delta \boldsymbol{\psi}, \qquad
+\boldsymbol{\Lambda} = \boldsymbol{I} + \frac{1 - \cos \psi}{\psi^2}
+\mathrm{Spin}(\boldsymbol{\psi}) + \frac{\psi - \sin \psi}{\psi^3}
+\mathrm{Spin}(\boldsymbol{\psi})^2\]</div>
+<p>the <span class="math notranslate nohighlight">\(\boldsymbol{H}(\boldsymbol{\theta})\)</span> of Crisfield (1997), Eq. (16.90),
+and the <span class="math notranslate nohighlight">\(\boldsymbol{H}^{-1}\)</span> of Felippa and Haugen (2005), Eq. (100). Its
+inverse, for the small deformational rotations <span class="math notranslate nohighlight">\(\boldsymbol{\theta}\)</span> in the
+CR frame, is (<a class="reference internal" href="corotational.html#pyfe3d.corotational.Hmat" title="pyfe3d.corotational.Hmat"><code class="xref py py-func docutils literal notranslate"><span class="pre">Hmat()</span></code></a>, Felippa and Haugen, Eq. (101))</p>
+<div class="math notranslate nohighlight" id="equation-cr-h">
+<span class="eqno">(3)<a class="headerlink" href="#equation-cr-h" title="Link to this equation">#</a></span>\[\delta \boldsymbol{\theta} = \boldsymbol{H}(\boldsymbol{\theta}) \delta
+\boldsymbol{\omega}, \qquad
+\boldsymbol{H} = \boldsymbol{I} - \frac{1}{2}
+\mathrm{Spin}(\boldsymbol{\theta}) + \eta \,
+\mathrm{Spin}(\boldsymbol{\theta})^2, \qquad
+\eta = \frac{1 - (\theta/2) \cot(\theta/2)}{\theta^2}\]</div>
+<p><span class="math notranslate nohighlight">\(\boldsymbol{\Lambda}\)</span> is singular at <span class="math notranslate nohighlight">\(\psi = 2 k \pi\)</span>, <span class="math notranslate nohighlight">\(k \ge 1\)</span>: a node
+must turn by less than one full revolution, <span class="math notranslate nohighlight">\(|\boldsymbol{\psi}| &lt; 2 \pi\)</span>.
+Since the rotation vectors are total, no state is kept between the calls,
+and the solvers of <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a> are used unchanged. The derivatives of
+the transposes of <span class="math notranslate nohighlight">\(\boldsymbol{\Lambda}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{H}\)</span> times a fixed
+moment, which enter the tangent stiffness matrix, are <a class="reference internal" href="corotational.html#pyfe3d.corotational.dLambdaT_m" title="pyfe3d.corotational.dLambdaT_m"><code class="xref py py-func docutils literal notranslate"><span class="pre">dLambdaT_m()</span></code></a>
+and <a class="reference internal" href="corotational.html#pyfe3d.corotational.Lmat" title="pyfe3d.corotational.Lmat"><code class="xref py py-func docutils literal notranslate"><span class="pre">Lmat()</span></code></a>.</p>
+</section>
+<section id="base-and-co-rotational-frames">
+<h2>Base and co-rotational frames<a class="headerlink" href="#base-and-co-rotational-frames" title="Link to this heading">#</a></h2>
+<p>The frames are written as <span class="math notranslate nohighlight">\(3 \times 3\)</span> matrices whose columns are the element
+axes, the convention of the attributes <code class="docutils literal notranslate"><span class="pre">r11,</span> <span class="pre">...,</span> <span class="pre">r33</span></code> of the elements
+(Felippa and Haugen write their transposes): <span class="math notranslate nohighlight">\(\boldsymbol{T}_0\)</span>, the base
+frame, which is that of <code class="docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code> of the element, and
+<span class="math notranslate nohighlight">\(\boldsymbol{T}_R\)</span>, the CR frame of the current configuration. With the base
+local coordinates <span class="math notranslate nohighlight">\(\tilde{\boldsymbol{x}}_a = \boldsymbol{T}_0^\top
+(\boldsymbol{X}_a - \boldsymbol{X}_C)\)</span> of node <span class="math notranslate nohighlight">\(a\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{X}_C\)</span> being
+the mean of the nodal coordinates, the deformed positions
+<span class="math notranslate nohighlight">\(\boldsymbol{x}^D_a\)</span> and the nodal rotation matrices <span class="math notranslate nohighlight">\(\boldsymbol{R}_a\)</span>, the
+deformational displacements of node <span class="math notranslate nohighlight">\(a\)</span> in the CR frame are</p>
+<div class="math notranslate nohighlight" id="equation-cr-deformational">
+<span class="eqno">(4)<a class="headerlink" href="#equation-cr-deformational" title="Link to this equation">#</a></span>\[\bar{\boldsymbol{u}}_{d,a} = \boldsymbol{T}_R^\top (\boldsymbol{x}^D_a -
+\boldsymbol{x}_C) - \tilde{\boldsymbol{x}}_a, \qquad
+\bar{\boldsymbol{\theta}}_{d,a} = \mathrm{axial}\left(\log\left(
+\boldsymbol{T}_R^\top \boldsymbol{R}_a \boldsymbol{T}_0 \right)\right)\]</div>
+<p>with <span class="math notranslate nohighlight">\(\boldsymbol{x}_C\)</span> the mean of <span class="math notranslate nohighlight">\(\boldsymbol{x}^D_a\)</span> (Felippa and Haugen,
+Eq. (22); Nour-Omid and Rankin, Eq. (14)). In this chapter the overbar marks
+components in the CR frame, as in Felippa and Haugen. The positions are
+computed relative to the base centroid, <span class="math notranslate nohighlight">\((\boldsymbol{X}_a -
+\boldsymbol{X}_C) + \boldsymbol{u}_a\)</span>, which keeps their round-off
+independent of the origin of the coordinates. A rigid motion of the element
+moves <span class="math notranslate nohighlight">\(\boldsymbol{T}_R\)</span> with it and leaves the deformational displacements
+<span class="math notranslate nohighlight">\(\boldsymbol{d}\)</span> zero; the element is then evaluated with its local linear
+stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_e\)</span>, computed once in the base configuration
+by its own <code class="docutils literal notranslate"><span class="pre">update_KC0</span></code> with the rotation matrix set to the identity.</p>
+<p>The CR frame is defined by a frame rule of each element type,
+<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.add" title="pyfe3d.corotational.CorotationalModel.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CorotationalModel.add()</span></code></a> choosing the wrapper:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Wrapper, elements</p></th>
+<th class="head"><p>CR frame</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalShell</span></code></a>, triangles</p></td>
+<td><p><span class="math notranslate nohighlight">\(x\)</span> along the side 1-2 and <span class="math notranslate nohighlight">\(z\)</span> normal to the plane of the nodes;
+the solution depends on the numbering of the nodes</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalShell</span></code></a>, quadrilaterals</p></td>
+<td><p><span class="math notranslate nohighlight">\(z\)</span> along the cross product of the diagonals and <span class="math notranslate nohighlight">\(x\)</span> along their
+sum, invariant to a cyclic renumbering; a warped element is linked to
+its flat projection by rigid offsets, see the Notes of
+<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalShell</span></code></a> and <a class="reference internal" href="element_choice.html"><span class="doc">Choosing an element</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalBeam" title="pyfe3d.corotational.CorotationalBeam"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalBeam</span></code></a>, <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> and <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a></p></td>
+<td><p>mean nodal triad, below</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalTruss" title="pyfe3d.corotational.CorotationalTruss"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalTruss</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'chord'</span></code>: the axis alone, Crisfield’s co-rotational truss;
+<code class="docutils literal notranslate"><span class="pre">'mean_triad'</span></code>: as the beams, with the torsion</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalSpring" title="pyfe3d.corotational.CorotationalSpring"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalSpring</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'axis'</span></code>: as the beams, for an axial spring along its nodes;
+<code class="docutils literal notranslate"><span class="pre">'triad'</span></code>: mean of the rotated element axes, also for coincident
+nodes</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Mean nodal triad of the beams.</strong> The <span class="math notranslate nohighlight">\(x\)</span> axis of the CR frame follows the
+chord, and the <span class="math notranslate nohighlight">\(y\)</span> axis lies in the plane of the chord and of the mean of the
+base <span class="math notranslate nohighlight">\(y\)</span> axis <span class="math notranslate nohighlight">\(\boldsymbol{q}_0 = \boldsymbol{T}_0 \boldsymbol{e}_2\)</span> rotated
+by the two nodal rotations
+(Crisfield, 1997, Eqs. (17.11)-(17.14); the midpoint interpolation of
+Nour-Omid and Rankin, Section 5):</p>
+<div class="math notranslate nohighlight" id="equation-cr-beam-frame">
+<span class="eqno">(5)<a class="headerlink" href="#equation-cr-beam-frame" title="Link to this equation">#</a></span>\[\boldsymbol{e}_1 = \frac{\boldsymbol{x}^D_2 - \boldsymbol{x}^D_1}{l},
+\qquad \boldsymbol{q} = \frac{1}{2} (\boldsymbol{R}_1 + \boldsymbol{R}_2)
+\boldsymbol{q}_0, \qquad \boldsymbol{e}_3 = \frac{\boldsymbol{e}_1 \times
+\boldsymbol{q}}{|\boldsymbol{e}_1 \times \boldsymbol{q}|}, \qquad
+\boldsymbol{e}_2 = \boldsymbol{e}_3 \times \boldsymbol{e}_1\]</div>
+<p>with <span class="math notranslate nohighlight">\(l\)</span> the current length. The frame is undefined when <span class="math notranslate nohighlight">\(\boldsymbol{q}\)</span>
+becomes parallel to the chord; below the component <span class="math notranslate nohighlight">\(\bar{q}_2\)</span> of
+<code class="docutils literal notranslate"><span class="pre">q2_min</span></code> the wrapper returns NaN forces, so that the solvers reduce the
+increment, and warns. Nour-Omid and Rankin, Appendix B.3, redefine
+<span class="math notranslate nohighlight">\(\boldsymbol{q}\)</span> in that case, which a formulation without state cannot do
+without a jump of the forces.</p>
+</section>
+<section id="internal-force-and-consistent-tangent-stiffness">
+<h2>Internal force and consistent tangent stiffness<a class="headerlink" href="#internal-force-and-consistent-tangent-stiffness" title="Link to this heading">#</a></h2>
+<p><strong>Projector.</strong> The variation of the CR frame follows from the variations of
+the nodal displacements and spins in the CR frame, <span class="math notranslate nohighlight">\(\delta
+\bar{\boldsymbol{v}}\)</span>, through the spin-fitter matrix <span class="math notranslate nohighlight">\(\boldsymbol{G}\)</span>,
+<span class="math notranslate nohighlight">\(\delta \boldsymbol{\omega}_R = \boldsymbol{G} \delta \bar{\boldsymbol{v}}\)</span>,
+derived in pyfe3d for each frame rule and given in the Notes of the wrappers;
+for the mean nodal triad</p>
+<div class="math notranslate nohighlight" id="equation-cr-g-beam">
+<span class="eqno">(6)<a class="headerlink" href="#equation-cr-g-beam" title="Link to this equation">#</a></span>\[\omega_1 = \frac{1}{2 q_2} \sum_i (\bar{q}_{i2} \omega_{i,x} -
+\bar{q}_{i1} \omega_{i,y}) - \frac{q_1}{q_2} \frac{w_2 - w_1}{l},
+\qquad \omega_2 = -\frac{w_2 - w_1}{l}, \qquad \omega_3 = \frac{v_2
+- v_1}{l}\]</div>
+<p>with <span class="math notranslate nohighlight">\(\bar{\boldsymbol{q}} = \boldsymbol{T}_R^\top \boldsymbol{q} = (q_1, q_2,
+0)\)</span>, <span class="math notranslate nohighlight">\(\bar{\boldsymbol{q}}_i = \boldsymbol{T}_R^\top \boldsymbol{R}_i
+\boldsymbol{q}_0\)</span>, and <span class="math notranslate nohighlight">\(v_a\)</span>, <span class="math notranslate nohighlight">\(w_a\)</span>, <span class="math notranslate nohighlight">\(\omega_{i,x}\)</span>, <span class="math notranslate nohighlight">\(\omega_{i,y}\)</span> the
+local translations and spins of the nodes. With the matrix <span class="math notranslate nohighlight">\(\boldsymbol{S}\)</span>
+of the rigid rotations of the nodes about the centroid, <span class="math notranslate nohighlight">\(\boldsymbol{G}
+\boldsymbol{S} = \boldsymbol{I}\)</span> (Felippa and Haugen, Eq. (17)), and the
+projector</p>
+<div class="math notranslate nohighlight" id="equation-cr-projector">
+<span class="eqno">(7)<a class="headerlink" href="#equation-cr-projector" title="Link to this equation">#</a></span>\[\boldsymbol{P} = \boldsymbol{P}_u - \boldsymbol{S} \boldsymbol{G}\]</div>
+<p>removes the rigid motions from the variations of the element, <span class="math notranslate nohighlight">\(\boldsymbol{P}_u\)</span>
+removing the rigid translations (Felippa and Haugen, Eqs. (11), (12),
+(31)-(34)).</p>
+<p><strong>Internal force.</strong> With the local force <span class="math notranslate nohighlight">\(\boldsymbol{K}_e \boldsymbol{d}\)</span>
+transformed from the deformational rotations to the spins by
+<span class="math notranslate nohighlight">\(\bar{\boldsymbol{H}} = \mathrm{diag}(\boldsymbol{I},
+\boldsymbol{H}(\bar{\boldsymbol{\theta}}_{d,a}))\)</span>, the internal force in the
+CR frame is that of the consistent symmetrizable equilibrated (CSE)
+formulation of Felippa and Haugen (2005), Section 6.3, Eq. (53):</p>
+<div class="math notranslate nohighlight" id="equation-cr-force">
+<span class="eqno">(8)<a class="headerlink" href="#equation-cr-force" title="Link to this equation">#</a></span>\[\bar{\boldsymbol{p}} = \boldsymbol{P}^\top \bar{\boldsymbol{H}}^\top
+\boldsymbol{K}_e \boldsymbol{d}\]</div>
+<p><strong>Tangent stiffness.</strong> Its variation gives the tangent stiffness matrix in
+the CR frame,</p>
+<div class="math notranslate nohighlight" id="equation-cr-tangent">
+<span class="eqno">(9)<a class="headerlink" href="#equation-cr-tangent" title="Link to this equation">#</a></span>\[\boldsymbol{K}_R = \underbrace{\boldsymbol{P}^\top \bar{\boldsymbol{H}}^\top
+\boldsymbol{K}_e \bar{\boldsymbol{H}} \boldsymbol{P}}_{\text{material}}
++ \underbrace{\boldsymbol{P}^\top \bar{\boldsymbol{L}} \boldsymbol{P} -
+\boldsymbol{F}_{nm} \boldsymbol{G} - \boldsymbol{G}^\top
+\boldsymbol{F}_n^\top \boldsymbol{P}}_{\text{geometric}}\]</div>
+<p>with <span class="math notranslate nohighlight">\(\bar{\boldsymbol{L}} = \mathrm{diag}(\boldsymbol{0},
+\boldsymbol{L}(\bar{\boldsymbol{\theta}}_{d,a}, \bar{\boldsymbol{m}}_a))\)</span> of
+the local nodal moments (<a class="reference internal" href="corotational.html#pyfe3d.corotational.Lmat" title="pyfe3d.corotational.Lmat"><code class="xref py py-func docutils literal notranslate"><span class="pre">Lmat()</span></code></a>), the moment-correction stiffness of
+Felippa and Haugen, Eqs. (46) and (102), <span class="math notranslate nohighlight">\(-\boldsymbol{F}_{nm}
+\boldsymbol{G}\)</span> the rotational geometric stiffness, Eqs. (44)-(45), and
+<span class="math notranslate nohighlight">\(-\boldsymbol{G}^\top \boldsymbol{F}_n^\top \boldsymbol{P}\)</span> the
+equilibrium-projection geometric stiffness, Eq. (47), with
+<span class="math notranslate nohighlight">\(\boldsymbol{F}_n\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{F}_{nm}\)</span> built with the spins of the
+forces and moments of <span class="math notranslate nohighlight">\(\bar{\boldsymbol{p}}\)</span>. Equation (47) is exact when
+<span class="math notranslate nohighlight">\(\boldsymbol{G}\)</span> does not depend on the nodal rotations, their condition
+(37), which holds for the frames of the shells. The mean nodal triad
+depends on them, and <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalBeam" title="pyfe3d.corotational.CorotationalBeam"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalBeam</span></code></a> uses, with <code class="docutils literal notranslate"><span class="pre">exact_KGP=True</span></code>
+(the default), the exact variation of <span class="math notranslate nohighlight">\(\boldsymbol{P}^\top \boldsymbol{p}\)</span>,</p>
+<div class="math notranslate nohighlight" id="equation-cr-kgp">
+<span class="eqno">(10)<a class="headerlink" href="#equation-cr-kgp" title="Link to this equation">#</a></span>\[\boldsymbol{K}_{GP} = -\frac{\partial (\boldsymbol{G}^\top
+\boldsymbol{z})}{\partial \bar{\boldsymbol{v}}} - \boldsymbol{G}^\top
+\boldsymbol{F}_n(\boldsymbol{p})^\top \boldsymbol{P}, \qquad
+\boldsymbol{z} = \boldsymbol{S}^\top \boldsymbol{p}, \qquad
+\boldsymbol{p} = \bar{\boldsymbol{H}}^\top \boldsymbol{K}_e \boldsymbol{d}\]</div>
+<p>derived in pyfe3d, whose first term Eq. (47) misses, a term of the order of
+the unbalanced force (Felippa and Haugen, Eq. (48)).</p>
+<p><strong>Additive rotation vectors.</strong> The force and the stiffness are transformed
+to global components, <span class="math notranslate nohighlight">\(\boldsymbol{\mathcal{T}} =
+\mathrm{diag}(\boldsymbol{T}_R)\)</span>, and from the spins to the variations of
+the rotation vectors, <span class="math notranslate nohighlight">\(\hat{\boldsymbol{\Lambda}} =
+\mathrm{diag}(\boldsymbol{I}, \boldsymbol{\Lambda}(\boldsymbol{\psi}_a))\)</span>
+(Crisfield, 1997, Section 17.4.2, Eqs. (17.176)-(17.177)):</p>
+<div class="math notranslate nohighlight" id="equation-cr-global">
+<span class="eqno">(11)<a class="headerlink" href="#equation-cr-global" title="Link to this equation">#</a></span>\[\boldsymbol{f} = \hat{\boldsymbol{\Lambda}}^\top
+\boldsymbol{\mathcal{T}} \bar{\boldsymbol{p}}, \qquad
+\boldsymbol{K} = \hat{\boldsymbol{\Lambda}}^\top \boldsymbol{\mathcal{T}}
+\boldsymbol{K}_R \boldsymbol{\mathcal{T}}^\top \hat{\boldsymbol{\Lambda}}
++ \mathrm{diag}\left(\boldsymbol{0}, \frac{\partial
+(\boldsymbol{\Lambda}^\top \boldsymbol{m}_a)}{\partial
+\boldsymbol{\psi}_a}\right)\]</div>
+<p>with <span class="math notranslate nohighlight">\(\boldsymbol{m}_a\)</span> the global moments of node <span class="math notranslate nohighlight">\(a\)</span> (<a class="reference internal" href="corotational.html#pyfe3d.corotational.dLambdaT_m" title="pyfe3d.corotational.dLambdaT_m"><code class="xref py py-func docutils literal notranslate"><span class="pre">dLambdaT_m()</span></code></a>).
+<span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> is the Jacobian of <span class="math notranslate nohighlight">\(\boldsymbol{f}\)</span>, exact for the frames of
+the shells, the chord of the truss and, with <code class="docutils literal notranslate"><span class="pre">exact_KGP=True</span></code>, the nodal
+triads of the beams and the springs, and unsymmetric away from equilibrium;
+its material part enters <code class="docutils literal notranslate"><span class="pre">calc_kC</span></code> and its geometric part <code class="docutils literal notranslate"><span class="pre">calc_kG</span></code> of
+the model. The steps are
+those of the kernel <code class="docutils literal notranslate"><span class="pre">_force_tangent_c</span></code> of <a class="reference internal" href="corotational.html#module-pyfe3d.corotational" title="pyfe3d.corotational"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code></a>, and
+each tangent is checked against central finite differences in
+<code class="docutils literal notranslate"><span class="pre">tests/test_corotational_core.py</span></code>.</p>
+</section>
+<section id="truss-and-spring">
+<h2>Truss and spring<a class="headerlink" href="#truss-and-spring" title="Link to this heading">#</a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">frame='chord'</span></code>, <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalTruss" title="pyfe3d.corotational.CorotationalTruss"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalTruss</span></code></a> is the co-rotational truss
+of Crisfield (1991), Section 3.6, written for the space truss of Section 3.7:
+with <span class="math notranslate nohighlight">\(l_0\)</span> and <span class="math notranslate nohighlight">\(l\)</span> the initial and current lengths, <span class="math notranslate nohighlight">\(\boldsymbol{e}\)</span> the unit
+vector from node 1 to node 2 and the axial force <span class="math notranslate nohighlight">\(N = (E A/l_0)(l - l_0)\)</span>,</p>
+<div class="math notranslate nohighlight" id="equation-cr-truss">
+<span class="eqno">(12)<a class="headerlink" href="#equation-cr-truss" title="Link to this equation">#</a></span>\[\begin{split}\boldsymbol{f} = N \begin{Bmatrix} -\boldsymbol{e} \\ \boldsymbol{e}
+\end{Bmatrix}, \qquad
+\boldsymbol{K}_t = \frac{E A}{l_0} \boldsymbol{e} \boldsymbol{e}^\top +
+\frac{N}{l} (\boldsymbol{I} - \boldsymbol{e} \boldsymbol{e}^\top)\end{split}\]</div>
+<p>on the translations, <span class="math notranslate nohighlight">\(\boldsymbol{K}_t\)</span> and <span class="math notranslate nohighlight">\(-\boldsymbol{K}_t\)</span> being the
+blocks of the two nodes, material and geometric. The rotations receive no
+force, as in the linear element; with a torsional stiffness, <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>
+chooses <code class="docutils literal notranslate"><span class="pre">'mean_triad'</span></code>, the frame of the beams.</p>
+<p>The linear <a class="reference internal" href="spring.html#pyfe3d.spring.Spring" title="pyfe3d.spring.Spring"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spring</span></code></a> does not balance the moment of its transverse
+forces between distinct nodes, see <a class="reference internal" href="truss_spring.html"><span class="doc">Truss and spring elements</span></a>; the projector of
+<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalSpring" title="pyfe3d.corotational.CorotationalSpring"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalSpring</span></code></a> adds it, so that its tangent at the base
+configuration differs from <code class="docutils literal notranslate"><span class="pre">KC0</span></code>. Its <code class="docutils literal notranslate"><span class="pre">'triad'</span></code> frame replaces the chord
+of Eq. <a class="reference internal" href="#equation-cr-beam-frame">(5)</a> by the mean of the rotated base <span class="math notranslate nohighlight">\(x\)</span> axes, which
+depends on the nodal rotations only and is defined for coincident nodes, up
+to a relative rotation of the nodes of 180 degrees.</p>
+</section>
+<section id="von-karman-strains-in-the-co-rotational-frame">
+<h2>Von Kármán strains in the co-rotational frame<a class="headerlink" href="#von-karman-strains-in-the-co-rotational-frame" title="Link to this heading">#</a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">kinematics='corotational_von_karman'</span></code> of <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.add" title="pyfe3d.corotational.CorotationalModel.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CorotationalModel.add()</span></code></a>
+(<code class="docutils literal notranslate"><span class="pre">local='von_karman'</span></code> of the wrappers), the local response is that of the
+von Kármán strains of the element, step 8 of the procedure of Crisfield
+(1997), Section 17.1.5: the element’s own <code class="docutils literal notranslate"><span class="pre">update_probe_finte(prop,</span>
+<span class="pre">nonlinear=1)</span></code>, <code class="docutils literal notranslate"><span class="pre">update_KCNL</span></code> and <code class="docutils literal notranslate"><span class="pre">update_KG</span></code> are evaluated at
+<span class="math notranslate nohighlight">\(\boldsymbol{d}\)</span>, and the local force <span class="math notranslate nohighlight">\(\bar{\boldsymbol{f}}(\boldsymbol{d})\)</span>
+and the local tangent <span class="math notranslate nohighlight">\(\boldsymbol{K}_e + \boldsymbol{K}_{CNL}(\boldsymbol{d})
++ \boldsymbol{K}_G(\boldsymbol{d})\)</span> replace <span class="math notranslate nohighlight">\(\boldsymbol{K}_e
+\boldsymbol{d}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{K}_e\)</span> in Eqs. <a class="reference internal" href="#equation-cr-force">(8)</a> and
+<a class="reference internal" href="#equation-cr-tangent">(9)</a>. In the CR frame of a beam the deformational translations
+are along the chord, <span class="math notranslate nohighlight">\(\bar{v} = \bar{w} = 0\)</span>:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a> interpolates <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(w\)</span> linearly, so its von Kármán terms
+vanish and the result is that of <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code> to round-off; the same
+holds for the shells, whose transverse translations in the CR frame are
+zero or the hourglass pattern of the warp;</p></li>
+<li><p><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> interpolates them with the nodal rotations, and its
+element-mean axial strain of <a class="reference internal" href="beam_theory.html"><span class="doc">Beam theory and the beam elements</span></a>, Eq. <a class="reference internal" href="beam_theory.html#equation-beamc-mean">(18)</a>,
+adds the local higher-order terms of Crisfield (1997), Section 17.1.5,
+Eqs. (17.56a)-(17.56b). On the cantilever under an end force of Sze, Liu
+and Lo (2004), Section 3.1, 16 elements give tip errors of -0.02 % and
++0.05 % with <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code> and +0.002 % and +0.007 % with
+<code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code>, see <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalBeam" title="pyfe3d.corotational.CorotationalBeam"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalBeam</span></code></a>.</p></li>
+</ul>
+<p>The truss and the spring, without von Kármán strains of their own, take
+<code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code> as <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code>.</p>
+</section>
+<section id="limits-of-validity">
+<h2>Limits of validity<a class="headerlink" href="#limits-of-validity" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Small strains: the local response is linear, or von Kármán, in the CR
+frame; large strains are not represented.</p></li>
+<li><p>Each nodal rotation vector below one revolution, <span class="math notranslate nohighlight">\(|\boldsymbol{\psi}_a| &lt;
+2 \pi\)</span>.</p></li>
+<li><p>The mean nodal triad is undefined when the mean of the rotated <span class="math notranslate nohighlight">\(y\)</span> axes
+turns parallel to the chord, <code class="docutils literal notranslate"><span class="pre">q2_min</span></code>; for a truss without torsion,
+<code class="docutils literal notranslate"><span class="pre">'chord'</span></code> avoids it.</p></li>
+<li><p>A node shared with an element of another kinematics is valid only while its
+rotations remain small, since that element reads the rotation vector as a
+small rotation; a warning is issued.</p></li>
+<li><p>Moments in the constant external load vector <code class="docutils literal notranslate"><span class="pre">fext</span></code> are conjugate to the
+rotation vectors; moments about fixed axes and follower moments depend on
+the configuration and are added with <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.add_moment" title="pyfe3d.corotational.CorotationalModel.add_moment"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CorotationalModel.add_moment()</span></code></a>,
+see <a class="reference internal" href="nonlinear_analyses.html"><span class="doc">Non-linear static analyses</span></a>.</p></li>
+</ul>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+Structures, Volume 1: Essentials, John Wiley &amp; Sons, Chichester, 1991.</p></li>
+<li><p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+Structures, Volume 2: Advanced Topics, John Wiley &amp; Sons, Chichester, 1997.</p></li>
+<li><p>Felippa, C. A. and Haugen, B., A unified formulation of small-strain
+corotational finite elements: I. Theory, Computer Methods in Applied
+Mechanics and Engineering, 194(21-24), 2285-2335, 2005.
+<a class="reference external" href="https://doi.org/10.1016/j.cma.2004.07.035">https://doi.org/10.1016/j.cma.2004.07.035</a></p></li>
+<li><p>Nour-Omid, B. and Rankin, C. C., Finite rotation analysis and consistent
+linearization using projectors, Computer Methods in Applied Mechanics and
+Engineering, 93(3), 353-384, 1991.
+<a class="reference external" href="https://doi.org/10.1016/0045-7825(91)90248-5">https://doi.org/10.1016/0045-7825(91)90248-5</a></p></li>
+<li><p>Sze, K. Y., Liu, X. H. and Lo, S. H., Popular benchmark problems for
+geometric nonlinear analysis of shells, Finite Elements in Analysis and
+Design, 40(11), 1551-1569, 2004. <a class="reference external" href="https://doi.org/10.1016/j.finel.2003.11.001">https://doi.org/10.1016/j.finel.2003.11.001</a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="truss_spring.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Truss and spring elements</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="cross_sectional_analysis.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Cross-sectional analysis of beams</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#finite-rotations">Finite rotations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#base-and-co-rotational-frames">Base and co-rotational frames</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#internal-force-and-consistent-tangent-stiffness">Internal force and consistent tangent stiffness</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#truss-and-spring">Truss and spring</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#von-karman-strains-in-the-co-rotational-frame">Von Kármán strains in the co-rotational frame</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limits-of-validity">Limits of validity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/corotational_formulation.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

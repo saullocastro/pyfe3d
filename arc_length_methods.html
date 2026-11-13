@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Arc-length methods &#8212; pyfe3d 0.12.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'arc_length_methods';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Convergence criteria" href="convergence_criteria.html" />
+    <link rel="prev" title="The Newton-Raphson method" href="newton_raphson_method.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#" aria-current="page">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Arc-length methods</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="arc-length-methods">
+<h1>Arc-length methods<a class="headerlink" href="#arc-length-methods" title="Link to this heading">#</a></h1>
+<p>Under load control, the load factor of each increment is prescribed, and
+the Newton-Raphson iterations of <a class="reference internal" href="newton_raphson_method.html"><span class="doc">The Newton-Raphson method</span></a> fail at a
+limit point of the load, where the tangent stiffness matrix is singular and
+no equilibrium exists near the current configuration for a larger load.
+The arc-length methods make the load factor an unknown of each increment,
+together with the configuration, and add one equation that fixes the
+length of the increment along the equilibrium path. They trace limit
+points, snap-through and snap-back. <code class="docutils literal notranslate"><span class="pre">Analysis.NL_method</span> <span class="pre">=</span>
+<span class="pre">'arc_length_riks'</span></code> and <code class="docutils literal notranslate"><span class="pre">'arc_length_crisfield'</span></code> select the methods of
+Riks (1979) and Crisfield (1981), which share the implementation of
+<a class="reference internal" href="solver_arc_length.html#pyfe3d.solver.arc_length._solver_arc_length" title="pyfe3d.solver.arc_length._solver_arc_length"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length._solver_arc_length()</span></code></a> and differ only in how
+the correction of the load factor is computed.</p>
+<section id="the-arc-length-constraint">
+<h2>The arc-length constraint<a class="headerlink" href="#the-arc-length-constraint" title="Link to this heading">#</a></h2>
+<p>With <span class="math notranslate nohighlight">\(\Delta \boldsymbol{u}\)</span> and <span class="math notranslate nohighlight">\(\Delta\lambda\)</span> the increments of the
+configuration and of the load factor from the last converged point, the
+step satisfies, besides the equilibrium <span class="math notranslate nohighlight">\(\boldsymbol{R}(\boldsymbol{u} + \Delta
+\boldsymbol{u}, \lambda + \Delta\lambda) = \boldsymbol{0}\)</span>, the constraint</p>
+<div class="math notranslate nohighlight" id="equation-al-constraint">
+<span class="eqno">(1)<a class="headerlink" href="#equation-al-constraint" title="Link to this equation">#</a></span>\[\frac{\Delta \boldsymbol{u}^\top \Delta \boldsymbol{u}}{\boldsymbol{u}_{ref}^\top \boldsymbol{u}_{ref}}
++ \psi^2 \Delta\lambda^2 = \Delta s^2\]</div>
+<p>with <span class="math notranslate nohighlight">\(\Delta s\)</span> the arc length of the step, <span class="math notranslate nohighlight">\(\psi\)</span> = <code class="docutils literal notranslate"><span class="pre">PSI</span></code> <span class="math notranslate nohighlight">\(= 1\)</span>, and
+<span class="math notranslate nohighlight">\(\boldsymbol{u}_{ref} = \boldsymbol{K}_{C0}^{-1} \boldsymbol{F}_{ext}\)</span> the linear solution of
+the reference load, which makes <span class="math notranslate nohighlight">\(\Delta s\)</span> dimensionless and independent of
+a uniform change of the units of the displacements, though not of a change
+of the units of the rotations only. In the linear regime, <span class="math notranslate nohighlight">\(\Delta
+\boldsymbol{u} = \Delta\lambda \, \boldsymbol{u}_{ref}\)</span> and <span class="math notranslate nohighlight">\(\Delta s = \sqrt{1 +
+\psi^2} \, \Delta\lambda\)</span>. This is the spherical constraint of Crisfield
+(1991, Sec. 9.3.2, Eq. (9.19)), whose displacement term is here scaled and
+whose load term, there <span class="math notranslate nohighlight">\(\psi^2 \Delta\lambda^2 \boldsymbol{F}_{ext}^\top
+\boldsymbol{F}_{ext}\)</span>, is not. It is convenient to write it with the inner
+product of the space of the configurations and the load factor,</p>
+<div class="math notranslate nohighlight" id="equation-al-inner">
+<span class="eqno">(2)<a class="headerlink" href="#equation-al-inner" title="Link to this equation">#</a></span>\[\langle (\boldsymbol{a}, \alpha), (\boldsymbol{b}, \beta) \rangle =
+\frac{\boldsymbol{a}^\top \boldsymbol{b}}{\boldsymbol{u}_{ref}^\top \boldsymbol{u}_{ref}} + \psi^2 \alpha \beta,
+\qquad
+g = \tfrac{1}{2} \left( \langle (\Delta \boldsymbol{u}, \Delta\lambda),
+(\Delta \boldsymbol{u}, \Delta\lambda) \rangle - \Delta s^2 \right) = 0\]</div>
+<p>When <span class="math notranslate nohighlight">\(\boldsymbol{u}_{ref}\)</span> is null, its squared norm is replaced by 1; when
+<code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> declares <code class="docutils literal notranslate"><span class="pre">lbd</span></code>, e.g. under prescribed displacements,
+<span class="math notranslate nohighlight">\(\boldsymbol{u}_{ref}\)</span> is the linear solution of <span class="math notranslate nohighlight">\(-\partial \boldsymbol{R}/\partial
+\lambda\)</span> at <span class="math notranslate nohighlight">\(\boldsymbol{u} = \boldsymbol{0}\)</span>, <span class="math notranslate nohighlight">\(\lambda = 0\)</span>, see
+<a class="reference internal" href="configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent loads</span></a>.</p>
+</section>
+<section id="predictor">
+<h2>Predictor<a class="headerlink" href="#predictor" title="Link to this heading">#</a></h2>
+<p>Each step starts from the tangent at the last converged point, <span class="math notranslate nohighlight">\(\delta
+\boldsymbol{u}_q = \boldsymbol{K}_T^{-1} \boldsymbol{q}\)</span>, with <span class="math notranslate nohighlight">\(\boldsymbol{q} = -\partial
+\boldsymbol{R}/\partial \lambda\)</span>, equal to <span class="math notranslate nohighlight">\(\boldsymbol{F}_{ext}\)</span> for a load that
+depends neither on the configuration nor on the load factor:</p>
+<div class="math notranslate nohighlight" id="equation-al-predictor">
+<span class="eqno">(3)<a class="headerlink" href="#equation-al-predictor" title="Link to this equation">#</a></span>\[\Delta\lambda = \pm \frac{\Delta s}{\sqrt{\langle (\delta \boldsymbol{u}_q, 1),
+(\delta \boldsymbol{u}_q, 1) \rangle}}, \qquad
+\Delta \boldsymbol{u} = \Delta\lambda \, \delta \boldsymbol{u}_q\]</div>
+<p>which satisfies the constraint <a class="reference internal" href="#equation-al-constraint">(1)</a>. The sign is that of
+<span class="math notranslate nohighlight">\(\langle (\delta \boldsymbol{u}_q, 1), (\Delta \boldsymbol{u}_{prev},
+\Delta\lambda_{prev}) \rangle\)</span>, with the increment of the previous step,
+positive at the first step: the predictor continues in the direction of
+the path already traced, which makes <span class="math notranslate nohighlight">\(\Delta\lambda\)</span> negative after a
+limit point of the load. The first arc length, <span class="math notranslate nohighlight">\(\Delta s_0 =\)</span>
+<code class="docutils literal notranslate"><span class="pre">an.initialInc</span></code> <span class="math notranslate nohighlight">\(\sqrt{\langle (\delta \boldsymbol{u}_q, 1), (\delta
+\boldsymbol{u}_q, 1) \rangle}\)</span> at the origin, corresponds to a load factor
+increment of <code class="docutils literal notranslate"><span class="pre">an.initialInc</span></code> along the initial tangent.</p>
+</section>
+<section id="corrections">
+<h2>Corrections<a class="headerlink" href="#corrections" title="Link to this heading">#</a></h2>
+<p>At each iteration, the residual is <span class="math notranslate nohighlight">\(\boldsymbol{R} = \boldsymbol{F}_{int}(\boldsymbol{u} +
+\Delta \boldsymbol{u}) - (\lambda + \Delta\lambda) \boldsymbol{F}_{ext}\)</span>, and the
+linearized equilibrium is the bordered system <span class="math notranslate nohighlight">\(\boldsymbol{K}_T \delta \boldsymbol{u} -
+\delta\lambda \, \boldsymbol{q} = -\boldsymbol{R}\)</span>. It is solved with one
+factorization and two substitutions,</p>
+<div class="math notranslate nohighlight" id="equation-al-bordered">
+<span class="eqno">(4)<a class="headerlink" href="#equation-al-bordered" title="Link to this equation">#</a></span>\[\delta \boldsymbol{u}_R = -\boldsymbol{K}_T^{-1} \boldsymbol{R}, \qquad
+\delta \boldsymbol{u}_q = \boldsymbol{K}_T^{-1} \boldsymbol{q}, \qquad
+\delta \boldsymbol{u} = \delta \boldsymbol{u}_R + \delta\lambda \, \delta \boldsymbol{u}_q\]</div>
+<p>and the increment becomes <span class="math notranslate nohighlight">\((\Delta \boldsymbol{u} + \delta \boldsymbol{u}, \Delta\lambda
++ \delta\lambda)\)</span>, with <span class="math notranslate nohighlight">\(\delta\lambda\)</span> from the constraint:</p>
+<ul>
+<li><p><strong>Riks</strong>, <code class="docutils literal notranslate"><span class="pre">'arc_length_riks'</span></code>: the constraint is linearized at the
+current increment, <span class="math notranslate nohighlight">\(g + \langle (\Delta \boldsymbol{u}, \Delta\lambda), (\delta
+\boldsymbol{u}, \delta\lambda) \rangle = 0\)</span>, which gives</p>
+<div class="math notranslate nohighlight" id="equation-al-riks">
+<span class="eqno">(5)<a class="headerlink" href="#equation-al-riks" title="Link to this equation">#</a></span>\[\delta\lambda = -\frac{g + \langle (\Delta \boldsymbol{u}, \Delta\lambda),
+(\delta \boldsymbol{u}_R, 0) \rangle}{\langle (\Delta \boldsymbol{u}, \Delta\lambda),
+(\delta \boldsymbol{u}_q, 1) \rangle}\]</div>
+<p>This is Newton’s method applied to the system of the equilibrium
+equations augmented with the constraint, with quadratic convergence when
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_T\)</span> is the exact Jacobian and is updated at every iteration
+(Crisfield 1991, Sec. 9.3.2, p. 272). Riks (1979, Secs. 3.1 to 3.3)
+augments the equilibrium equations with a linear equation, the plane
+normal to the tangent of the path at the last converged point at the
+distance <span class="math notranslate nohighlight">\(\Delta s\)</span> from it, and solves them by Newton’s method with
+quadratic convergence; with <span class="math notranslate nohighlight">\(g = 0\)</span> in <a class="reference internal" href="#equation-al-riks">(5)</a>, the constraint is
+the updated normal plane of Ramm (1981, p. 75); Crisfield (1991, Sec.
+9.3.2.2, Eq. (9.29), pp. 274-275) attributes the mismatch term to
+Schweizerhof and Wriggers and to Riks. With it, each iteration satisfies
+the linearized constraint about the current increment, and the iterates
+return to the sphere of <a class="reference internal" href="#equation-al-constraint">(1)</a> as they converge.</p>
+</li>
+<li><p><strong>Crisfield</strong>, <code class="docutils literal notranslate"><span class="pre">'arc_length_crisfield'</span></code>: the spherical constraint is
+solved exactly for <span class="math notranslate nohighlight">\(\delta\lambda\)</span>. With <span class="math notranslate nohighlight">\(\boldsymbol{v} = \Delta \boldsymbol{u} +
+\delta \boldsymbol{u}_R\)</span>, it is the quadratic equation</p>
+<div class="math notranslate nohighlight" id="equation-al-crisfield">
+<span class="eqno">(6)<a class="headerlink" href="#equation-al-crisfield" title="Link to this equation">#</a></span>\[a \, \delta\lambda^2 + b \, \delta\lambda + c = 0, \qquad
+a = \langle (\delta \boldsymbol{u}_q, 1), (\delta \boldsymbol{u}_q, 1) \rangle, \quad
+b = 2 \langle (\boldsymbol{v}, \Delta\lambda), (\delta \boldsymbol{u}_q, 1) \rangle, \quad
+c = \langle (\boldsymbol{v}, \Delta\lambda), (\boldsymbol{v}, \Delta\lambda) \rangle - \Delta s^2\]</div>
+<p>whose roots, computed as <span class="math notranslate nohighlight">\(q/a\)</span> and <span class="math notranslate nohighlight">\(c/q\)</span> with <span class="math notranslate nohighlight">\(q = -\frac{1}{2}(b +
+\mathrm{sign}(b) \sqrt{b^2 - 4 a c})\)</span> to avoid cancellation, give two
+new increments of the length <span class="math notranslate nohighlight">\(\Delta s\)</span>. The root whose increment makes
+the smallest angle with the current one, i.e. the largest inner product,
+is chosen, which avoids the “doubling back” along the path already
+traced (Crisfield 1981, p. 56). When the roots are complex, the
+linearized constraint <a class="reference internal" href="#equation-al-riks">(5)</a> is used for that iteration.</p>
+</li>
+</ul>
+<p>The convergence criterion is that of the Newton-Raphson method, see
+<a class="reference internal" href="convergence_criteria.html"><span class="doc">Convergence criteria</span></a>, at the current load factor <span class="math notranslate nohighlight">\(\lambda +
+\Delta\lambda\)</span>, with the external force vector of the increment,
+<span class="math notranslate nohighlight">\(\Delta\lambda \boldsymbol{F}_{ext}\)</span>, as an additional reference, which keeps the
+criterion meaningful where the path crosses a null load. The step also
+fails when <span class="math notranslate nohighlight">\(\delta\lambda\)</span> cannot be computed or is not finite, when the
+divergence checks of <a class="reference internal" href="newton_raphson_method.html"><span class="doc">The Newton-Raphson method</span></a> stop the iterations, and
+when the converged increment points against the tangent predictor of the
+step, <span class="math notranslate nohighlight">\(\langle (\Delta \boldsymbol{u}, \Delta\lambda), (\Delta \boldsymbol{u}_{pred},
+\Delta\lambda_{pred}) \rangle \le 0\)</span>: the previous converged point is also
+at the distance <span class="math notranslate nohighlight">\(\Delta s\)</span> from the last one, and with long steps or near a
+limit point the iterations may converge to it. The accepted points are
+thus on the side of the predictor of the hyperplane normal to it through
+the last converged point, as the points of the plane of Riks.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">an.modified_NR</span> <span class="pre">=</span> <span class="pre">True</span></code>, the factorization of the tangent at the
+last converged point is used for the first <code class="docutils literal notranslate"><span class="pre">an.compute_every_n</span></code>
+iterations and the tangent is then updated every <code class="docutils literal notranslate"><span class="pre">an.compute_every_n</span></code>
+iterations; with <code class="docutils literal notranslate"><span class="pre">an.kT_initial_state</span> <span class="pre">=</span> <span class="pre">False</span></code>, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> replaces
+the tangent of the initial state at the first step.</p>
+</section>
+<section id="step-length-and-termination">
+<h2>Step length and termination<a class="headerlink" href="#step-length-and-termination" title="Link to this heading">#</a></h2>
+<p>After each converged step, the arc length is multiplied by
+<span class="math notranslate nohighlight">\(\sqrt{I_d/n_{it}}\)</span>, with <span class="math notranslate nohighlight">\(n_{it}\)</span> the number of corrections of the step
+and <span class="math notranslate nohighlight">\(I_d\)</span> = <code class="docutils literal notranslate"><span class="pre">DESIRED_NUM_ITER</span></code> <span class="math notranslate nohighlight">\(= 4\)</span>, bounded by <code class="docutils literal notranslate"><span class="pre">MIN_GROWTH_FACTOR</span></code>
+<span class="math notranslate nohighlight">\(= 0.5\)</span> and <code class="docutils literal notranslate"><span class="pre">MAX_GROWTH_FACTOR</span></code> <span class="math notranslate nohighlight">\(= 1.5\)</span>, at most 1 after a step that was
+repeated, and limited by the larger of <code class="docutils literal notranslate"><span class="pre">an.maxInc</span></code> and the first arc
+length. The square root is the rule of Ramm (1981, p. 76), who found that
+the ratio <span class="math notranslate nohighlight">\(I_d/n_{it}\)</span> itself, used by Crisfield (1981, Eq. (15)), makes
+the number of iterations oscillate from step to step. A step that fails is
+repeated from the same converged point and predictor direction with the
+arc length multiplied by <code class="docutils literal notranslate"><span class="pre">INC_CUT_FACTOR</span></code> <span class="math notranslate nohighlight">\(= 0.5\)</span>.</p>
+<p>When a converged step crosses the load factor 1.0, from <span class="math notranslate nohighlight">\(\lambda &lt; 1\)</span> to
+<span class="math notranslate nohighlight">\(\lambda + \Delta\lambda &gt; 1\)</span>, it is replaced by Newton-Raphson iterations
+at <span class="math notranslate nohighlight">\(\lambda = 1\)</span> exactly, from the predictor <span class="math notranslate nohighlight">\(t \Delta \boldsymbol{u}\)</span> with <span class="math notranslate nohighlight">\(t = (1
+- \lambda)/\Delta\lambda\)</span>; when they do not converge, the step is repeated
+with a shorter arc length. The analysis stops when the load factor 1.0 is
+reached, when the cumulative arc length reaches <code class="docutils literal notranslate"><span class="pre">an.maxArcLength</span></code>, 18 by
+default, when the arc length falls below <code class="docutils literal notranslate"><span class="pre">an.minInc</span></code>, after
+<code class="docutils literal notranslate"><span class="pre">MAX_NUM_STEPS</span></code> <span class="math notranslate nohighlight">\(= 1000\)</span> converged steps, or when the tangent stiffness
+matrix at the last converged point is singular. A path whose load factor never reaches 1.0, e.g. the
+post-buckling path of a structure whose load is beyond its limit load and
+does not recover, ends at <code class="docutils literal notranslate"><span class="pre">an.maxArcLength</span></code>: the attribute bounds the
+length of the path traced.</p>
+</section>
+<section id="choice-between-the-two-methods">
+<h2>Choice between the two methods<a class="headerlink" href="#choice-between-the-two-methods" title="Link to this heading">#</a></h2>
+<p>Both methods trace the same path, with the same predictor, step control
+and convergence criterion. Riks’ method is Newton’s method on the
+augmented system, with quadratic convergence and a linear equation for
+<span class="math notranslate nohighlight">\(\delta\lambda\)</span> that always has a solution while its denominator is not
+null. Crisfield’s method keeps the iterates on the sphere of radius
+<span class="math notranslate nohighlight">\(\Delta s\)</span> and needs the choice between two roots, with the fall-back to
+the linearized constraint when they are complex. <code class="docutils literal notranslate"><span class="pre">tests/test_solver_arc_length.py</span></code>
+checks both on analytic problems with exact tangents: the limit points of
+the shallow von Mises truss, snap-through and snap-back, the quadratic
+convergence, the step cutting, the modified Newton-Raphson, the landing on
+the load factor 1.0, the independence of the units of forces and
+displacements, and a sharp peak and complex roots;
+<code class="docutils literal notranslate"><span class="pre">tests/test_solver_arc_length_fung_kaplan.py</span></code> traces the snap-through of
+the low sinusoidal arch of Fung and Kaplan (1952) through both limit
+points with <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> elements.</p>
+</section>
+<section id="loads-that-depend-on-the-configuration-or-on-the-load-factor">
+<h2>Loads that depend on the configuration or on the load factor<a class="headerlink" href="#loads-that-depend-on-the-configuration-or-on-the-load-factor" title="Link to this heading">#</a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> declares <code class="docutils literal notranslate"><span class="pre">c</span></code>, <span class="math notranslate nohighlight">\(\boldsymbol{q}\)</span> in the predictor and in the
+bordered system is the load vector of the current configuration,
+<code class="docutils literal notranslate"><span class="pre">calc_fext(inc=1.,</span> <span class="pre">c=c)</span></code>, i.e. <span class="math notranslate nohighlight">\(-\partial \boldsymbol{R}/\partial \lambda\)</span> at the
+iterate, whereas <span class="math notranslate nohighlight">\(\boldsymbol{u}_{ref}\)</span> remains the linear solution of the
+reference vector; with it, the iterations of Riks’ method keep their
+quadratic convergence under follower loads, see
+<code class="docutils literal notranslate"><span class="pre">tests/test_solver_follower_loads.py</span></code>. When <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> also declares
+<code class="docutils literal notranslate"><span class="pre">lbd</span></code>, <span class="math notranslate nohighlight">\(\boldsymbol{q}\)</span> is evaluated at the current configuration and load
+factor, together with the tangent stiffness matrix, i.e. once per update of
+the tangent, and <span class="math notranslate nohighlight">\(\lambda \boldsymbol{q}\)</span> is an additional reference of the
+convergence criterion, see <a class="reference internal" href="configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent loads</span></a>.</p>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Crisfield, M. A., A fast incremental/iterative solution procedure that
+handles “snap-through”, Computers &amp; Structures, 13(1-3), 55-62, 1981.
+<a class="reference external" href="https://doi.org/10.1016/0045-7949(81)90108-5">https://doi.org/10.1016/0045-7949(81)90108-5</a></p></li>
+<li><p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+Structures, Volume 1: Essentials, John Wiley &amp; Sons, Chichester, 1991.</p></li>
+<li><p>Fung, Y. C. and Kaplan, A., Buckling of low arches or curved beams of
+small curvature, NACA Technical Note 2840, National Advisory Committee
+for Aeronautics, Washington, 1952.
+<a class="reference external" href="https://ntrs.nasa.gov/citations/19930083579">https://ntrs.nasa.gov/citations/19930083579</a></p></li>
+<li><p>Ramm, E., Strategies for tracing the nonlinear response near limit
+points, in: Wunderlich, W., Stein, E. and Bathe, K. J. (eds.), Nonlinear
+Finite Element Analysis in Structural Mechanics, Springer, 63-89, 1981.
+<a class="reference external" href="https://doi.org/10.1007/978-3-642-81589-8_5">https://doi.org/10.1007/978-3-642-81589-8_5</a></p></li>
+<li><p>Riks, E., An incremental approach to the solution of snapping and
+buckling problems, International Journal of Solids and Structures,
+15(7), 529-551, 1979. <a class="reference external" href="https://doi.org/10.1016/0020-7683(79)90081-7">https://doi.org/10.1016/0020-7683(79)90081-7</a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="newton_raphson_method.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">The Newton-Raphson method</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="convergence_criteria.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Convergence criteria</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-arc-length-constraint">The arc-length constraint</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#predictor">Predictor</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corrections">Corrections</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-length-and-termination">Step length and termination</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choice-between-the-two-methods">Choice between the two methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loads-that-depend-on-the-configuration-or-on-the-load-factor">Loads that depend on the configuration or on the load factor</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/arc_length_methods.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

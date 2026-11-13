@@ -1,0 +1,3 @@
+{
+    "path": "../../../notebooks/ex_nonlinear_static.ipynb"
+}

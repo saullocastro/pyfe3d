@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Linear buckling and natural frequencies &#8212; pyfe3d 0.12.0 documentation</title>
+    <title>Linear buckling and natural frequencies &#8212; pyfe3d 0.12.1 documentation</title>
   
   
   
@@ -26,19 +26,19 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
+    <script src="_static/documentation_options.js?v=c5b435e8"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,8 +48,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Linear static analysis of a plate" href="ex_linear_static.html" />
-    <link rel="prev" title="Non-linear static analyses" href="nonlinear_analyses.html" />
+    <link rel="next" title="Eigenvalue solvers and their verification" href="eigenvalue_solvers.html" />
+    <link rel="prev" title="Load- and configuration-dependent loads" href="configuration_dependent_loads.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -101,7 +101,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
   
 </a></div>
     
@@ -165,7 +165,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
-    Shell and beam properties
+    Shell properties
   </a>
 </li>
 
@@ -178,8 +178,92 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
     Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
   </a>
 </li>
 
@@ -205,6 +289,34 @@
 </li>
 
 
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
 <li class=" current active">
   <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
     Linear buckling and natural frequencies
@@ -213,64 +325,162 @@
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_static.html">
     Linear static analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_beam_frame.html">
     Linear static analysis of beams and frames
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_column.html">
     Linear buckling analysis of a column
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_plate.html">
     Natural frequency analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_nonlinear_static.html">
     Non-linear static analysis with pyfe3d.solver
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
   </a>
 </li>
 
@@ -328,14 +538,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -355,7 +565,7 @@
   
 
   
-    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -369,7 +579,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -415,7 +625,84 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
-    Shell and beam properties
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
   </a>
 </li>
 
@@ -423,6 +710,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
     Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
   </a>
 </li>
 
@@ -448,6 +742,34 @@
 </li>
 
 
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#" aria-current="page">
     Linear buckling and natural frequencies
@@ -456,64 +778,162 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_static.html">
+  <a class="nav-link nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_static.html">
     Linear static analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_beam_frame.html">
     Linear static analysis of beams and frames
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_column.html">
     Linear buckling analysis of a column
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_plate.html">
     Natural frequency analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_nonlinear_static.html">
     Non-linear static analysis with pyfe3d.solver
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
   </a>
 </li>
 
@@ -559,14 +979,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -623,7 +1043,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Linear buckling and natural frequencies</span></li>
@@ -645,292 +1065,235 @@
                   
   <section id="linear-buckling-and-natural-frequencies">
 <h1>Linear buckling and natural frequencies<a class="headerlink" href="#linear-buckling-and-natural-frequencies" title="Link to this heading">#</a></h1>
-<p>The eigenvalue analyses use the matrices of the free dofs, e.g.
-<code class="docutils literal notranslate"><span class="pre">KC0uu</span> <span class="pre">=</span> <span class="pre">KC0[bu,</span> <span class="pre">:][:,</span> <span class="pre">bu]</span></code>, and are solved with
-<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>, <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> and
-<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a> of <a class="reference internal" href="solver_eigen.html#module-pyfe3d.solver.eigen" title="pyfe3d.solver.eigen"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code></a>, which return the
-eigenvectors with the size of the matrices received, to be expanded by the
-user, <code class="docutils literal notranslate"><span class="pre">u[bu]</span> <span class="pre">=</span> <span class="pre">eigvecs[:,</span> <span class="pre">i]</span></code>.</p>
+<p>The eigenvalue analyses of pyfe3d linearize the behaviour of the structure
+about a reference state: the linear buckling analysis seeks the load
+multipliers at which the stiffness of a linear pre-buckling state vanishes,
+the natural frequency analysis the free vibrations about a state at rest,
+possibly pre-stressed, and the complex frequency analysis the free
+vibrations of a damped system. They use the free-free blocks of the
+assembled matrices, e.g. <code class="docutils literal notranslate"><span class="pre">KC0uu</span> <span class="pre">=</span> <span class="pre">KC0[bu,</span> <span class="pre">:][:,</span> <span class="pre">bu]</span></code>, see
+<a class="reference internal" href="boundary_conditions.html"><span class="doc">Boundary conditions and prescribed displacements</span></a>, and are solved with <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>,
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> and <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a> of
+<a class="reference internal" href="solver_eigen.html#module-pyfe3d.solver.eigen" title="pyfe3d.solver.eigen"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code></a>, which return the eigenvectors with the size of
+the matrices received, to be expanded by the user, <code class="docutils literal notranslate"><span class="pre">u[bu]</span> <span class="pre">=</span> <span class="pre">eigvecs[:,</span>
+<span class="pre">i]</span></code>. The algorithms that solve and verify them are described in
+<a class="reference internal" href="eigenvalue_solvers.html"><span class="doc">Eigenvalue solvers and their verification</span></a>.</p>
 <section id="linear-buckling">
 <h2>Linear buckling<a class="headerlink" href="#linear-buckling" title="Link to this heading">#</a></h2>
-<p>A linear buckling analysis has three steps:</p>
-<ol class="arabic">
-<li><p>the linear static solution <span class="math notranslate nohighlight">\(\boldsymbol{u}_0\)</span> of a reference load <span class="math notranslate nohighlight">\(\boldsymbol{F}_{ref}\)</span>,
-<span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_{0_u} = \boldsymbol{F}_{{ref}_u}\)</span>, see <a class="reference internal" href="overview.html"><span class="doc">Overview and workflow</span></a>;</p></li>
-<li><p>the geometric stiffness matrix of the prestress of <span class="math notranslate nohighlight">\(\boldsymbol{u}_0\)</span>: for each
-element, <code class="docutils literal notranslate"><span class="pre">update_probe_xe(x)</span></code>, <code class="docutils literal notranslate"><span class="pre">update_probe_ue(u0)</span></code> and
-<code class="docutils literal notranslate"><span class="pre">update_KG(KGr,</span> <span class="pre">KGc,</span> <span class="pre">KGv,</span> <span class="pre">prop)</span></code>. For the shells, a known constant
-membrane state can be given instead with <code class="docutils literal notranslate"><span class="pre">update_KG_given_stress(Nxx,</span>
-<span class="pre">Nyy,</span> <span class="pre">Nxy,</span> <span class="pre">KGr,</span> <span class="pre">KGc,</span> <span class="pre">KGv)</span></code>, with the stress resultants in the element
-coordinate system of each element, see <a class="reference internal" href="conventions.html"><span class="doc">Conventions</span></a>;</p></li>
-<li><p>the eigenvalue problem</p>
-<div class="math notranslate nohighlight">
-\[(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}\]</div>
-<p>solved by <code class="docutils literal notranslate"><span class="pre">eigvals,</span> <span class="pre">eigvecs</span> <span class="pre">=</span> <span class="pre">linear_buckling(KC0uu,</span> <span class="pre">KGuu,</span>
-<span class="pre">num_eigvalues=...)</span></code>.</p>
-</li>
+<p>At a stable equilibrium the second variation of the total potential energy
+is positive for every variation of the configuration; the neutral
+equilibrium criterion, <span class="math notranslate nohighlight">\(\delta^2 V = \delta \boldsymbol{u}^\top \boldsymbol{K}_T \,
+\delta \boldsymbol{u} = 0\)</span> for at least one <span class="math notranslate nohighlight">\(\delta \boldsymbol{u} \ne \boldsymbol{0}\)</span>, marks
+the loss of stability, where the tangent stiffness matrix of
+<a class="reference internal" href="nonlinear_analyses.html"><span class="doc">Non-linear static analyses</span></a> becomes singular. The linear buckling analysis
+takes a linear pre-buckling state: the solution <span class="math notranslate nohighlight">\(\boldsymbol{u}_0\)</span> of the linear
+static system of a reference load, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} \boldsymbol{u}_0 =
+\boldsymbol{F}_{ext}\)</span>, with the pre-buckling rotations neglected, such that
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL} = \boldsymbol{0}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{K}_{GNL} = \boldsymbol{0}\)</span>. The geometric
+stiffness matrix of that state, <code class="docutils literal notranslate"><span class="pre">KG</span></code>, is linear in its stresses, hence in
+the load, and the tangent stiffness matrix along the pre-buckling path is
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G\)</span>. It is singular at the load multipliers
+of</p>
+<div class="math notranslate nohighlight" id="equation-ev-buckling">
+<span class="eqno">(1)<a class="headerlink" href="#equation-ev-buckling" title="Link to this equation">#</a></span>\[(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}\]</div>
+<p>whose lowest positive eigenvalue <span class="math notranslate nohighlight">\(\lambda_1\)</span> gives the critical load
+<span class="math notranslate nohighlight">\(\lambda_1 \boldsymbol{F}_{ext}\)</span> and whose eigenvector is the buckling mode. The
+analysis has three steps:</p>
+<ol class="arabic simple">
+<li><p>the linear static solution <span class="math notranslate nohighlight">\(\boldsymbol{u}_0\)</span> of the reference load, see
+<a class="reference internal" href="linear_analyses.html"><span class="doc">Linear static analyses</span></a>;</p></li>
+<li><p>the geometric stiffness matrix of <span class="math notranslate nohighlight">\(\boldsymbol{u}_0\)</span>: for each element,
+<code class="docutils literal notranslate"><span class="pre">update_probe_xe(x)</span></code>, <code class="docutils literal notranslate"><span class="pre">update_probe_ue(u0)</span></code> and <code class="docutils literal notranslate"><span class="pre">update_KG(KGr,</span>
+<span class="pre">KGc,</span> <span class="pre">KGv,</span> <span class="pre">prop)</span></code>; for the shells, a known constant membrane state can
+be given instead with <code class="docutils literal notranslate"><span class="pre">update_KG_given_stress(Nxx,</span> <span class="pre">Nyy,</span> <span class="pre">Nxy,</span> <span class="pre">KGr,</span> <span class="pre">KGc,</span>
+<span class="pre">KGv)</span></code>, with the stress resultants in the element coordinate system of
+each element, see <a class="reference internal" href="conventions.html"><span class="doc">Conventions</span></a>;</p></li>
+<li><p>the eigenvalue problem <a class="reference internal" href="#equation-ev-buckling">(1)</a> of the free dofs,
+<code class="docutils literal notranslate"><span class="pre">eigvals,</span> <span class="pre">eigvecs</span> <span class="pre">=</span> <span class="pre">linear_buckling(KC0uu,</span> <span class="pre">KGuu,</span> <span class="pre">num_eigvalues=...)</span></code>.</p></li>
 </ol>
-<p><span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span> is linear in <span class="math notranslate nohighlight">\(\boldsymbol{u}_0\)</span>, hence in the reference load, and the
-critical load is <span class="math notranslate nohighlight">\(\lambda_1 \boldsymbol{F}_{ref}\)</span>, with <span class="math notranslate nohighlight">\(\lambda_1\)</span> = <code class="docutils literal notranslate"><span class="pre">eigvals[0]</span></code>.
-<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> returns the positive load multipliers first, in
+<p><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> returns the positive load multipliers first, in
 increasing order, followed, when fewer than <code class="docutils literal notranslate"><span class="pre">num_eigvalues</span></code> positive ones
 exist, by the negative ones closest to zero, which are the critical load
-multipliers of the reversed reference load. A load that is not scaled by
-<span class="math notranslate nohighlight">\(\lambda\)</span>, e.g. a preload with the geometric stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{G0}\)</span>,
-belongs to the first matrix, <code class="docutils literal notranslate"><span class="pre">linear_buckling(KC0uu</span> <span class="pre">+</span> <span class="pre">KG0uu,</span> <span class="pre">KGuu)</span></code>,
-which is also how the critical value of one load component is found under
-the other components kept constant.</p>
-<p>The beams have <code class="docutils literal notranslate"><span class="pre">update_KG</span></code> for the axial force of the prestress, see
-<code class="docutils literal notranslate"><span class="pre">tests/test_beam_linear_buckling_3D_column.py</span></code>; <a class="reference internal" href="truss.html#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> and
-<a class="reference internal" href="spring.html#pyfe3d.spring.Spring" title="pyfe3d.spring.Spring"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spring</span></code></a> have no geometric stiffness matrix. Both beams take the
-slopes <span class="math notranslate nohighlight">\(v_{,x}\)</span> and <span class="math notranslate nohighlight">\(w_{,x}\)</span> of their geometric stiffness matrices from the
-interpolations of <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(w\)</span>, such that the buckling load includes the
-reduction due to shear deformation, Eq. (2-57) of Timoshenko, S. P. and
-Gere, J. M., Theory of Elastic Stability, 2nd ed., McGraw-Hill, 1961, Sec.
-2.17, p. 133; up to version 0.11 <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a> took them from the rotations
-and its buckling load converged to the Euler load whatever the shear
-stiffness, see the Notes of <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a>.</p>
-<p>The geometric stiffness matrices of <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> and <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>
-integrate the membrane stress resultants with two-by-two quadrature.
-<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>, and <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> or
-<code class="docutils literal notranslate"><span class="pre">centroid_slopes</span> <span class="pre">=</span> <span class="pre">1</span></code>, take the slopes of <span class="math notranslate nohighlight">\(w\)</span> at the centroid of the
-element, where the constant part of the transverse shear of
-<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>, and the transverse shear of the thin <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>
-elements with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, are sampled. The hourglass pattern of
-<span class="math notranslate nohighlight">\(w\)</span>, alternating in sign from node to node with zero rotations, which the
-shear sampled there does not resist, then has no geometric stiffness
-either. With the one-point transverse shear and the slopes at the
-two-by-two points, as up to version 0.11, that pattern could give a
-spurious buckling mode below the physical load when the transverse shear
-stiffness is low compared with the bending stiffness, e.g. in sandwich
-plates, and in thin laminated cylinders under axial compression once the
-mesh is fine: the buckling load of the cylinder Z22 of Castro et al. (2014)
-fell to a sixth of its value with 480 elements around the circumference.
-The default <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>, whose assumed transverse shear strains of the
-MITC4 element resist the pattern, takes the slopes at the two-by-two
-points, which integrate the geometric stiffness of smooth modes more
-accurately, without that spurious mode: the cylinder Z22 converges to
-within 0.3 % of the 35.27 kN of that paper, Fig. 6(c), with both rules,
-see <code class="docutils literal notranslate"><span class="pre">tests/test_quad4_linear_buckling_cylinder_displ.py</span></code>, and a plate
-with 5 elements per half-wave buckles 4.3 % above the exact load with the
-default and 6.8 % with the slopes at the centroid. See the Notes of
-<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4.update_KG" title="pyfe3d.quad4.Quad4.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4.update_KG()</span></code></a> and <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_KG()</span></code></a>.</p>
-<p>For a warped quadrilateral, the rigid offsets of <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code>, the
-default, enter <code class="docutils literal notranslate"><span class="pre">KC0</span></code>, <code class="docutils literal notranslate"><span class="pre">M</span></code> and <code class="docutils literal notranslate"><span class="pre">KG</span></code>, which adds the eccentricity
-geometric stiffness of the offsets on the rotations of each node, see
-<a class="reference internal" href="element_choice.html"><span class="doc">Choosing an element</span></a>. Without them, warped meshes are too stiff in
-buckling and vibration as well: in the twisted beam of MacNeal and Harder
-(1985), Fig. 6, <a class="reference external" href="https://doi.org/10.1016/0168-874X(85)90003-4">doi:10.1016/0168-874X(85)90003-4</a>, under an axial tip load, against a 96x16 <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> mesh with
-the offsets, the linear buckling load of 12x2, 24x4 and 48x8 elements is
-+0.00, +0.01 and +0.01 % off with the offsets and +366, +102 and +26 %
-without them (<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>), +1.2, +0.4 and +0.1 % against +329, +101
-and +27 % (<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>), and the first natural frequency of 12x2
-elements +0.07 and +0.13 % against +40 %, see <a class="reference internal" href="changelog.html"><span class="doc">Changelog</span></a>, version
-0.12.0.</p>
+multipliers of the reversed reference load: a tensile reference load, which
+has no positive multiplier, thus gives the critical multipliers of the
+compressive one. The infinite load multipliers, e.g. of dofs where <code class="docutils literal notranslate"><span class="pre">KG</span></code>
+has null rows, are discarded by the sparse solvers of symmetric matrices,
+and returned as <code class="docutils literal notranslate"><span class="pre">-inf</span></code>, last, by the dense solvers.</p>
+<p><strong>Preloads and combined loads.</strong> A load that is not scaled by <span class="math notranslate nohighlight">\(\lambda\)</span>,
+e.g. a preload with the geometric stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{G0}\)</span>, belongs
+to the first matrix, since the geometric stiffness matrix is linear in the
+stresses and the stresses of a linear pre-buckling state add up:</p>
+<div class="math notranslate nohighlight" id="equation-ev-preload">
+<span class="eqno">(2)<a class="headerlink" href="#equation-ev-preload" title="Link to this equation">#</a></span>\[(\boldsymbol{K}_{C0} + \boldsymbol{K}_{G0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}\]</div>
+<p>solved with <code class="docutils literal notranslate"><span class="pre">linear_buckling(KC0uu</span> <span class="pre">+</span> <span class="pre">KG0uu,</span> <span class="pre">KGuu)</span></code>, which is how the
+critical value of one load component is found with the other components
+kept constant, e.g. the compressive load of a panel under a given shear
+load. A preload beyond its own buckling load makes the first matrix
+indefinite, which <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> reports, see
+<a class="reference internal" href="eigenvalue_solvers.html"><span class="doc">Eigenvalue solvers and their verification</span></a>.</p>
+<p><strong>Elements.</strong> The beams have <code class="docutils literal notranslate"><span class="pre">update_KG</span></code> for the axial force of the
+pre-buckling state and take the slopes of their geometric stiffness
+matrices from the interpolations of the transverse displacements, such that
+the buckling load includes the reduction due to shear deformation, Eq.
+(2-57) of Timoshenko and Gere (1961, Sec. 2.17, p. 133), see
+<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> and <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a>; <a class="reference internal" href="truss.html#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> and <a class="reference internal" href="spring.html#pyfe3d.spring.Spring" title="pyfe3d.spring.Spring"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spring</span></code></a>
+have no geometric stiffness matrix. The integration of the geometric
+stiffness matrices of the shells, the slopes at the centroid of the
+elements with reduced transverse shear and the eccentricity term of the
+rigid offsets of warped quadrilaterals are described with each element, see
+<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4.update_KG" title="pyfe3d.quad4.Quad4.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4.update_KG()</span></code></a>, <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_KG()</span></code></a> and
+<a class="reference internal" href="element_choice.html"><span class="doc">Choosing an element</span></a>.</p>
+<p><strong>Limits.</strong> The linear pre-buckling state neglects the pre-buckling
+rotations and the change of the stresses along the path. The critical load
+is that of a bifurcation from the linear path; a structure whose
+pre-buckling path is markedly non-linear, or that is sensitive to
+imperfections, has a limit load that is traced with the non-linear
+analyses of <a class="reference internal" href="nonlinear_analyses.html"><span class="doc">Non-linear static analyses</span></a> and <a class="reference internal" href="arc_length_methods.html"><span class="doc">Arc-length methods</span></a>. A
+geometric stiffness matrix built at a converged non-linear state,
+<code class="docutils literal notranslate"><span class="pre">calc_kG(c,</span> <span class="pre">NLgeom=True)</span></code>, linearizes the stability about that state
+instead.</p>
+</section>
+<section id="follower-loads-and-flutter">
+<h2>Follower loads and flutter<a class="headerlink" href="#follower-loads-and-flutter" title="Link to this heading">#</a></h2>
+<p>With a configuration-dependent load, the load stiffness matrix of the
+reference load, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{F_{ref}}\)</span>, see
+<a class="reference internal" href="configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent loads</span></a>, adds to the geometric stiffness
+matrix:</p>
+<div class="math notranslate nohighlight" id="equation-ev-follower">
+<span class="eqno">(3)<a class="headerlink" href="#equation-ev-follower" title="Link to this equation">#</a></span>\[\left(\boldsymbol{K}_{C0} + \lambda (\boldsymbol{K}_G + \boldsymbol{K}_{F_{ref}})\right) \boldsymbol{u} = \boldsymbol{0}\]</div>
+<p>an unsymmetric problem when <span class="math notranslate nohighlight">\(\boldsymbol{K}_{F_{ref}}\)</span> is, whose load multipliers
+may be complex; <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> detects the unsymmetric matrices
+and uses its solvers of unsymmetric matrices, which find the lowest
+positive real load multiplier, the divergence load. A non-conservative
+system may lose its stability by flutter, a dynamic instability that this
+static criterion does not detect: Ziegler’s double pendulum under a
+follower force has no finite load multiplier, its stiffness matrix being
+singular for no value of the load, and loses its stability by flutter, see
+<code class="docutils literal notranslate"><span class="pre">tests/test_solver_linear_buckling.py</span></code>. Its stability is studied with the
+dynamic method below. For a uniform pressure on a closed surface, or on a
+surface whose edges satisfy the conditions of
+<a class="reference internal" href="configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent loads</span></a>, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{F_{ref}}\)</span> is symmetric and
+the static criterion applies.</p>
 </section>
 <section id="natural-frequencies">
 <h2>Natural frequencies<a class="headerlink" href="#natural-frequencies" title="Link to this heading">#</a></h2>
-<p>The frequency problem</p>
-<div class="math notranslate nohighlight">
-\[(\boldsymbol{K} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}\]</div>
-<p>is solved by <code class="docutils literal notranslate"><span class="pre">omegan,</span> <span class="pre">eigvecs</span> <span class="pre">=</span> <span class="pre">natural_frequency(Kuu,</span> <span class="pre">Muu,</span>
-<span class="pre">num_eigvalues=...)</span></code>, which returns the circular frequencies <span class="math notranslate nohighlight">\(\omega_n\)</span>,
-in rad/s with consistent units, in increasing order. <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> is
-<span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, plus the geometric stiffness matrix of a prestress when it
-applies, e.g. <code class="docutils literal notranslate"><span class="pre">KC0uu</span> <span class="pre">+</span> <span class="pre">KGuu</span></code>, see
-<code class="docutils literal notranslate"><span class="pre">tests/test_quad4r_natural_freq_pre_stress.py</span></code>. The mass matrix is
-assembled with <code class="docutils literal notranslate"><span class="pre">update_M</span></code>, whose <code class="docutils literal notranslate"><span class="pre">mtype</span></code> selects the mass matrix of
-each element, see <a class="reference internal" href="element_choice.html"><span class="doc">Choosing an element</span></a>.</p>
-<p>With an unsymmetric <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>, e.g. with the aerodynamic stiffness matrix of
-the piston theory or the load stiffness of a follower load, the
-frequencies may become complex; <code class="docutils literal notranslate"><span class="pre">omegan</span></code> is then the principal square
-root of the complex eigenvalues. Two frequencies that coalesce and become
-complex indicate the loss of stability by flutter, which
-<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> does not detect: this is the dynamic method of
-Bolotin (1963), see <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>.</p>
-<p><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> solves the undamped problem.</p>
+<p>The free vibrations <span class="math notranslate nohighlight">\(\boldsymbol{u} \sin(\omega_n t)\)</span> about a state at rest give
+the generalized eigenvalue problem</p>
+<div class="math notranslate nohighlight" id="equation-ev-frequency">
+<span class="eqno">(4)<a class="headerlink" href="#equation-ev-frequency" title="Link to this equation">#</a></span>\[(\boldsymbol{K} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}\]</div>
+<p>solved by <code class="docutils literal notranslate"><span class="pre">omegan,</span> <span class="pre">eigvecs</span> <span class="pre">=</span> <span class="pre">natural_frequency(Kuu,</span> <span class="pre">Muu,</span>
+<span class="pre">num_eigvalues=...)</span></code>, which returns the circular frequencies <span class="math notranslate nohighlight">\(\omega_n\)</span>, in
+rad/s with consistent units, in increasing order. <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> is
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, plus the geometric stiffness matrix of a pre-stress when it
+applies, e.g. <code class="docutils literal notranslate"><span class="pre">KC0uu</span> <span class="pre">+</span> <span class="pre">KGuu</span></code>: a compressive pre-stress lowers the
+frequencies, and the lowest one vanishes at the critical load multiplier of
+<a class="reference internal" href="#equation-ev-buckling">(1)</a>, see <code class="docutils literal notranslate"><span class="pre">tests/test_solver_natural_frequency.py</span></code>. A
+pre-stress beyond the buckling load gives negative <span class="math notranslate nohighlight">\(\omega_n^2\)</span>, returned as
+null frequencies. The mass matrix is assembled with <code class="docutils literal notranslate"><span class="pre">update_M</span></code>, whose
+<code class="docutils literal notranslate"><span class="pre">mtype</span></code> selects the consistent, lumped or reduced-integration mass matrix
+of each element, see <a class="reference internal" href="element_choice.html"><span class="doc">Choosing an element</span></a>. A lumped mass matrix without
+rotary inertia is singular: its massless dofs have infinite eigenvalues,
+which the solvers, seeking the lowest ones, are not troubled by, but which
+the lumped matrix places where its factorization puts them, so a consistent
+mass matrix is preferable when the lowest frequencies matter. The
+unconstrained rigid-body modes of a free structure give null frequencies.</p>
+<p><strong>Dynamic stability.</strong> With <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> the tangent stiffness matrix at a
+load level, including the load stiffness of a follower load, e.g. with the
+aerodynamic stiffness matrix of the piston theory, <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> is
+unsymmetric and the eigenvalues <span class="math notranslate nohighlight">\(\omega_n^2\)</span> may become complex; <code class="docutils literal notranslate"><span class="pre">omegan</span></code>
+is then the principal square root of the complex eigenvalues. Below the
+flutter load the <span class="math notranslate nohighlight">\(\omega_n^2\)</span> are real and positive; at the flutter load two
+frequencies coalesce, a double root of the frequency equation, and above it
+they become a complex conjugate pair, one of which corresponds to a growing
+motion. This is the dynamic method of Bolotin (1963, Introduction, Secs. 6
+and 7, pp. 12-17), where <span class="math notranslate nohighlight">\(\omega_n\)</span> is the frequency <span class="math notranslate nohighlight">\(\Omega\)</span> of the
+characteristic exponent <span class="math notranslate nohighlight">\(s = i\Omega\)</span>; a real negative <span class="math notranslate nohighlight">\(\omega_n^2\)</span>, i.e. a
+real positive <span class="math notranslate nohighlight">\(s\)</span>, indicates divergence (p. 17). The flutter load of
+Ziegler’s double pendulum and the frequencies below it are checked against
+their analytical values in <code class="docutils literal notranslate"><span class="pre">tests/test_solver_natural_frequency.py</span></code>.</p>
 </section>
 <section id="damped-frequencies">
 <h2>Damped frequencies<a class="headerlink" href="#damped-frequencies" title="Link to this heading">#</a></h2>
-<p>With a damping matrix <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>, the free vibrations <span class="math notranslate nohighlight">\(\boldsymbol{u} e^{\lambda t}\)</span>
-give the quadratic eigenvalue problem</p>
-<div class="math notranslate nohighlight">
-\[(\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}\]</div>
+<p>With a damping matrix <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>, the free vibrations <span class="math notranslate nohighlight">\(\boldsymbol{u} e^{\lambda
+t}\)</span> of <span class="math notranslate nohighlight">\(\boldsymbol{M} \ddot{\boldsymbol{q}} + \boldsymbol{C} \dot{\boldsymbol{q}} + \boldsymbol{K}
+\boldsymbol{q} = \boldsymbol{0}\)</span> give the quadratic eigenvalue problem</p>
+<div class="math notranslate nohighlight" id="equation-ev-qep">
+<span class="eqno">(5)<a class="headerlink" href="#equation-ev-qep" title="Link to this equation">#</a></span>\[(\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}\]</div>
 <p>solved by <code class="docutils literal notranslate"><span class="pre">eigvals,</span> <span class="pre">eigvecs</span> <span class="pre">=</span> <span class="pre">complex_frequency(Kuu,</span> <span class="pre">Cuu,</span> <span class="pre">Muu,</span>
-<span class="pre">num_eigvalues=...)</span></code>, which returns the complex eigenvalues <span class="math notranslate nohighlight">\(\lambda\)</span>,
-one per complex conjugate pair, with <span class="math notranslate nohighlight">\(Im(\lambda) \ge 0\)</span>, and the complex
-eigenvectors. The damped circular frequency is <span class="math notranslate nohighlight">\(\omega_d = |Im(\lambda)|\)</span>,
-<code class="docutils literal notranslate"><span class="pre">abs(eigvals.imag)</span></code>, the damping ratio <span class="math notranslate nohighlight">\(\zeta = -Re(\lambda)/|\lambda|\)</span>,
-<code class="docutils literal notranslate"><span class="pre">-eigvals.real/abs(eigvals)</span></code>, and a positive <span class="math notranslate nohighlight">\(Re(\lambda)\)</span> is a growing
-motion. With <span class="math notranslate nohighlight">\(\boldsymbol{C} = \boldsymbol{0}\)</span>, <span class="math notranslate nohighlight">\(\lambda = i \omega_n\)</span>, with the <span class="math notranslate nohighlight">\(\omega_n\)</span> of
-<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>.</p>
+<span class="pre">num_eigvalues=...)</span></code>, which returns the complex eigenvalues <span class="math notranslate nohighlight">\(\lambda\)</span>, one
+per complex conjugate pair, with <span class="math notranslate nohighlight">\(\mathrm{Im}(\lambda) \ge 0\)</span>, and the
+complex eigenvectors. With <span class="math notranslate nohighlight">\(\lambda = -\zeta \omega_n \pm i \omega_d\)</span>, the
+damped circular frequency is <span class="math notranslate nohighlight">\(\omega_d = |\mathrm{Im}(\lambda)|\)</span>,
+<code class="docutils literal notranslate"><span class="pre">abs(eigvals.imag)</span></code>, and the damping ratio <span class="math notranslate nohighlight">\(\zeta =
+-\mathrm{Re}(\lambda)/|\lambda|\)</span>, <code class="docutils literal notranslate"><span class="pre">-eigvals.real/abs(eigvals)</span></code>: a single
+dof, <span class="math notranslate nohighlight">\(m \lambda^2 + c \lambda + k = 0\)</span>, has the roots <span class="math notranslate nohighlight">\(\lambda = -\zeta
+\omega_n \pm i \omega_n \sqrt{1 - \zeta^2}\)</span> for <span class="math notranslate nohighlight">\(\zeta &lt; 1\)</span>, with <span class="math notranslate nohighlight">\(\omega_n
+= \sqrt{k/m} = |\lambda|\)</span> and <span class="math notranslate nohighlight">\(\zeta = c/(2\sqrt{k m})\)</span>. A real <span class="math notranslate nohighlight">\(\lambda\)</span>,
+e.g. of an overdamped mode, gives <span class="math notranslate nohighlight">\(\omega_d = 0\)</span>, and a positive
+<span class="math notranslate nohighlight">\(\mathrm{Re}(\lambda)\)</span> a growing motion, i.e. an unstable system, by
+flutter when <span class="math notranslate nohighlight">\(\lambda\)</span> is complex. With <span class="math notranslate nohighlight">\(\boldsymbol{C} = \boldsymbol{0}\)</span>, <span class="math notranslate nohighlight">\(\lambda = i
+\omega_n\)</span>, with the <span class="math notranslate nohighlight">\(\omega_n\)</span> of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>. This
+<span class="math notranslate nohighlight">\(\zeta\)</span> is not the <span class="math notranslate nohighlight">\(\zeta\)</span> of the convergence criterion of the non-linear
+analyses.</p>
 <p>The damping matrix is assembled by the user, e.g. Rayleigh damping
-<span class="math notranslate nohighlight">\(\boldsymbol{C} = \alpha \boldsymbol{M} + \beta \boldsymbol{K}\)</span>, or the aerodynamic damping of the piston
-theory, <code class="docutils literal notranslate"><span class="pre">Cuu</span> <span class="pre">=</span> <span class="pre">-mu*CAuu</span></code> with <code class="docutils literal notranslate"><span class="pre">update_CA</span></code> of <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> and
-<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>, with the aerodynamic stiffness in <code class="docutils literal notranslate"><span class="pre">Kuu</span> <span class="pre">=</span> <span class="pre">KC0uu</span> <span class="pre">-</span>
-<span class="pre">beta*KA_betauu</span> <span class="pre">-</span> <span class="pre">gamma*KA_gammauu</span></code>, see <code class="docutils literal notranslate"><span class="pre">update_KA_beta</span></code>. A flutter
-analysis then follows the largest <span class="math notranslate nohighlight">\(Re(\lambda)\)</span> over the flow speed: the
-aerodynamic damping moves the flutter onset beyond the coalescence of the
-frequencies of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>, see
-<code class="docutils literal notranslate"><span class="pre">tests/test_quad4_piston_theory.py</span></code>.</p>
+<span class="math notranslate nohighlight">\(\boldsymbol{C} = \alpha \boldsymbol{M} + \beta \boldsymbol{K}\)</span>, or the aerodynamic damping of
+the piston theory, <code class="docutils literal notranslate"><span class="pre">Cuu</span> <span class="pre">=</span> <span class="pre">-mu*CAuu</span></code> with <code class="docutils literal notranslate"><span class="pre">update_CA</span></code> of <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>
+and <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>, together with the aerodynamic stiffness in <code class="docutils literal notranslate"><span class="pre">Kuu</span> <span class="pre">=</span>
+<span class="pre">KC0uu</span> <span class="pre">-</span> <span class="pre">beta*KA_betauu</span> <span class="pre">-</span> <span class="pre">gamma*KA_gammauu</span></code>, see <code class="docutils literal notranslate"><span class="pre">update_KA_beta</span></code>. A
+flutter analysis then follows the largest <span class="math notranslate nohighlight">\(\mathrm{Re}(\lambda)\)</span> over the
+flow speed: the aerodynamic damping moves the flutter onset beyond the
+coalescence of the frequencies of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>, see
+<code class="docutils literal notranslate"><span class="pre">tests/test_quad4_piston_theory.py</span></code>. <code class="docutils literal notranslate"><span class="pre">C</span></code> may also contain gyroscopic
+terms; <code class="docutils literal notranslate"><span class="pre">K</span></code>, <code class="docutils literal notranslate"><span class="pre">C</span></code> and <code class="docutils literal notranslate"><span class="pre">M</span></code> may be unsymmetric.</p>
 </section>
-<section id="verification-and-dense-fallback">
-<h2>Verification and dense fallback<a class="headerlink" href="#verification-and-dense-fallback" title="Link to this heading">#</a></h2>
-<p>The three functions check that <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> has no null row or column, a dof
-without stiffness, which raises a <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> naming
-the dofs, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>, whereas <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span> and
-<span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span> may have null rows, e.g. a lumped mass matrix without rotary
-inertia. They equilibrate the diagonal of the matrices with
-<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.diagonal_preconditioner" title="pyfe3d.solver.eigen.diagonal_preconditioner"><code class="xref py py-func docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a>, which does not change the eigenvalues,
-and <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> and <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> select the
-solvers of symmetric or unsymmetric matrices with <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.is_symmetric" title="pyfe3d.solver.sparseutils.is_symmetric"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_symmetric()</span></code></a>.
-Then:</p>
+<section id="choice-of-the-analysis">
+<h2>Choice of the analysis<a class="headerlink" href="#choice-of-the-analysis" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Question</p></th>
+<th class="head"><p>Analysis</p></th>
+<th class="head"><p>Remarks</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>critical load of a conservative load, linear pre-buckling state</p></td>
+<td><p><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>, Eq. <a class="reference internal" href="#equation-ev-buckling">(1)</a></p></td>
+<td><p>preloads in the first matrix, Eq. <a class="reference internal" href="#equation-ev-preload">(2)</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>divergence load under a follower load</p></td>
+<td><p><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> with <span class="math notranslate nohighlight">\(\boldsymbol{K}_G + \boldsymbol{K}_{F_{ref}}\)</span></p></td>
+<td><p>unsymmetric; does not detect flutter</p></td>
+</tr>
+<tr class="row-even"><td><p>frequencies, with or without pre-stress</p></td>
+<td><p><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>, Eq. <a class="reference internal" href="#equation-ev-frequency">(4)</a></p></td>
+<td><p>verified to miss no frequency for symmetric matrices</p></td>
+</tr>
+<tr class="row-odd"><td><p>flutter of an undamped non-conservative system</p></td>
+<td><p><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> over the load level</p></td>
+<td><p>coalescence of two frequencies</p></td>
+</tr>
+<tr class="row-even"><td><p>damped frequencies, flutter with damping</p></td>
+<td><p><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a>, Eq. <a class="reference internal" href="#equation-ev-qep">(5)</a></p></td>
+<td><p>growth rate <span class="math notranslate nohighlight">\(\mathrm{Re}(\lambda)\)</span>; no count of missed eigenvalues</p></td>
+</tr>
+<tr class="row-odd"><td><p>stability along a non-linear path, imperfections</p></td>
+<td><p><a class="reference internal" href="nonlinear_analyses.html"><span class="doc">Non-linear static analyses</span></a> with <a class="reference internal" href="arc_length_methods.html"><span class="doc">Arc-length methods</span></a></p></td>
+<td><p>limit points of the load</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>the sparse solvers of SciPy run first, in shift-invert or Cayley mode,
-with a shift estimated from the matrices for the linear buckling,
-<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.estimate_cayley_sigma" title="pyfe3d.solver.eigen.estimate_cayley_sigma"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate_cayley_sigma()</span></code></a>;</p></li>
-<li><p>every result is verified: the relative residual of each eigenpair and,
-for symmetric matrices, the absence of an eigenvalue missed below the
-highest one returned, from the count of the negative pivots of a shifted
-matrix, see <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.check_eigenpairs" title="pyfe3d.solver.eigen.check_eigenpairs"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_eigenpairs()</span></code></a> and <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.is_positive_definite" title="pyfe3d.solver.eigen.is_positive_definite"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_positive_definite()</span></code></a>;
-an eigenpair of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> or <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a>
-whose relative residual is too large still passes when its backward
-error is at the round-off, e.g. an eigenvalue close to zero of a model
-pre-stressed close to buckling, see
-<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._backward_errors()</span></code>;
-for the complex eigenvalues of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a> no such count
-is implemented, and only the residuals are verified;</p></li>
-<li><p>when that count finds eigenvalues missing below the highest one returned
-by a sparse solver of symmetric matrices, they are computed by deflated
-passes before the next solver, after each of the two calls of
-<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> and after
-the single one of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>, such that no accurate
-result with missing copies reaches the dense fallback or the <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>
-without a completion attempt, see
-<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._complete_repeated()</span></code>: the Lanczos process of
-ARPACK may return only one copy of a repeated eigenvalue, e.g. of the
-pairs of modes <span class="math notranslate nohighlight">\(\cos n\theta\)</span> and <span class="math notranslate nohighlight">\(\sin n\theta\)</span> of a cylinder, equal up
-to the round-off with a rotationally symmetric mesh, and each pass
-computes the missing ones with the eigenvectors already found deflated
-and another starting vector, see <a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.deflated_eigsh" title="pyfe3d.solver.arpackutils.deflated_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">deflated_eigsh()</span></code></a>;</p></li>
-<li><p>when the sparse solvers fail, a dense solver of SciPy is used as a last
-resort, when the dense problem has at most <code class="docutils literal notranslate"><span class="pre">max_dense_size</span></code> dofs, with a
-<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.DenseFallbackWarning" title="pyfe3d.solver.eigen.DenseFallbackWarning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DenseFallbackWarning</span></code></a> giving the reasons; otherwise a
-<code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> lists every failure, such that no unverified result is
-returned silently;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sparse_solver=False</span></code> solves the full problem with a dense solver,
-returning all the eigenvalues, as a reference for validations.</p></li>
+<li><p>Bolotin, V. V., Nonconservative Problems of the Theory of Elastic
+Stability, Pergamon Press, Oxford, 1963.</p></li>
+<li><p>Timoshenko, S. P. and Gere, J. M., Theory of Elastic Stability, 2nd ed.,
+McGraw-Hill, New York, 1961.</p></li>
+<li><p>Ziegler, H., Die Stabilitätskriterien der Elastomechanik,
+Ingenieur-Archiv, 20(1), 49-56, 1952. <a class="reference external" href="https://doi.org/10.1007/BF00536796">https://doi.org/10.1007/BF00536796</a></p></li>
 </ul>
-<p>The fallback can be turned into an error, e.g. in a test suite:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d.solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">DenseFallbackWarning</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">DenseFallbackWarning</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>For symmetric matrices, <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> requires a positive
-definite <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>, the matrix of its Cayley mode and of its count of the
-missing load multipliers: with <code class="docutils literal notranslate"><span class="pre">check=True</span></code>, the default, a <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>
-whose factorization has a negative or a zero pivot raises a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> that says so, with the likely causes:
-insufficient boundary conditions, a mechanism, distorted elements, e.g.
-re-entrant quadrilaterals, or a preload beyond the buckling load included
-in <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>; so do <a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a> and the linear
-<a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a>. <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> accepts an indefinite
-<span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>, whose negative <span class="math notranslate nohighlight">\(\omega_n^2\)</span> give null frequencies, e.g. with a
-preload beyond the buckling load, and the unconstrained rigid-body modes
-of a singular <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>; when its solvers fail and <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> is not positive
-definite, its <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> starts with the same diagnosis. A singular
-<span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> whose round-off pivots all come out positive is not detected.</p>
-<p>With Intel MKL 2024.2.0 to 2025.0.0, the symmetric solver of ARPACK
-returns wrong eigenpairs when its number of Lanczos vectors exceeds 32;
-these versions are detected and the number is capped, see
-<a class="reference internal" href="solver_arpackutils.html#module-pyfe3d.solver.arpackutils" title="pyfe3d.solver.arpackutils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code></a>, also for the override with the
-environment variable <code class="docutils literal notranslate"><span class="pre">PYFE3D_ARPACK_MAX_NCV</span></code>.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
-<p>The reference load, a preload and the reversed reference load of a
-<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> plate:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_quad4_plate_reference_load</span><span class="p">():</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""The Quad4 plate of ``test_solver.py``: a reference load twice as</span>
-<span class="sd">    large halves the load multipliers, a constant preload belongs to ``K``,</span>
-<span class="sd">    and the tensile reference load gives the negative load multipliers</span>
-<span class="sd">    closest to zero, without the dense fallback"""</span>
-    <span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span> <span class="o">=</span> <span class="n">plate_matrices</span><span class="p">(</span><span class="n">Nxx</span><span class="o">=-</span><span class="mf">1.</span><span class="p">)</span>
-    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">DenseFallbackWarning</span><span class="p">)</span>
-        <span class="n">eigvals</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-        <span class="n">lambda_1</span> <span class="o">=</span> <span class="n">eigvals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">eigvals2</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">KGuu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-        <span class="n">eigvals_pre</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span> <span class="o">+</span> <span class="mf">0.4</span><span class="o">*</span><span class="n">lambda_1</span><span class="o">*</span><span class="n">KGuu</span><span class="p">,</span> <span class="n">KGuu</span><span class="p">,</span>
-                                         <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-        <span class="n">eigvals_rev</span><span class="p">,</span> <span class="n">eigvecs_rev</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="o">-</span><span class="n">KGuu</span><span class="p">,</span>
-                                                   <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">eigvals</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">eigvals2</span><span class="p">,</span> <span class="n">eigvals</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">eigvals_pre</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">0.6</span><span class="o">*</span><span class="n">lambda_1</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">eigvals_rev</span><span class="p">,</span> <span class="o">-</span><span class="n">eigvals</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">relative_residuals</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="o">-</span><span class="n">KGuu</span><span class="p">,</span> <span class="n">eigvals_rev</span><span class="p">,</span> <span class="n">eigvecs_rev</span><span class="p">)</span>
-                  <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The frequencies of the same plate under a compressive prestress, whose
-lowest one vanishes at the critical load multiplier:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_quad4_plate_prestress</span><span class="p">():</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""The Quad4 plate of ``test_solver.py`` under a compressive prestress</span>
-<span class="sd">    `\lambda \boldsymbol{K}_G`: the frequencies decrease with `\lambda`, and the</span>
-<span class="sd">    squared lowest one vanishes linearly at the critical load multiplier of</span>
-<span class="sd">    :func:`pyfe3d.solver.linear_buckling`; with ``symmetric=True`` the</span>
-<span class="sd">    eigenvectors are normalized with respect to the mass matrix"""</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d.solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">linear_buckling</span>
-    <span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span><span class="p">,</span> <span class="n">Muu</span> <span class="o">=</span> <span class="n">plate_matrices</span><span class="p">(</span><span class="n">Nxx</span><span class="o">=-</span><span class="mf">1.</span><span class="p">,</span> <span class="n">with_mass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">lambda_1</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">omega2</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">DenseFallbackWarning</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">frac</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">,</span> <span class="mf">0.999</span><span class="p">]:</span>
-            <span class="n">omegan</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">natural_frequency</span><span class="p">(</span><span class="n">KC0uu</span> <span class="o">+</span> <span class="n">frac</span><span class="o">*</span><span class="n">lambda_1</span><span class="o">*</span><span class="n">KGuu</span><span class="p">,</span>
-                                                <span class="n">Muu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-                                                <span class="n">symmetric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">omegan</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">eigvecs</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">Muu</span> <span class="o">@</span> <span class="n">eigvecs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
-                                       <span class="n">atol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
-            <span class="n">omega2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">omegan</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">omega2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">omega2</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">omega2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1e-12</span><span class="o">*</span><span class="n">omega2</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">omega2</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">omega2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mf">10.</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The damped eigenvalues of a chain of masses with Rayleigh damping, against
-the analytical modal values:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_rayleigh_damping_chain</span><span class="p">():</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""Rayleigh damping of a chain of masses: the analytical modal</span>
-<span class="sd">    eigenvalues and modes"""</span>
-    <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="mi">40</span><span class="p">,</span> <span class="mf">100.</span><span class="p">,</span> <span class="mf">2.</span>
-    <span class="n">K</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
-    <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">2e-3</span>
-    <span class="n">C</span> <span class="o">=</span> <span class="n">alpha</span><span class="o">*</span><span class="n">M</span> <span class="o">+</span> <span class="n">beta</span><span class="o">*</span><span class="n">K</span>
-    <span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
-    <span class="n">omega</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">k</span><span class="o">/</span><span class="n">m</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">j</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
-    <span class="n">zeta</span> <span class="o">=</span> <span class="n">alpha</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">omega</span><span class="p">)</span> <span class="o">+</span> <span class="n">beta</span><span class="o">*</span><span class="n">omega</span><span class="o">/</span><span class="mi">2</span>
-    <span class="n">lam_ref</span> <span class="o">=</span> <span class="o">-</span><span class="n">zeta</span><span class="o">*</span><span class="n">omega</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">omega</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">zeta</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">DenseFallbackWarning</span><span class="p">)</span>
-        <span class="n">lam</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="n">complex_frequency</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">lam_ref</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="o">-</span><span class="n">lam</span><span class="o">.</span><span class="n">real</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lam</span><span class="p">),</span> <span class="n">zeta</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lam</span><span class="p">),</span> <span class="n">omega</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
-    <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
-        <span class="n">mode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">i</span><span class="o">*</span><span class="n">jj</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="n">mode</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mode</span> <span class="o">@</span> <span class="n">U</span><span class="p">[:,</span> <span class="n">col</span><span class="p">]),</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">residuals</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Complete models are in <a class="reference internal" href="ex_linear_buckling_plate.html"><span class="doc">Linear buckling analysis of a plate</span></a>,
-<a class="reference internal" href="ex_linear_buckling_cylinder_torsion.html"><span class="doc">Linear buckling analysis of a cylinder under torsion</span></a>, <a class="reference internal" href="ex_natural_frequency_plate.html"><span class="doc">Natural frequency analysis of a plate</span></a>
-and <a class="reference internal" href="ex_natural_frequency_cylinder.html"><span class="doc">Natural frequency analysis of a cylinder</span></a>.</p>
 </section>
 </section>
 
@@ -945,20 +1308,20 @@ and <a class="reference internal" href="ex_natural_frequency_cylinder.html"><spa
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="nonlinear_analyses.html"
+       href="configuration_dependent_loads.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Non-linear static analyses</p>
+        <p class="prev-next-title">Load- and configuration-dependent loads</p>
       </div>
     </a>
     <a class="right-next"
-       href="ex_linear_static.html"
+       href="eigenvalue_solvers.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Linear static analysis of a plate</p>
+        <p class="prev-next-title">Eigenvalue solvers and their verification</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -969,7 +1332,7 @@ and <a class="reference internal" href="ex_natural_frequency_cylinder.html"><spa
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -982,10 +1345,11 @@ and <a class="reference internal" href="ex_natural_frequency_cylinder.html"><spa
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linear-buckling">Linear buckling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#follower-loads-and-flutter">Follower loads and flutter</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#natural-frequencies">Natural frequencies</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#damped-frequencies">Damped frequencies</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#verification-and-dense-fallback">Verification and dense fallback</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choice-of-the-analysis">Choice of the analysis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
   </nav></div>
 
@@ -1011,8 +1375,8 @@ and <a class="reference internal" href="ex_natural_frequency_cylinder.html"><spa
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1045,7 +1409,7 @@ and <a class="reference internal" href="ex_natural_frequency_cylinder.html"><spa
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
 </p></div>
       
     </div>

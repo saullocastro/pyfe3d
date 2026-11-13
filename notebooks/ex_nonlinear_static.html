@@ -1,0 +1,1943 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Non-linear static analysis with pyfe3d.solver &#8212; pyfe3d 0.12.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/ex_nonlinear_static';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial: Ply tailoring using GA for a simply-supported plate under normal load" href="tut-opt-lightweight-smeared-deflection-GA.html" />
+    <link rel="prev" title="Natural frequency analysis of a cylinder" href="ex_natural_frequency_cylinder.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#" aria-current="page">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Non-linear static analysis with pyfe3d.solver</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Non-linear-static-analysis-with-pyfe3d.solver">
+<h1>Non-linear static analysis with pyfe3d.solver<a class="headerlink" href="#Non-linear-static-analysis-with-pyfe3d.solver" title="Link to this heading">#</a></h1>
+<p>The geometrically non-linear analyses of <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver.Analysis</span></code> receive the callables of a model: the external and internal force vectors and the stiffness matrices. This example builds these callables for pyfe3d elements and uses them in five problems:</p>
+<ol class="arabic simple">
+<li><p>a simply supported plate with immovable edges under a uniform pressure, solved with a Newton-Raphson loop written by hand and with <code class="docutils literal notranslate"><span class="pre">Analysis</span></code>;</p></li>
+<li><p>the same plate under a central point load, with the deflection prescribed instead of the load;</p></li>
+<li><p>the plate with a configuration-dependent load, the piston-theory aerodynamic load;</p></li>
+<li><p>the snap-through of the shallow von Mises truss of Crisfield (1991), traced with the arc-length methods;</p></li>
+<li><p>the snap-through of a low sinusoidal arch of <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements, compared with the limit loads of Fung and Kaplan (1952).</p></li>
+</ol>
+<p>The theory is in <a class="reference internal" href="../nonlinear_analyses.html"><span class="doc">Non-linear static analyses</span></a>, <a class="reference internal" href="../newton_raphson_method.html"><span class="doc">The Newton-Raphson method</span></a>, <a class="reference internal" href="../arc_length_methods.html"><span class="doc">Arc-length methods</span></a> and <a class="reference internal" href="../convergence_criteria.html"><span class="doc">Convergence criteria</span></a>. The full references are at the end of the notebook.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>%matplotlib inline
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.sparse import coo_matrix, csc_matrix
+
+from pyfe3d import (DOF, DOUBLE, INT, BeamC, BeamCData, BeamCProbe, Quad4R,
+                    Quad4RData, Quad4RProbe)
+from pyfe3d.beamprop import BeamProp
+from pyfe3d.shellprop_utils import isotropic_plate
+from pyfe3d.solver import (Analysis, crisfield_weights, crisfield_zeta,
+                           is_symmetric, solve)
+</pre></div>
+</div>
+</div>
+<section id="Equilibrium-and-the-tangent-stiffness-matrix">
+<h2>Equilibrium and the tangent stiffness matrix<a class="headerlink" href="#Equilibrium-and-the-tangent-stiffness-matrix" title="Link to this heading">#</a></h2>
+<p>Equilibrium is the null residual</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{R}(\boldsymbol{u}, \lambda) = \boldsymbol{F}_{int}(\boldsymbol{u})
+- \lambda \boldsymbol{F}_{ext} = \boldsymbol{0}\]</div>
+<p>with the load factor <span class="math notranslate nohighlight">\(\lambda\)</span>. The internal forces of <code class="docutils literal notranslate"><span class="pre">update_fint(...,</span> <span class="pre">nonlinear=1)</span></code> come from the von Kármán strains of the elements, and <span class="math notranslate nohighlight">\(\boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL} +
+\boldsymbol{K}_G\)</span>, of <code class="docutils literal notranslate"><span class="pre">update_KC0</span></code>, <code class="docutils literal notranslate"><span class="pre">update_KCNL</span></code> and <code class="docutils literal notranslate"><span class="pre">update_KG</span></code>, is their exact Jacobian, so the Newton-Raphson iterations <span class="math notranslate nohighlight">\(\boldsymbol{K}_T \delta
+\boldsymbol{u} = -\boldsymbol{R}\)</span> converge quadratically near the solution.</p>
+<p>The class below wraps a list of elements into the four callables of <code class="docutils literal notranslate"><span class="pre">Analysis</span></code>, with the vectors and matrices of all the dofs: <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> the external forces times the load factor <code class="docutils literal notranslate"><span class="pre">inc</span></code>, <code class="docutils literal notranslate"><span class="pre">calc_fint</span></code> the internal forces, <code class="docutils literal notranslate"><span class="pre">calc_kC</span></code> <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, or <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} +
+\boldsymbol{K}_{CNL}\)</span> when <code class="docutils literal notranslate"><span class="pre">NLgeom=True</span></code>, and <code class="docutils literal notranslate"><span class="pre">calc_kG</span></code> <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span>. The elements share one probe, so <code class="docutils literal notranslate"><span class="pre">update_probe_xe</span></code> and <code class="docutils literal notranslate"><span class="pre">update_probe_ue</span></code> are called before each element routine. Every call of <code class="docutils literal notranslate"><span class="pre">calc_fint</span></code> is recorded, to follow the iterations:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>class Model(object):
+    def __init__(self, elements, data, prop, x, N, fext):
+        self.elements = elements
+        self.data = data
+        self.prop = prop
+        self.x = x
+        self.N = N
+        self.fext = fext
+        n = len(elements)
+        self.KC0r = np.zeros(data.KC0_SPARSE_SIZE*n, dtype=INT)
+        self.KC0c = np.zeros(data.KC0_SPARSE_SIZE*n, dtype=INT)
+        KC0v = np.zeros(data.KC0_SPARSE_SIZE*n, dtype=DOUBLE)
+        self.KCNLr = np.zeros(data.KCNL_SPARSE_SIZE*n, dtype=INT)
+        self.KCNLc = np.zeros(data.KCNL_SPARSE_SIZE*n, dtype=INT)
+        self.KGr = np.zeros(data.KG_SPARSE_SIZE*n, dtype=INT)
+        self.KGc = np.zeros(data.KG_SPARSE_SIZE*n, dtype=INT)
+        for elem in elements:
+            elem.update_probe_xe(x)
+            elem.update_KC0(self.KC0r, self.KC0c, KC0v, prop)
+        self.KC0 = self.sparse(self.KC0r, self.KC0c, KC0v)
+        self.fint_calls = []
+
+    def sparse(self, r, c, v):
+        return coo_matrix((v, (r, c)), shape=(self.N, self.N)).tocsr()
+
+    def internal_forces(self, u):
+        fint = np.zeros(self.N)
+        for elem in self.elements:
+            elem.update_probe_xe(self.x)
+            elem.update_probe_ue(u)
+            elem.update_fint(fint, self.prop, nonlinear=1)
+        return fint
+
+    def KCNL(self, u):
+        v = np.zeros(self.data.KCNL_SPARSE_SIZE*len(self.elements))
+        for elem in self.elements:
+            elem.update_probe_xe(self.x)
+            elem.update_probe_ue(u)
+            elem.update_KCNL(self.KCNLr, self.KCNLc, v, self.prop)
+        return self.sparse(self.KCNLr, self.KCNLc, v)
+
+    def KG(self, u):
+        v = np.zeros(self.data.KG_SPARSE_SIZE*len(self.elements))
+        for elem in self.elements:
+            elem.update_probe_xe(self.x)
+            elem.update_probe_ue(u)
+            elem.update_KG(self.KGr, self.KGc, v, self.prop)
+        return self.sparse(self.KGr, self.KGc, v)
+
+    # callables of pyfe3d.solver.Analysis
+    def calc_fext(self, inc=1., silent=True):
+        return inc*self.fext
+
+    def calc_fint(self, c, silent=True):
+        self.fint_calls.append(c.copy())
+        return self.internal_forces(c)
+
+    def calc_kC(self, c=None, NLgeom=False, silent=True):
+        if c is None or not NLgeom:
+            return self.KC0
+        return self.KC0 + self.KCNL(c)
+
+    def calc_kG(self, c=None, NLgeom=False, silent=True):
+        return self.KG(c)
+
+    def analysis(self, bu, uk=None, **kwargs):
+        an = Analysis(self.calc_fext, self.calc_fint, self.calc_kC,
+                      self.calc_kG, bu=bu, uk=uk)
+        for key, value in kwargs.items():
+            setattr(an, key, value)
+        return an
+</pre></div>
+</div>
+</div>
+</section>
+<section id="1.-Plate-under-uniform-pressure">
+<h2>1. Plate under uniform pressure<a class="headerlink" href="#1.-Plate-under-uniform-pressure" title="Link to this heading">#</a></h2>
+<p>The square plate has <span class="math notranslate nohighlight">\(a = b = 1\)</span> m, <span class="math notranslate nohighlight">\(h = 0.01\)</span> m, <span class="math notranslate nohighlight">\(E = 70\)</span> GPa and <span class="math notranslate nohighlight">\(\nu =
+0.3\)</span>, and is meshed with 10 x 10 <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> elements. The edges are simply supported and immovable, <span class="math notranslate nohighlight">\(u = v = w = 0\)</span>; the drilling rotations, which do not take part in the response of a flat plate, are held. The pressure <span class="math notranslate nohighlight">\(q = 3 h
+D/(0.00406 a^4)\)</span> is the one whose linear central deflection, <span class="math notranslate nohighlight">\(0.00406\, q
+a^4/D\)</span> with <span class="math notranslate nohighlight">\(D = E h^3/(12 (1 - \nu^2))\)</span>, is <span class="math notranslate nohighlight">\(3 h\)</span>, such that the membrane action stiffens the plate. It is lumped to the nodes with their tributary areas:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def plate(nx=11, ny=11, a=1., h=0.01, E=70.e9, nu=0.3):
+    b = a
+    D = E*h**3/(12*(1 - nu**2))
+    q = 3*h*D/(0.00406*a**4)
+    prop = isotropic_plate(thickness=h, E=E, nu=nu)
+    xtmp = np.linspace(0, a, nx)
+    ytmp = np.linspace(0, b, ny)
+    xmesh, ymesh = np.meshgrid(xtmp, ytmp)
+    ncoords = np.vstack((xmesh.T.flatten(), ymesh.T.flatten(),
+                         np.zeros(nx*ny))).T
+    x = ncoords.flatten()
+    nids = np.arange(nx*ny).reshape(nx, ny)
+    connectivity = zip(nids[:-1, :-1].flatten(), nids[1:, :-1].flatten(),
+                       nids[1:, 1:].flatten(), nids[:-1, 1:].flatten())
+    data = Quad4RData()
+    probe = Quad4RProbe()
+    elements = []
+    for k, (n1, n2, n3, n4) in enumerate(connectivity):
+        elem = Quad4R(probe)
+        elem.n1, elem.n2, elem.n3, elem.n4 = n1, n2, n3, n4
+        elem.c1, elem.c2, elem.c3, elem.c4 = DOF*n1, DOF*n2, DOF*n3, DOF*n4
+        elem.init_k_KC0 = k*data.KC0_SPARSE_SIZE
+        elem.init_k_KCNL = k*data.KCNL_SPARSE_SIZE
+        elem.init_k_KG = k*data.KG_SPARSE_SIZE
+        elem.init_k_KA_beta = k*data.KA_BETA_SPARSE_SIZE
+        elem.update_rotation_matrix(x)
+        elem.update_probe_xe(x)
+        elements.append(elem)
+
+    N = DOF*nx*ny
+    X, Y = ncoords[:, 0], ncoords[:, 1]
+    edge = (np.isclose(X, 0) | np.isclose(X, a) | np.isclose(Y, 0)
+            | np.isclose(Y, b))
+    bk = np.zeros(N, dtype=bool)
+    bk[0::DOF] = edge
+    bk[1::DOF] = edge
+    bk[2::DOF] = edge
+    bk[5::DOF] = True
+    bu = ~bk
+
+    wx = np.full(nx, a/(nx - 1))
+    wx[[0, -1]] /= 2
+    wy = np.full(ny, b/(ny - 1))
+    wy[[0, -1]] /= 2
+    fext = np.zeros(N)
+    fext[2::DOF] = q*np.outer(wx, wy).flatten()
+    center = DOF*nids[nx//2, ny//2] + 2
+    return elements, data, prop, x, N, bu, fext, center, h
+
+elements, data, prop, x, N, bu, fext, center, h = plate()
+model = Model(elements, data, prop, x, N, fext)
+u_lin = np.zeros(N)
+u_lin[bu] = solve(model.KC0[bu, :][:, bu], fext[bu])
+print('linear central deflection: w/h = %.4f' % (u_lin[center]/h))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+linear central deflection: w/h = 2.9963
+</pre></div></div>
+</div>
+<section id="A-Newton-Raphson-loop-written-by-hand">
+<h3>A Newton-Raphson loop written by hand<a class="headerlink" href="#A-Newton-Raphson-loop-written-by-hand" title="Link to this heading">#</a></h3>
+<p>The full load in a single increment, starting from <span class="math notranslate nohighlight">\(\boldsymbol{u} =
+\boldsymbol{0}\)</span>: at each iteration the internal forces and <span class="math notranslate nohighlight">\(\boldsymbol{K}_T\)</span> are evaluated at the current displacements, and the correction solves <span class="math notranslate nohighlight">\(\boldsymbol{K}_{T_{uu}} \delta \boldsymbol{u}_u = -\boldsymbol{R}_u\)</span>. The relative norm of the residual is printed:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>u = np.zeros(N)
+for iteration in range(20):
+    R = model.internal_forces(u)[bu] - fext[bu]
+    rel = np.linalg.norm(R)/np.linalg.norm(fext[bu])
+    print('iteration %2d   |R|/|F_ext| = %.2e' % (iteration, rel))
+    if rel &lt; 1e-10:
+        break
+    KT = model.KC0 + model.KCNL(u) + model.KG(u)
+    u[bu] += solve(KT[bu, :][:, bu], -R)
+u_hand = u.copy()
+print('central deflection: w/h = %.6f' % (u_hand[center]/h))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+iteration  0   |R|/|F_ext| = 1.00e+00
+iteration  1   |R|/|F_ext| = 1.91e+02
+iteration  2   |R|/|F_ext| = 1.58e+01
+iteration  3   |R|/|F_ext| = 1.20e+01
+iteration  4   |R|/|F_ext| = 2.28e+00
+iteration  5   |R|/|F_ext| = 2.06e-01
+iteration  6   |R|/|F_ext| = 1.18e-03
+iteration  7   |R|/|F_ext| = 4.20e-08
+iteration  8   |R|/|F_ext| = 6.63e-13
+central deflection: w/h = 1.094278
+</pre></div></div>
+</div>
+<p>Far from the solution the residual first grows; near it, it falls quadratically, each norm about the square of the previous one.</p>
+</section>
+<section id="The-same-with-Analysis">
+<h3>The same with Analysis<a class="headerlink" href="#The-same-with-Analysis" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Analysis.static(NLgeom=True)</span></code> runs the same iterations, here with the full load in one increment, <code class="docutils literal notranslate"><span class="pre">initialInc=1.</span></code>, and the convergence criterion of Crisfield (1991),</p>
+<div class="math notranslate nohighlight">
+\[\zeta_i = \frac{\|\boldsymbol{R}_i\|_{\boldsymbol{d}}}{\max\left(
+\|\lambda \boldsymbol{F}_{ext}\|_{\boldsymbol{d}},
+\|\boldsymbol{F}_{int}(\boldsymbol{u}_i)\|_{\boldsymbol{d}}, \dots\right)}
+\le \text{relTOL}\]</div>
+<p>with the norms over the free dofs, weighted by the weights <span class="math notranslate nohighlight">\(\boldsymbol{d}\)</span> of <code class="docutils literal notranslate"><span class="pre">crisfield_weights</span></code>. The criterion is evaluated below at every recorded call of <code class="docutils literal notranslate"><span class="pre">calc_fint</span></code>, with <code class="docutils literal notranslate"><span class="pre">crisfield_zeta</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>model.fint_calls = []
+an = model.analysis(bu, initialInc=1., relTOL=1.e-9)
+increments, cs = an.static(NLgeom=True, silent=True)
+u_an = cs[-1]
+
+w = crisfield_weights(model.KC0[bu, :][:, bu])
+zetas = []
+for c in model.fint_calls:
+    fint = model.internal_forces(c)[bu]
+    zetas.append(crisfield_zeta(fint - fext[bu], fext[bu], fint, w))
+print('zeta:', ' '.join('%.1e' % z for z in zetas))
+print('%-22s %12s' % ('', 'w/h'))
+print('%-22s %12.8f' % ('linear', u_lin[center]/h))
+print('%-22s %12.8f' % ('hand-written loop', u_hand[center]/h))
+print('%-22s %12.8f' % ('Analysis', u_an[center]/h))
+print('relative difference, Analysis vs hand-written: %.1e'
+      % (u_an[center]/u_hand[center] - 1))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+zeta: 1.0e+00 9.7e-01 9.8e-01 7.8e-01 1.3e-01 7.8e-04 2.8e-08 1.1e-12
+                                w/h
+linear                   2.99626733
+hand-written loop        1.09427794
+Analysis                 1.09427794
+relative difference, Analysis vs hand-written: 6.5e-14
+</pre></div></div>
+</div>
+<p>The membrane action reduces the central deflection from <span class="math notranslate nohighlight">\(3 h\)</span> to about <span class="math notranslate nohighlight">\(1.1
+h\)</span>.</p>
+</section>
+<section id="The-load-deflection-curve">
+<h3>The load-deflection curve<a class="headerlink" href="#The-load-deflection-curve" title="Link to this heading">#</a></h3>
+<p>With smaller increments, <code class="docutils literal notranslate"><span class="pre">initialInc=0.1</span></code>, <code class="docutils literal notranslate"><span class="pre">Analysis</span></code> returns the load factors of the converged increments and their displacements, the equilibrium path:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>an = model.analysis(bu, initialInc=0.1, relTOL=1.e-9)
+increments, cs = an.static(NLgeom=True, silent=True)
+w_path = np.array([c[center] for c in cs])/h
+plt.plot(np.r_[0, w_path], np.r_[0, increments], 'o-', label='non-linear')
+plt.plot([0, u_lin[center]/h], [0, 1], 'k--', label='linear')
+plt.xlabel('central deflection $w/h$')
+plt.ylabel(r'load factor $\lambda$')
+plt.legend()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_ex_nonlinear_static_11_0.png" src="../_images/notebooks_ex_nonlinear_static_11_0.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="2.-Prescribed-displacement">
+<h2>2. Prescribed displacement<a class="headerlink" href="#2.-Prescribed-displacement" title="Link to this heading">#</a></h2>
+<p>The same plate under a central point load <span class="math notranslate nohighlight">\(P\)</span> whose linear deflection is <span class="math notranslate nohighlight">\(3
+h\)</span>, first with the load prescribed. Then the central deflection <span class="math notranslate nohighlight">\(w_c\)</span> of that solution is prescribed instead, <span class="math notranslate nohighlight">\(\bar{u}_k = \lambda w_c\)</span>, at a dof moved from <code class="docutils literal notranslate"><span class="pre">bu</span></code> to the constrained ones, with <code class="docutils literal notranslate"><span class="pre">uk</span></code> and no external load. The reaction at that dof, <span class="math notranslate nohighlight">\(\boldsymbol{R}_k\)</span> of the partitioned system of <a class="reference internal" href="../boundary_conditions.html"><span class="doc">Boundary conditions and prescribed displacements</span></a>, equals the internal force there and must equal <span class="math notranslate nohighlight">\(P\)</span>, with the same displacement field.
+Displacement control is solved with Newton-Raphson and with the Riks method:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>elements, data, prop, x, N, bu, _, dof, h = plate()
+f = np.zeros(N)
+f[dof] = 1.
+model = Model(elements, data, prop, x, N, f)
+w1 = solve(model.KC0[bu, :][:, bu], f[bu])[np.flatnonzero(bu) == dof][0]
+P = 3*h/w1
+model.fext = P*f
+
+an = model.analysis(bu, initialInc=0.2, relTOL=1.e-10)
+increments, cs = an.static(NLgeom=True, silent=True)
+u_load = cs[-1]
+w_c = u_load[dof]
+print('load control: P = %.6e N, w/h = %.6f' % (P, w_c/h))
+
+bu_d = bu.copy()
+bu_d[dof] = False
+uk = np.zeros(N)
+uk[dof] = w_c
+model.fext = np.zeros(N)
+paths = {}
+print('%-16s %16s %16s %11s %18s' % ('method', 'reaction (N)', 'P (N)',
+      'rel. diff.', 'max |u - u_load|'))
+for method in ['NR', 'arc_length_riks']:
+    an_d = model.analysis(bu_d, uk=uk, initialInc=0.2, relTOL=1.e-10,
+                          NL_method=method)
+    increments_d, cs_d = an_d.static(NLgeom=True, silent=True)
+    reaction = model.internal_forces(cs_d[-1])[dof]
+    paths[method] = (increments_d, [model.internal_forces(c)[dof]
+                                    for c in cs_d])
+    print('%-16s %16.8e %16.8e %11.1e %18.2e'
+          % (method, reaction, P, reaction/P - 1,
+             np.abs(cs_d[-1] - u_load).max()))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+load control: P = 1.660498e+04 N, w/h = 1.274070
+method               reaction (N)            P (N)  rel. diff.   max |u - u_load|
+NR                 1.66049794e+04   1.66049794e+04    -6.5e-12           1.39e-13
+arc_length_riks    1.66049794e+04   1.66049794e+04    -5.2e-11           8.74e-13
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>for method, (lbd, reactions) in paths.items():
+    plt.plot(np.r_[0, lbd]*w_c/h, np.r_[0, reactions]/P, 'o-', mfc='none',
+             label=method)
+plt.plot([0, 3], [0, 1], 'k--', label='linear')
+plt.xlabel('prescribed central deflection $w/h$')
+plt.ylabel('reaction / $P$')
+plt.legend()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_ex_nonlinear_static_14_0.png" src="../_images/notebooks_ex_nonlinear_static_14_0.png" />
+</div>
+</div>
+<p>The reaction grows faster than the deflection: membrane stiffening.</p>
+</section>
+<section id="3.-Configuration-dependent-load">
+<h2>3. Configuration-dependent load<a class="headerlink" href="#3.-Configuration-dependent-load" title="Link to this heading">#</a></h2>
+<p>The aerodynamic load of the piston theory, <span class="math notranslate nohighlight">\(\boldsymbol{F}_a = \lambda \beta
+\boldsymbol{K}_{A_\beta} \boldsymbol{u}\)</span>, with the matrix of <code class="docutils literal notranslate"><span class="pre">update_KA_beta</span></code> of <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, depends on the displacements. Moved to the left-hand side, it enters the internal forces with the load factor <code class="docutils literal notranslate"><span class="pre">inc</span></code>, and its load stiffness <span class="math notranslate nohighlight">\(-\lambda \beta \boldsymbol{K}_{A_\beta}\)</span>, unsymmetric, enters <span class="math notranslate nohighlight">\(\boldsymbol{K}_T\)</span>; <code class="docutils literal notranslate"><span class="pre">calc_fext(c=...)</span></code> gives the load vector of the current configuration, used by the geometrically linear analysis. See <a class="reference internal" href="../configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent
+loads</span></a>. The plate is that of problem 1, and <span class="math notranslate nohighlight">\(\beta\)</span> is chosen such that the aerodynamic load is 20 % of the pressure load in the linear solution:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>elements, data, prop, x, N, bu, fext, center, h = plate()
+model = Model(elements, data, prop, x, N, fext)
+r = np.zeros(data.KA_BETA_SPARSE_SIZE*len(elements), dtype=INT)
+c = np.zeros(data.KA_BETA_SPARSE_SIZE*len(elements), dtype=INT)
+v = np.zeros(data.KA_BETA_SPARSE_SIZE*len(elements), dtype=DOUBLE)
+for elem in elements:
+    elem.update_probe_xe(x)
+    elem.update_KA_beta(r, c, v)
+KA = coo_matrix((v, (r, c)), shape=(N, N)).tocsr()
+u_lin = np.zeros(N)
+u_lin[bu] = solve(model.KC0[bu, :][:, bu], fext[bu])
+beta = 0.2*np.linalg.norm(fext[bu])/np.linalg.norm((KA @ u_lin)[bu])
+BKA = beta*KA
+print('K_C0 - beta*K_A symmetric:', is_symmetric((model.KC0 - BKA)[bu, :][:, bu]))
+
+def calc_fint(c, inc=1., silent=True):
+    return model.internal_forces(c) - inc*(BKA @ c)
+
+def calc_kC(c=None, NLgeom=False, inc=1., silent=True):
+    if c is None or not NLgeom:
+        return model.KC0
+    return model.KC0 + model.KCNL(c) - inc*BKA
+
+def calc_fext(inc=1., silent=True, c=None):
+    if c is None:
+        return inc*model.fext
+    return inc*(model.fext + BKA @ c)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+K_C0 - beta*K_A symmetric: False
+</pre></div></div>
+</div>
+<p>The geometrically non-linear analysis with and without the aerodynamic load, and the geometrically linear analysis, whose load correction iterations with <code class="docutils literal notranslate"><span class="pre">calc_fext(c=...)</span></code> must give the solution of <span class="math notranslate nohighlight">\((\boldsymbol{K}_{C0} - \beta
+\boldsymbol{K}_{A_\beta}) \boldsymbol{u} = \boldsymbol{F}_{ext}\)</span>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>an = Analysis(calc_fext, calc_fint, calc_kC, model.calc_kG, bu=bu)
+an.initialInc = 1.
+an.relTOL = 1.e-10
+u_aero = an.static(NLgeom=True, silent=True)[1][-1]
+R = (model.internal_forces(u_aero) - (model.fext + BKA @ u_aero))[bu]
+print('non-linear, |R|/|F_ext| = %.1e' % (np.linalg.norm(R)
+                                         /np.linalg.norm(model.fext[bu])))
+u_dead = model.analysis(bu, initialInc=1., relTOL=1.e-10).static(
+    NLgeom=True, silent=True)[1][-1]
+
+an_lin = Analysis(calc_fext, None, calc_kC, None, bu=bu)
+an_lin.relTOL = 1.e-12
+an_lin.maxNumIter = 100
+u_lin_aero = an_lin.static(silent=True)[1][-1]
+ref = np.zeros(N)
+ref[bu] = solve((model.KC0 - BKA)[bu, :][:, bu], model.fext[bu])
+
+print('%-36s %10s' % ('', 'w/h'))
+print('%-36s %10.6f' % ('non-linear, pressure only', u_dead[center]/h))
+print('%-36s %10.6f' % ('non-linear, with aerodynamic load', u_aero[center]/h))
+print('%-36s %10.6f' % ('linear, with aerodynamic load', u_lin_aero[center]/h))
+print('%-36s %10.6f' % ('(K_C0 - beta K_A) u = F_ext', ref[center]/h))
+print('linear analysis vs direct solution, max relative difference: %.1e'
+      % (np.abs(u_lin_aero - ref).max()/np.abs(ref).max()))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+non-linear, |R|/|F_ext| = 8.8e-13
+                                            w/h
+non-linear, pressure only              1.094278
+non-linear, with aerodynamic load      1.093184
+linear, with aerodynamic load          2.973885
+(K_C0 - beta K_A) u = F_ext            2.973885
+linear analysis vs direct solution, max relative difference: 2.2e-12
+</pre></div></div>
+</div>
+<p>The aerodynamic load changes the deflection by 0.1 % in the non-linear analysis, where the membrane stiffness of the deflected plate dominates, and by 0.7 % in the linear one.</p>
+</section>
+<section id="4.-Snap-through-of-the-von-Mises-truss">
+<h2>4. Snap-through of the von Mises truss<a class="headerlink" href="#4.-Snap-through-of-the-von-Mises-truss" title="Link to this heading">#</a></h2>
+<p>A shallow von Mises truss loaded through a linear spring of stiffness <span class="math notranslate nohighlight">\(k_s\)</span>: dof 0 is the apex deflection <span class="math notranslate nohighlight">\(w\)</span>, positive towards the base, and dof 1 the loaded point. With the shallow truss theory of Crisfield (1991, Sec. 1.2, Eq. (1.7), p. 4), for two bars with <span class="math notranslate nohighlight">\(E A/l^3 = 1\)</span> and the rise <span class="math notranslate nohighlight">\(z = 1\)</span>, the internal force at the apex is</p>
+<div class="math notranslate nohighlight">
+\[F(w) = w^3 - 3 w^2 + 2 w\]</div>
+<p><span class="math notranslate nohighlight">\(F'(w) = 3 w^2 - 6 w + 2 = 0\)</span> gives the limit points <span class="math notranslate nohighlight">\(w = 1 \mp 1/\sqrt{3}\)</span>, with the loads <span class="math notranslate nohighlight">\(\pm F_{lim}\)</span>, <span class="math notranslate nohighlight">\(F_{lim} = 2/(3 \sqrt{3})\)</span>, and <span class="math notranslate nohighlight">\(F = 0\)</span> again at <span class="math notranslate nohighlight">\(w = 2\)</span>, the inverted configuration. The spring in series carries the same force, so the load factor at a given <span class="math notranslate nohighlight">\(w\)</span> does not depend on its stiffness. The callables are written directly with NumPy:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>F_LIM = 2/(3*np.sqrt(3))
+
+def von_mises_truss(frac, ks=10.):
+    fext = np.array([0., frac*F_LIM])
+    kC = csc_matrix(np.array([[2. + ks, -ks], [-ks, ks]]))
+
+    def calc_fext(inc=1., silent=True):
+        return inc*fext
+
+    def calc_fint(c, silent=True):
+        w = c[0]
+        return np.array([w**3 - 3*w**2 + 2*w + ks*(c[0] - c[1]),
+                         ks*(c[1] - c[0])])
+
+    def calc_kC(c=None, NLgeom=False, silent=True):
+        return kC
+
+    def calc_kG(c=None, NLgeom=False, silent=True):
+        w = c[0]
+        return csc_matrix(np.array([[3*w**2 - 6*w, 0.], [0., 0.]]))
+
+    return Analysis(calc_fext, calc_fint, calc_kC, calc_kG)
+</pre></div>
+</div>
+</div>
+<p>The load is <span class="math notranslate nohighlight">\(1.5 F_{lim}\)</span>. Load control would stop at the limit point; the arc-length methods add to the equilibrium the constraint <span class="math notranslate nohighlight">\(\Delta \boldsymbol{u}^\top \Delta \boldsymbol{u} / (\boldsymbol{u}_{ref}^\top
+\boldsymbol{u}_{ref}) + \psi^2 \Delta\lambda^2 = \Delta s^2\)</span>, linearized (Riks 1979) or solved exactly (Crisfield 1981), and follow the path through the limit points, along which the load factor becomes negative, until the load factor 1.0 on the inverted configuration. On the path, <span class="math notranslate nohighlight">\(\lambda = F(w)/(1.5
+F_{lim})\)</span>, with the extremes <span class="math notranslate nohighlight">\(\pm 1/1.5\)</span>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>frac = 1.5
+w_final = np.roots([1, -3, 2, -frac*F_LIM]).real.max()
+print('%-22s %12s %12s %12s' % ('', 'max lambda', 'min lambda', 'final w'))
+print('%-22s %12.6f %12.6f %12.6f' % ('Crisfield (1991)', 1/frac, -1/frac,
+                                     w_final))
+paths = {}
+for method in ['arc_length_riks', 'arc_length_crisfield']:
+    an = von_mises_truss(frac)
+    an.NL_method = method
+    an.initialInc = 0.05
+    an.static(NLgeom=True, silent=True)
+    inc = np.asarray(an.increments)
+    w = np.array([c[0] for c in an.cs])
+    paths[method] = (w, inc)
+    print('%-22s %12.6f %12.6f %12.6f' % (method, inc[:-1].max(), inc.min(),
+                                         w[-1]))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+                         max lambda   min lambda      final w
+Crisfield (1991)           0.666667    -0.666667     2.214631
+arc_length_riks            0.658958    -0.658902     2.214631
+arc_length_crisfield       0.664845    -0.661710     2.214631
+</pre></div></div>
+</div>
+<p>The extremes are those of the converged increments, which sample the path near the limit points. The final apex deflection is the root <span class="math notranslate nohighlight">\(w &gt; 2\)</span> of <span class="math notranslate nohighlight">\(F(w)
+= 1.5 F_{lim}\)</span>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>wplot = np.linspace(0, 2.4, 200)
+plt.plot(wplot, (wplot**3 - 3*wplot**2 + 2*wplot)/(frac*F_LIM), 'k-',
+         label='$F(w)/(1.5 F_{lim})$')
+for (method, (w, inc)), marker in zip(paths.items(), ['o', 's']):
+    plt.plot(w, inc, marker, mfc='none', label=method)
+plt.axhline(0, color='gray', lw=0.5)
+plt.xlabel('apex deflection $w$')
+plt.ylabel(r'load factor $\lambda$')
+plt.legend()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_ex_nonlinear_static_25_0.png" src="../_images/notebooks_ex_nonlinear_static_25_0.png" />
+</div>
+</div>
+</section>
+<section id="5.-Snap-through-of-a-low-sinusoidal-arch">
+<h2>5. Snap-through of a low sinusoidal arch<a class="headerlink" href="#5.-Snap-through-of-a-low-sinusoidal-arch" title="Link to this heading">#</a></h2>
+<p>Fung and Kaplan (1952) write the equilibrium of a low arch hinged at both ends, of initial and deflected centre lines <span class="math notranslate nohighlight">\(y_0 = \sum a_m L \sin(m \pi
+x/L)\)</span> and <span class="math notranslate nohighlight">\(y = \sum b_m L \sin(m \pi x/L)\)</span>, with the nondimensional rises and load of their Eq. (14),</p>
+<div class="math notranslate nohighlight">
+\[\lambda_m = \frac{a_m L}{2}\sqrt{\frac{A}{I}}, \qquad
+B_m = \frac{b_m L}{2}\sqrt{\frac{A}{I}}, \qquad
+R = \frac{q_0 L^4}{2 \pi^4 E I}\sqrt{\frac{A}{I}}\]</div>
+<p>For the sinusoidal arch under the sinusoidal load <span class="math notranslate nohighlight">\(q_0 \sin(\pi x/L)\)</span>, rigid supports and no initial thrust, the symmetric path is their Eq. (23), <span class="math notranslate nohighlight">\(B_1^3 - B_1 (\lambda_1^2 - 1) = \lambda_1 - R\)</span>, with the upper limit point of their Eq. (25),</p>
+<div class="math notranslate nohighlight">
+\[R_{cr} = \lambda_1 + \sqrt{\frac{4 (\lambda_1^2 - 1)^3}{27}}\]</div>
+<p>and the lower one at <span class="math notranslate nohighlight">\(\lambda_1 - \sqrt{4 (\lambda_1^2 - 1)^3/27}\)</span>, <span class="math notranslate nohighlight">\(B_1 =
+\mp\sqrt{(\lambda_1^2 - 1)/3}\)</span>. With <span class="math notranslate nohighlight">\(\lambda_1^2 &lt; 5.5\)</span> the arch buckles at the limit point, their Eq. (29), so the symmetric path is the one followed. Here <span class="math notranslate nohighlight">\(\lambda_1 = 2.2\)</span>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>lam1 = 2.2
+d = np.sqrt(4/27*(lam1**2 - 1)**3)
+R_cr, R_low = lam1 + d, lam1 - d
+B1_lim = np.sqrt((lam1**2 - 1)/3)
+print('R_cr = %.6f at B1 = %.4f, lower limit load %.6f at B1 = %.4f'
+      % (R_cr, B1_lim, R_low, -B1_lim))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+R_cr = 5.096309 at B1 = 1.1314, lower limit load -0.696309 at B1 = -1.1314
+</pre></div></div>
+</div>
+<p>The arch is modelled with 40 <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements in the <span class="math notranslate nohighlight">\(x\)</span>-<span class="math notranslate nohighlight">\(z\)</span> plane, <span class="math notranslate nohighlight">\(L =
+100\)</span>, a rectangular section of thickness <span class="math notranslate nohighlight">\(t = 1\)</span> and width 1, <span class="math notranslate nohighlight">\(E = 10^7\)</span> and <span class="math notranslate nohighlight">\(\nu = 0.3\)</span>, hinged at both ends (<span class="math notranslate nohighlight">\(u = w = 0\)</span>); the out-of-plane dofs <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(r_z\)</span> are held at every node. The sinusoidal load is lumped to the nodes, with the reference load <span class="math notranslate nohighlight">\(1.25 R_{cr}\)</span>, so that the load factor 1.0 is reached only on the inverted arch, after both limit points and two null loads. <span class="math notranslate nohighlight">\(B_1\)</span> is computed from the deflection at mid-span:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def arch(lam1, R_ref, num_elements=40, L=100., t=1., b=1., E=1.e7, nu=0.3):
+    A = b*t
+    I = b*t**3/12
+    rA = np.sqrt(A/I)
+    a1L = 2*lam1/rA
+    q0 = R_ref*2*np.pi**4*E*I/(L**4*rA)
+    prop = BeamProp()
+    prop.A = A
+    prop.E = E
+    prop.G = E/2/(1 + nu)
+    prop.Iyy = I # bending in the x-z plane
+    prop.Izz = t*b**3/12
+    prop.J = b*t**3/3
+    num_nodes = num_elements + 1
+    xs = np.linspace(0, L, num_nodes)
+    x = np.vstack((xs, 0*xs, a1L*np.sin(np.pi*xs/L))).T.flatten()
+    data = BeamCData()
+    probe = BeamCProbe()
+    elements = []
+    for k in range(num_elements):
+        elem = BeamC(probe)
+        elem.n1, elem.n2 = k, k + 1
+        elem.c1, elem.c2 = DOF*k, DOF*(k + 1)
+        elem.init_k_KC0 = k*data.KC0_SPARSE_SIZE
+        elem.init_k_KCNL = k*data.KCNL_SPARSE_SIZE
+        elem.init_k_KG = k*data.KG_SPARSE_SIZE
+        elem.update_rotation_matrix(0., 1., 0., x)
+        elem.update_probe_xe(x)
+        elements.append(elem)
+    N = DOF*num_nodes
+    bk = np.zeros(N, dtype=bool)
+    bk[1::DOF] = True
+    bk[3::DOF] = True
+    bk[5::DOF] = True
+    for n in (0, num_nodes - 1):
+        bk[DOF*n + 0] = True
+        bk[DOF*n + 2] = True
+    fext = np.zeros(N)
+    weights = np.full(num_nodes, L/num_elements)
+    weights[[0, -1]] /= 2
+    fext[2::DOF] = -q0*np.sin(np.pi*xs/L)*weights
+    model = Model(elements, data, prop, x, N, fext)
+    mid = DOF*(num_elements//2) + 2
+    B1 = lambda u: (a1L + u[mid])/2*rA
+    return model, ~bk, B1
+</pre></div>
+</div>
+</div>
+<p>Both arc-length methods, with increments of at most 0.05 and the default tolerances. The limit loads of the model are the extremes of <span class="math notranslate nohighlight">\(R\)</span> along the converged increments:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>R_ref = 1.25*R_cr
+print('%-22s %12s %10s %12s %10s' % ('', 'upper R', 'rel. diff.', 'lower R',
+                                    'rel. diff.'))
+print('%-22s %12.6f %10s %12.6f %10s' % ('Fung and Kaplan (1952)', R_cr, '',
+                                        R_low, ''))
+arch_paths = {}
+for method in ['arc_length_riks', 'arc_length_crisfield']:
+    model, bu, B1 = arch(lam1, R_ref)
+    an = model.analysis(bu, NL_method=method, initialInc=0.05, maxInc=0.05,
+                        maxArcLength=1e6)
+    increments, cs = an.static(NLgeom=True, silent=True)
+    R = R_ref*np.asarray(increments)
+    B1s = np.array([B1(c) for c in cs])
+    arch_paths[method] = (B1s, R)
+    kmin = np.argmin(R)
+    kmax = np.argmax(R[:kmin])
+    print('%-22s %12.6f %10.2e %12.6f %10.2e'
+          % (method, R[kmax], R[kmax]/R_cr - 1, R[kmin], R[kmin]/R_low - 1))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+                            upper R rel. diff.      lower R rel. diff.
+Fung and Kaplan (1952)     5.096309               -0.696309
+arc_length_riks            5.084297  -2.36e-03    -0.693671  -3.79e-03
+arc_length_crisfield       5.084297  -2.36e-03    -0.693671  -3.79e-03
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>B1plot = np.linspace(lam1, -2.6, 300)
+plt.plot(B1plot, lam1 - B1plot**3 + B1plot*(lam1**2 - 1), 'k-',
+         label='Fung and Kaplan (1952), Eq. (23)')
+for (method, (B1s, R)), marker in zip(arch_paths.items(), ['o', 's']):
+    plt.plot(B1s, R, marker, ms=4, mfc='none', label=method)
+plt.axhline(0, color='gray', lw=0.5)
+plt.gca().invert_xaxis()
+plt.xlabel('$B_1$')
+plt.ylabel('$R$')
+plt.legend()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_ex_nonlinear_static_32_0.png" src="../_images/notebooks_ex_nonlinear_static_32_0.png" />
+</div>
+</div>
+<p>The path passes both limit points and the null loads between and after them, which the convergence criteria accept thanks to their round-off floor, see <a class="reference internal" href="../nonlinear_analyses.html"><span class="doc">Non-linear static analyses</span></a>. The limit loads of the 40 elements are within 0.4 % of the analytical ones; part of the difference is the sampling of the path by the converged increments.</p>
+</section>
+<section id="References">
+<h2>References<a class="headerlink" href="#References" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Crisfield, M. A., A fast incremental/iterative solution procedure that handles “snap-through”, Computers &amp; Structures, 13(1-3), 55-62, 1981. <a class="reference external" href="https://doi.org/10.1016/0045-7949(81)90108-5">https://doi.org/10.1016/0045-7949(81)90108-5</a></p></li>
+<li><p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids and Structures, Volume 1: Essentials, John Wiley &amp; Sons, Chichester, 1991.</p></li>
+<li><p>Fung, Y. C. and Kaplan, A., Buckling of low arches or curved beams of small curvature, NACA Technical Note 2840, National Advisory Committee for Aeronautics, Washington, 1952. <a class="reference external" href="https://ntrs.nasa.gov/citations/19930083579">https://ntrs.nasa.gov/citations/19930083579</a></p></li>
+<li><p>Riks, E., An incremental approach to the solution of snapping and buckling problems, International Journal of Solids and Structures, 15(7), 529-551, 1979. <a class="reference external" href="https://doi.org/10.1016/0020-7683(79)90081-7">https://doi.org/10.1016/0020-7683(79)90081-7</a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="ex_natural_frequency_cylinder.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Natural frequency analysis of a cylinder</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tut-opt-lightweight-smeared-deflection-GA.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial: Ply tailoring using GA for a simply-supported plate under normal load</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Equilibrium-and-the-tangent-stiffness-matrix">Equilibrium and the tangent stiffness matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Plate-under-uniform-pressure">1. Plate under uniform pressure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#A-Newton-Raphson-loop-written-by-hand">A Newton-Raphson loop written by hand</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#The-same-with-Analysis">The same with Analysis</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#The-load-deflection-curve">The load-deflection curve</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Prescribed-displacement">2. Prescribed displacement</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Configuration-dependent-load">3. Configuration-dependent load</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Snap-through-of-the-von-Mises-truss">4. Snap-through of the von Mises truss</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#5.-Snap-through-of-a-low-sinusoidal-arch">5. Snap-through of a low sinusoidal arch</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#References">References</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/notebooks/ex_nonlinear_static.nblink.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

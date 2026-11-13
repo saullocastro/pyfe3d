@@ -6,7 +6,7 @@ section through the sectional stiffness matrix ``C`` of a
 :class:`.BeamProp`, which by default is built from the integrals of a
 rigid cross section, with the torsional stiffness ``GJ`` and the shear
 moduli ``G12`` and ``G13``, and their correction factors, given by the
-user, see :doc:`shell_properties`. The module :mod:`pyfe3d.vabs`
+user, see :doc:`beam_properties`. The module :mod:`pyfe3d.vabs`
 computes these stiffnesses, and the couplings between them, for an
 arbitrary cross section made of anisotropic and non-homogeneous materials,
 with the variational asymptotic beam sectional analysis (VABS) of Cesnik
@@ -15,6 +15,194 @@ elasticity problem of a slender prismatic beam is split into a
 two-dimensional problem over the cross section, solved here with finite
 elements, and a one-dimensional beam problem, governed by the resulting
 sectional stiffness matrix.
+
+The rigid cross section of :doc:`beam_theory` condenses the section into the
+integrals of :doc:`beam_properties`, and cannot give the torsional stiffness
+of a non-circular section, the actual distribution of the transverse shear
+stresses, nor the extension-twist, bending-twist and bending-shear couplings
+that the anisotropy of a composite section produces through its warping. The
+cross-sectional analysis lets the section warp freely, in and out of its
+plane, and finds the warping that minimizes the strain energy for given
+strains of the beam.
+
+
+Variational asymptotic formulation
+----------------------------------
+
+**Strains of a warping section.** The beam axis is `x_1` and the cross
+section lies in the plane `x_2 x_3`. The displacement of a point of the
+section is the rigid motion of the section plus a warping `\boldsymbol{w} =
+\{w_1, w_2, w_3\}`, discretized as `\boldsymbol{w} = \boldsymbol{S}
+\boldsymbol{V}` with the shape functions `\boldsymbol{S}` of the
+two-dimensional elements and three warping degrees of freedom per node,
+`\boldsymbol{V}`. For a prismatic beam the three-dimensional strains
+`\boldsymbol{\Gamma} = \{\Gamma_{11}, 2\Gamma_{12}, 2\Gamma_{13},
+\Gamma_{22}, 2\Gamma_{23}, \Gamma_{33}\}` are, Eq. (34) of Yu et al. (2012),
+
+.. math::
+    :label: vabs-strain
+
+    \boldsymbol{\Gamma} = \boldsymbol{\Gamma}_h \boldsymbol{S}
+    \boldsymbol{V} + \boldsymbol{\Gamma}_\epsilon \bar{\boldsymbol{\epsilon}}
+    + \boldsymbol{\Gamma}_l \boldsymbol{S} \boldsymbol{V}'
+
+with the classical strain measures of the beam `\bar{\boldsymbol{\epsilon}} =
+\{\gamma_{11}, \kappa_1, \kappa_2, \kappa_3\}`, the prime the derivative
+along `x_1`, and the operators
+
+.. math::
+    :label: vabs-operators
+
+    \boldsymbol{\Gamma}_h = \begin{bmatrix}
+        0 & 0 & 0 \\ \partial_2 & 0 & 0 \\ \partial_3 & 0 & 0 \\
+        0 & \partial_2 & 0 \\ 0 & \partial_3 & \partial_2 \\
+        0 & 0 & \partial_3 \end{bmatrix}
+    \qquad
+    \boldsymbol{\Gamma}_\epsilon = \begin{bmatrix}
+        1 & 0 & x_3 & -x_2 \\ 0 & -x_3 & 0 & 0 \\ 0 & x_2 & 0 & 0 \\
+        0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix}
+    \qquad
+    \boldsymbol{\Gamma}_l = \begin{bmatrix}
+        \boldsymbol{I}_3 \\ \boldsymbol{0}_3 \end{bmatrix}
+
+`\partial_\alpha = \partial/\partial x_\alpha`. The first row of
+`\boldsymbol{\Gamma}_\epsilon` gives the axial strain `\gamma_{11} + x_3
+\kappa_2 - x_2 \kappa_3` of a section without warping, which fixes the signs
+of the curvatures, see `Two conventions`_ below. With the material matrix
+`\boldsymbol{D}` of each element in the beam axes and `\langle \cdot
+\rangle` the integral over the section, the energy per unit length,
+`\frac{1}{2} \langle \boldsymbol{\Gamma}^\top \boldsymbol{D}
+\boldsymbol{\Gamma} \rangle`, is a quadratic form of `\boldsymbol{V}`,
+`\boldsymbol{V}'` and `\bar{\boldsymbol{\epsilon}}` with the matrices
+
+.. math::
+    :label: vabs-D
+
+    \boldsymbol{D}_{hh} = \langle (\boldsymbol{\Gamma}_h \boldsymbol{S})^\top
+    \boldsymbol{D} \boldsymbol{\Gamma}_h \boldsymbol{S} \rangle, \quad
+    \boldsymbol{D}_{h\epsilon} = \langle (\boldsymbol{\Gamma}_h
+    \boldsymbol{S})^\top \boldsymbol{D} \boldsymbol{\Gamma}_\epsilon \rangle,
+    \quad
+    \boldsymbol{D}_{\epsilon\epsilon} = \langle
+    \boldsymbol{\Gamma}_\epsilon^\top \boldsymbol{D}
+    \boldsymbol{\Gamma}_\epsilon \rangle, \quad
+    \boldsymbol{D}_{hl}, \; \boldsymbol{D}_{ll}, \; \boldsymbol{D}_{l\epsilon}
+
+the last three defined in the same way with `\boldsymbol{\Gamma}_l
+\boldsymbol{S}`, Eqs. (76) and (89) of Yu et al. (2012). They are
+integrated with Gauss rules over 3- and 6-node triangles and 4-, 8- and
+9-node quadrilaterals and assembled by the kernel ``_integrate`` of
+:mod:`pyfe3d.vabs`.
+
+**Asymptotic ordering.** The variational asymptotic method of Cesnik and
+Hodges (1997) orders the terms of the energy by the small parameter `h/l`,
+the ratio of the dimension of the section to the length over which the
+deformation of the beam varies: the terms in `\boldsymbol{V}'` and in the
+derivatives of the strains are one order smaller than those in
+`\boldsymbol{V}` and `\bar{\boldsymbol{\epsilon}}`. The leading order gives
+the classical model, the next one its refinement to the generalized
+Timoshenko model.
+
+**Classical model.** Without the terms in `\boldsymbol{V}'`, Eq. (75) of Yu
+et al. (2012),
+
+.. math::
+    :label: vabs-U0
+
+    2 \mathcal{U}_0 = \boldsymbol{V}^\top \boldsymbol{D}_{hh} \boldsymbol{V}
+    + 2 \boldsymbol{V}^\top \boldsymbol{D}_{h\epsilon}
+    \bar{\boldsymbol{\epsilon}} + \bar{\boldsymbol{\epsilon}}^\top
+    \boldsymbol{D}_{\epsilon\epsilon} \bar{\boldsymbol{\epsilon}}
+
+`\boldsymbol{D}_{hh}` is singular, its kernel `\boldsymbol{\Psi}` being the
+four rigid motions of the section that the beam strains already describe,
+and four constraints `\boldsymbol{D}_c^\top \boldsymbol{V} = \boldsymbol{0}`
+make the warping unique: zero mean warping and zero mean rotation of the
+in-plane warping (``constraint='yu2012'``, Yu et al., 2012, Eqs. (15),
+(17)), or zero mean warping and zero mean of `x_2 w_3 - x_3 w_2`
+(``'yu2002'``, Yu et al., 2002). The minimum of Eq. :eq:`vabs-U0` is
+`\boldsymbol{V}_0 = \hat{\boldsymbol{V}}_0 \bar{\boldsymbol{\epsilon}}`,
+from
+
+.. math::
+    :label: vabs-V0
+
+    \begin{bmatrix} \boldsymbol{D}_{hh} & \boldsymbol{D}_c \\
+    \boldsymbol{D}_c^\top & \boldsymbol{0} \end{bmatrix}
+    \begin{Bmatrix} \hat{\boldsymbol{V}}_0 \\ \boldsymbol{\Lambda}
+    \end{Bmatrix} = \begin{Bmatrix} -\boldsymbol{D}_{h\epsilon} \\
+    \boldsymbol{0} \end{Bmatrix}, \qquad
+    \boldsymbol{A} = \hat{\boldsymbol{V}}_0^\top \boldsymbol{D}_{h\epsilon}
+    + \boldsymbol{D}_{\epsilon\epsilon}
+
+and `\boldsymbol{A}` is the `4 \times 4` classical stiffness ``Kc``, the
+generalized Euler-Bernoulli model. The right-hand side is orthogonal to
+`\boldsymbol{\Psi}`, the multipliers `\boldsymbol{\Lambda}` vanish, and
+``Kc`` does not depend on the constraints. The warping softens the rigid
+section, gives the Saint-Venant torsional stiffness, and couples the four
+strains of an anisotropic section.
+
+**Refinement.** With `\boldsymbol{V} = \boldsymbol{V}_0 + \boldsymbol{V}_1`
+and the terms in `\boldsymbol{V}'`, the first-order warping of a prismatic
+beam is `\boldsymbol{V}_1 = \hat{\boldsymbol{V}}_{1S}
+\bar{\boldsymbol{\epsilon}}'`, solved from the same system with
+`-\boldsymbol{D}_S` on the right-hand side, `\boldsymbol{D}_S =
+(\boldsymbol{D}_{hl} - \boldsymbol{D}_{hl}^\top) \hat{\boldsymbol{V}}_0 -
+\boldsymbol{D}_{l\epsilon}`, Eqs. (96)-(101) of Yu et al. (2012), and the
+energy to second order is
+
+.. math::
+    :label: vabs-U2
+
+    2 \mathcal{U} = \bar{\boldsymbol{\epsilon}}^\top \boldsymbol{A}
+    \bar{\boldsymbol{\epsilon}} + 2 \bar{\boldsymbol{\epsilon}}^\top
+    \boldsymbol{B} \bar{\boldsymbol{\epsilon}}' +
+    \bar{\boldsymbol{\epsilon}}'^\top \boldsymbol{C}
+    \bar{\boldsymbol{\epsilon}}'
+
+with `\boldsymbol{B}` and `\boldsymbol{C}` given in the Notes of
+:meth:`.CrossSection.calc_stiffness`; the term in
+`\bar{\boldsymbol{\epsilon}}''` does not enter the stiffness of a prismatic
+beam. The derivatives of the strains are not degrees of freedom of a beam
+element. The kinematic relation between the classical and the Timoshenko
+strains and the one-dimensional equilibrium equations, Eqs. (27)-(28) of Yu
+et al. (2012), turn Eq. :eq:`vabs-U2` into the generalized Timoshenko energy
+`\boldsymbol{\epsilon}^\top \boldsymbol{X} \boldsymbol{\epsilon} + 2
+\boldsymbol{\epsilon}^\top \boldsymbol{Y} \boldsymbol{\gamma}_s +
+\boldsymbol{\gamma}_s^\top \boldsymbol{G} \boldsymbol{\gamma}_s`, with the
+classical strains `\boldsymbol{\epsilon}` of the Timoshenko model and the
+shear strains `\boldsymbol{\gamma}_s = \{2\gamma_{12}, 2\gamma_{13}\}`, in
+closed form, Eqs. (105)-(107):
+
+.. math::
+    :label: vabs-timoshenko
+
+    \boldsymbol{G} = \left[ \boldsymbol{Q}^\top \boldsymbol{A}^{-1}
+    (\boldsymbol{C} - \boldsymbol{B}^\top \boldsymbol{A}^{-1} \boldsymbol{B})
+    \boldsymbol{A}^{-1} \boldsymbol{Q} \right]^{-1}, \qquad
+    \boldsymbol{Y} = \boldsymbol{B}^\top \boldsymbol{A}^{-1} \boldsymbol{Q}
+    \boldsymbol{G}, \qquad
+    \boldsymbol{X} = \boldsymbol{A} + \boldsymbol{Y} \boldsymbol{G}^{-1}
+    \boldsymbol{Y}^\top
+
+with `\boldsymbol{Q}` of rows `\{0, 0\}, \{0, 0\}, \{0, -1\}, \{1, 0\}`. The
+`6 \times 6` stiffness ``Kt`` is `[\boldsymbol{X}, \boldsymbol{Y};
+\boldsymbol{Y}^\top, \boldsymbol{G}]` reordered to the strains
+`\{\gamma_{11}, 2\gamma_{12}, 2\gamma_{13}, \kappa_1, \kappa_2, \kappa_3\}`.
+Its shear entries contain the shear correction factors and the offset of
+the shear centre, which are thus computed, not assumed. By construction, the
+classical stiffness recovered from ``Kt`` by a condensation of the
+flexibility, deleting the shear rows and columns of ``Ft`` `=
+\boldsymbol{K}_t^{-1}` and inverting, is ``Kc``, see
+:func:`.classical_from_timoshenko`; deleting the rows and columns of the
+stiffness instead would impose `\gamma_{12} = \gamma_{13} = 0`, which gives
+another matrix whenever the shear and the classical strains are coupled.
+
+**Centres.** From the flexibilities, the shear centre is `e_2 =
+-P_{34}/P_{44}`, `e_3 = P_{24}/P_{44}`, with `P_{ij}` the entries of ``Ft``
+numbered from 1, Eq. (66) of Yu et al. (2002), and the tension centre `(a_2,
+a_3)` is the point where an axial force gives `\kappa_2 = \kappa_3 = 0`
+through ``Fc``.
 
 
 Steps of an analysis
@@ -257,14 +445,14 @@ Vlasov beam analyses outside pyfe3d, such as that of Section 3 of Yu et
 al. (2005).
 
 
-Plotting the warping
---------------------
+Warping of the cross section
+----------------------------
 
 After :meth:`.CrossSection.calc_stiffness`, :meth:`.CrossSection.warping`
 returns the warping displacements `w_1, w_2, w_3` of the nodes for given
 strains of the beam, and :meth:`.CrossSection.triangles` a triangulation of
-the mesh through all its nodes. These two arrays are all that a plotting
-library needs, and pyfe3d does not depend on any. The warping satisfies
+the mesh through all its nodes, from which the warping can be drawn with
+any plotting library; pyfe3d depends on none. The warping satisfies
 the constraints chosen in :meth:`.CrossSection.calc_stiffness`, among them
 zero average, and it is the warping relative to the rigid motion of the
 section about the reference axis. In the tested cases, the two sets of
@@ -288,7 +476,7 @@ mid-line, normalised with the pole at the shear centre such that
 \kappa_1`. This is checked for a channel in
 ``tests/test_vabs_vlasov.py``.
 
-With matplotlib, for a thin-walled channel, the out-of-plane warping
+The figure shows, for a thin-walled channel, the out-of-plane warping
 `w_1` per unit twist rate `\kappa_1` about the shear centre (cross), with
 the tension centre (circle), and the in-plane warping per unit curvature
 `\kappa_2`, i.e. the anticlastic deformation due to the Poisson effect,
@@ -297,72 +485,14 @@ contracts, and the flange in compression expands. The torsional warping
 is linear along each wall, `-\omega`, and changes sign on the web, at the
 centre of the section, and along the flanges.
 
-.. plot::
-   :include-source:
+.. plot:: _scripts/vabs_warping_2d.py
+   :include-source: false
 
-   import numpy as np
-   import matplotlib.pyplot as plt
-   from matplotlib.tri import Triangulation
-
-   from pyfe3d.vabs import CrossSection, isotropic
-
-   # channel: web of height h along x3, flanges of width b along x2,
-   # thickness t, meshed with bilinear quadrilaterals of side t/2
-   h, b, t = 1., 0.5, 0.05
-   d = t/2
-   xs = np.linspace(0., b, round(b/d) + 1)
-   ys = np.linspace(-h/2, h/2, round(h/d) + 1)
-   X2, X3 = np.meshgrid(xs, ys)
-   nx = xs.size
-   elements = []
-   for j in range(ys.size - 1):
-       for i in range(nx - 1):
-           xc, yc = (xs[i] + xs[i + 1])/2, (ys[j] + ys[j + 1])/2
-           if xc < t or abs(yc) > h/2 - t:
-               n = j*nx + i
-               elements.append([n, n + 1, n + 1 + nx, n + nx])
-   used = np.unique(elements)
-   new = -np.ones(X2.size, dtype=int)
-   new[used] = np.arange(used.size)
-   x2, x3 = X2.ravel()[used], X3.ravel()[used]
-   elements = new[np.array(elements)]
-
-   sec = CrossSection(x2, x3, elements, materials=[isotropic(70e9, 0.3)],
-                      mat_ids=[0]*len(elements))
-   sec.calc_stiffness()
-   tri = Triangulation(sec.x2, sec.x3, sec.triangles())
-   # origin at the shear centre, same nodes and triangles
-   sc = sec.translated(*sec.shear_centre)
-   sc.calc_stiffness()
-
-   fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4.5))
-   w = sc.warping([0., 1., 0., 0.])  # unit twist rate kappa1
-   cs = ax1.tricontourf(tri, w[:, 0], levels=21, cmap='RdBu_r')
-   fig.colorbar(cs, ax=ax1, label=r'$w_1 = -\omega$ per unit $\kappa_1$')
-   ax1.plot(*sec.tension_centre, 'ko', mfc='none')
-   ax1.plot(*sec.shear_centre, 'kx')
-   ax1.set_title('torsion, about the shear centre')
-
-   w = sec.warping([0., 0., 1., 0.])  # unit curvature kappa2
-   ax2.triplot(tri, color='0.8', lw=0.5)
-   ax2.triplot(sec.x2 + w[:, 1], sec.x3 + w[:, 2], sec.triangles(),
-               color='C0', lw=0.5)
-   ax2.set_title('bending, in-plane warping')
-   for ax in (ax1, ax2):
-       ax.set_aspect('equal')
-       ax.set_xlabel('$x_2$')
-       ax.set_ylabel('$x_3$')
-   fig.tight_layout()
-
-The same arrays give a three-dimensional view with plotly. The script
-below draws the channel as a beam of length 3 under a uniform twist rate:
+The three-dimensional view below shows the same channel as a beam of
+length 3 under a uniform twist rate:
 the sections rotate about the shear centre and warp along the beam by
 `w_1 = -\omega \kappa_1`, the warping being exaggerated and coloured by
 `w_1`. The figure can be rotated, panned and zoomed:
-
-.. literalinclude:: _scripts/vabs_warping_3d.py
-   :start-at: import numpy as np
-   :end-before: # NOTE written for the documentation
 
 .. raw:: html
    :file: _generated/vabs_warping_3d.html

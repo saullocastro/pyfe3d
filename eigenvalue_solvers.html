@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Eigenvalue solvers and their verification &#8212; pyfe3d 0.12.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'eigenvalue_solvers';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Linear static analysis of a plate" href="notebooks/ex_linear_static.html" />
+    <link rel="prev" title="Linear buckling and natural frequencies" href="eigenvalue_analyses.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#" aria-current="page">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Eigenvalue solvers and their verification</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="eigenvalue-solvers-and-their-verification">
+<h1>Eigenvalue solvers and their verification<a class="headerlink" href="#eigenvalue-solvers-and-their-verification" title="Link to this heading">#</a></h1>
+<p>The eigenvalue problems of <a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a> are large and sparse,
+and only a few eigenvalues are wanted: the lowest positive load
+multipliers, the lowest frequencies, the eigenvalues of a damped system
+nearest a shift. The iterative solvers of ARPACK, through
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code>,
+find them from one factorization, but they return the eigenvalues nearest
+a shift, not necessarily the lowest ones, may miss copies of repeated
+eigenvalues, and do not raise when they do. <a class="reference internal" href="solver_eigen.html#module-pyfe3d.solver.eigen" title="pyfe3d.solver.eigen"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code></a>
+therefore transforms each problem into one that the sparse solvers solve
+reliably, verifies every result, and uses a dense solver only as a last
+resort. This page describes the transformations, the verifications and the
+solver policy shared by <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>,
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> and <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a>.</p>
+<section id="equilibration-of-the-diagonal">
+<h2>Equilibration of the diagonal<a class="headerlink" href="#equilibration-of-the-diagonal" title="Link to this heading">#</a></h2>
+<p>The matrices of beam and shell models mix translations and rotations, such
+that the diagonal of <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> spans many orders of magnitude; the
+fictitious drilling stiffness of the shells widens the spread further. With
+<code class="docutils literal notranslate"><span class="pre">precondition=True</span></code>, the default, the problems are solved with the
+matrices <span class="math notranslate nohighlight">\(\boldsymbol{P} \boldsymbol{A} \boldsymbol{P}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{P} \boldsymbol{B} \boldsymbol{P}\)</span> of the
+Jacobi scaling</p>
+<div class="math notranslate nohighlight" id="equation-es-jacobi">
+<span class="eqno">(1)<a class="headerlink" href="#equation-es-jacobi" title="Link to this equation">#</a></span>\[P_{ii} = \frac{1}{\sqrt{\max(|K_{ii}|, \mathrm{floor})}}\]</div>
+<p>of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.diagonal_preconditioner" title="pyfe3d.solver.eigen.diagonal_preconditioner"><code class="xref py py-func docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a>, whose <span class="math notranslate nohighlight">\(\boldsymbol{P} \boldsymbol{K} \boldsymbol{P}\)</span> has a
+unit diagonal up to the signs. Since <span class="math notranslate nohighlight">\(\boldsymbol{P}\)</span> is non-singular, <span class="math notranslate nohighlight">\(\boldsymbol{P}
+\boldsymbol{A} \boldsymbol{P} \boldsymbol{y} = w \boldsymbol{P} \boldsymbol{B} \boldsymbol{P} \boldsymbol{y}\)</span> is <span class="math notranslate nohighlight">\(\boldsymbol{A}
+\boldsymbol{u} = w \boldsymbol{B} \boldsymbol{u}\)</span> with <span class="math notranslate nohighlight">\(\boldsymbol{u} = \boldsymbol{P} \boldsymbol{y}\)</span>: the eigenvalues
+are unchanged, the eigenvectors are transformed back, and the verification
+always uses the original matrices. The equilibration usually reduces the
+condition number and often decides whether the iterative solver converges.</p>
+</section>
+<section id="linear-buckling-the-cayley-mode">
+<h2>Linear buckling: the Cayley mode<a class="headerlink" href="#linear-buckling-the-cayley-mode" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> writes <a class="reference internal" href="eigenvalue_analyses.html#equation-ev-buckling">(1)</a> as</p>
+<div class="math notranslate nohighlight" id="equation-es-mu">
+<span class="eqno">(2)<a class="headerlink" href="#equation-es-mu" title="Link to this equation">#</a></span>\[\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K}_{C0} \boldsymbol{u}, \qquad \lambda = -\frac{1}{\mu}\]</div>
+<p>whose lowest positive load multipliers are the most negative <span class="math notranslate nohighlight">\(\mu\)</span>. For
+symmetric matrices with a positive definite <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, it calls
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> in the Cayley mode, in which ARPACK
+computes the eigenvalues <span class="math notranslate nohighlight">\((\mu + \sigma)/(\mu - \sigma)\)</span> of the operator
+<span class="math notranslate nohighlight">\((\boldsymbol{K}_G - \sigma \boldsymbol{K}_{C0})^{-1}(\boldsymbol{K}_G + \sigma \boldsymbol{K}_{C0})\)</span>
+(Lehoucq et al. 1998, Appendix A, Sec. A.1), and <code class="docutils literal notranslate"><span class="pre">which='SM'</span></code> selects
+those of smallest modulus. When the shift <span class="math notranslate nohighlight">\(\sigma\)</span> is larger than <span class="math notranslate nohighlight">\(|\mu|\)</span>
+of all the eigenvalues, <span class="math notranslate nohighlight">\((\mu + \sigma)/(\mu - \sigma)\)</span> increases in modulus
+with <span class="math notranslate nohighlight">\(\mu\)</span> in <span class="math notranslate nohighlight">\((-\sigma, \sigma)\)</span>, and the most negative <span class="math notranslate nohighlight">\(\mu\)</span>, i.e. the
+lowest positive load multipliers, come first; otherwise the eigenvalues
+closest to <span class="math notranslate nohighlight">\(-\sigma\)</span> come back instead, without warning, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._eigsh_cayley()</span></code>. The shift is therefore estimated
+from the matrices by <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.estimate_cayley_sigma" title="pyfe3d.solver.eigen.estimate_cayley_sigma"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate_cayley_sigma()</span></code></a>: power iterations on
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}^{-1} \boldsymbol{K}_G\)</span>, self-adjoint in the inner product of
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, whose ratio of <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>-norms grows towards the
+spectral radius <span class="math notranslate nohighlight">\(\max|\mu|\)</span>, multiplied by a safety factor of 10. The
+second sparse attempt uses a 10 times larger shift.</p>
+<p>The negative load multipliers, those of the reversed load, are the
+positive <span class="math notranslate nohighlight">\(\mu\)</span>. When fewer than <code class="docutils literal notranslate"><span class="pre">num_eigvalues</span></code> positive multipliers
+exist, the remaining ones are computed with <span class="math notranslate nohighlight">\(-\boldsymbol{K}_G\)</span>; the number
+requested of each sign is limited by the count of the multipliers of that
+sign, from the inertia below, since ARPACK may not converge when it is
+asked for more eigenvalues of one sign than exist, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._eigsh_both_signs()</span></code>.</p>
+</section>
+<section id="verification-residuals-and-the-inertia-count">
+<h2>Verification: residuals and the inertia count<a class="headerlink" href="#verification-residuals-and-the-inertia-count" title="Link to this heading">#</a></h2>
+<p>Every eigenpair returned by a sparse solver is verified, see
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.check_eigenpairs" title="pyfe3d.solver.eigen.check_eigenpairs"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_eigenpairs()</span></code></a>:</p>
+<ul>
+<li><p>the relative residual of each eigenpair, e.g. for buckling</p>
+<div class="math notranslate nohighlight" id="equation-es-residual">
+<span class="eqno">(3)<a class="headerlink" href="#equation-es-residual" title="Link to this equation">#</a></span>\[\frac{\|\boldsymbol{K}_{C0} \boldsymbol{u} + \lambda \boldsymbol{K}_G \boldsymbol{u}\|}
+{\|\boldsymbol{K}_{C0} \boldsymbol{u}\| + |\lambda| \, \|\boldsymbol{K}_G \boldsymbol{u}\|}\]</div>
+<p>must not exceed <code class="docutils literal notranslate"><span class="pre">check_rtol</span></code>, <span class="math notranslate nohighlight">\(10^{-3}\)</span> for <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>
+and <span class="math notranslate nohighlight">\(10^{-6}\)</span> for the frequencies; for a rigid-body mode, whose residual
+and denominator are both round-off errors, the residual is taken
+relative to the matrix norms, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._relative_residuals()</span></code>;</p>
+</li>
+<li><p>for symmetric matrices, the absence of an eigenvalue missed below the
+highest one returned, from the inertia of a shifted matrix. With a
+positive definite <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} + s \boldsymbol{K}_G\)</span> is
+congruent to <span class="math notranslate nohighlight">\(\boldsymbol{I} + s \boldsymbol{K}_{C0}^{-1/2} \boldsymbol{K}_G
+\boldsymbol{K}_{C0}^{-1/2}\)</span>, whose eigenvalues are <span class="math notranslate nohighlight">\(1 - s/\lambda_i\)</span>, negative
+exactly when <span class="math notranslate nohighlight">\(0 &lt; \lambda_i &lt; s\)</span>: the number of negative pivots of the
+factorization of</p>
+<div class="math notranslate nohighlight" id="equation-es-sturm">
+<span class="eqno">(4)<a class="headerlink" href="#equation-es-sturm" title="Link to this equation">#</a></span>\[\boldsymbol{K}_{C0} + s \boldsymbol{K}_G \quad \text{(buckling)}, \qquad
+\boldsymbol{K} - s \boldsymbol{M} \quad \text{(frequencies)}\]</div>
+<p>is, by Sylvester’s law of inertia, the number of load multipliers in
+<span class="math notranslate nohighlight">\((0, s)\)</span>, or of the <span class="math notranslate nohighlight">\(\omega_n^2 &lt; s\)</span>, which must equal the number
+returned below <span class="math notranslate nohighlight">\(s\)</span>, with <span class="math notranslate nohighlight">\(s\)</span> just below the highest eigenvalue returned.
+This is the Sturm sequence check of the eigenvalue solvers of structural
+analysis (Bathe 2014, Sec. 10.2.2, p. 849, Sec. 11.4.3, p. 943, and
+Sec. 11.6, p. 954), and it is what distinguishes a converged answer from
+a plausible-looking one. The factorization is that of
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.is_positive_definite" title="pyfe3d.solver.eigen.is_positive_definite"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_positive_definite()</span></code></a>, with a symmetric permutation and without
+row interchanges.</p>
+</li>
+</ul>
+<p>An eigenpair of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> or <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a>
+whose relative residual is too large still passes when its normwise
+backward error</p>
+<div class="math notranslate nohighlight" id="equation-es-backward">
+<span class="eqno">(5)<a class="headerlink" href="#equation-es-backward" title="Link to this equation">#</a></span>\[\eta = \frac{\|\boldsymbol{A} \boldsymbol{u} + \lambda \boldsymbol{B} \boldsymbol{u}\|}{(\|\boldsymbol{A}\|_F + |\lambda|
+\, \|\boldsymbol{B}\|_F) \|\boldsymbol{u}\|}\]</div>
+<p>is not larger than the machine precision: the eigenpair is then exact for
+matrices that differ from the given ones by perturbations of the order of
+the round-off of their entries (Tisseur 2000, Theorem 1, Eq. (2.3)), e.g. an
+eigenvalue close to zero of a model pre-stressed close to buckling, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._backward_errors()</span></code> and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._quadratic_backward_errors()</span></code>. The buckling
+analysis keeps the relative residual only: a finite load multiplier is never
+null, and a backward error at the round-off does not tell that an
+eigenpair is accurate when the matrix norms are set by stiff penalty
+springs.</p>
+</section>
+<section id="repeated-eigenvalues">
+<h2>Repeated eigenvalues<a class="headerlink" href="#repeated-eigenvalues" title="Link to this heading">#</a></h2>
+<p>Structures with a symmetry have eigenvalues equal up to the round-off,
+e.g. the pairs of modes <span class="math notranslate nohighlight">\(\cos n\theta\)</span> and <span class="math notranslate nohighlight">\(\sin n\theta\)</span> of a cylinder with
+a rotationally symmetric mesh. The Lanczos process of ARPACK, started from
+a single vector, finds in exact arithmetic one eigenvector of each
+eigenspace only, and the other copies only through the rounding errors.
+When the inertia count finds eigenvalues missing below the highest one
+returned, they are computed by deflated passes before the next solver, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._complete_repeated()</span></code>: each pass calls
+<a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.deflated_eigsh" title="pyfe3d.solver.arpackutils.deflated_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">deflated_eigsh()</span></code></a>, the shift-invert mode with the eigenvectors already
+found deflated from the operator and another starting vector, which returns
+the eigenvalues nearest the shift not found yet, and the eigenvectors are
+combined with a Rayleigh-Ritz projection that keeps them orthonormal; the
+result is verified as any other. <code class="docutils literal notranslate"><span class="pre">tests/test_solver_linear_buckling.py</span></code>
+checks the completion on a <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> cylinder under torsion.</p>
+</section>
+<section id="natural-frequencies-shift-invert-mode">
+<h2>Natural frequencies: shift-invert mode<a class="headerlink" href="#natural-frequencies-shift-invert-mode" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> computes the eigenvalues <span class="math notranslate nohighlight">\(\omega_n^2\)</span> nearest the
+shift <span class="math notranslate nohighlight">\(\sigma = -1\)</span> in the shift-invert mode, with
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> for symmetric matrices and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code> otherwise, factorizing <span class="math notranslate nohighlight">\(\boldsymbol{K} +
+\boldsymbol{M}\)</span>: these are the lowest ones when <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> is positive
+semi-definite and <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span> positive definite, and <span class="math notranslate nohighlight">\(\boldsymbol{K} + \boldsymbol{M}\)</span> is
+not singular when <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> is singular only because of unconstrained
+rigid-body modes that have mass. An indefinite <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>, e.g. pre-stressed
+beyond buckling, is accepted, its negative <span class="math notranslate nohighlight">\(\omega_n^2\)</span> giving null
+frequencies. The eigenpairs are verified with the residuals, the backward
+error and, for symmetric matrices, the inertia count of
+<a class="reference internal" href="#equation-es-sturm">(4)</a>, see <code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._check_freq()</span></code>.</p>
+</section>
+<section id="unsymmetric-problems">
+<h2>Unsymmetric problems<a class="headerlink" href="#unsymmetric-problems" title="Link to this heading">#</a></h2>
+<p>The load stiffness of a follower load makes the buckling problem
+unsymmetric, with possibly complex load multipliers, many of which may have
+a smaller modulus than the critical one. <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> then
+searches along the positive real axis: <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code>
+finds the multipliers nearest a shift <span class="math notranslate nohighlight">\(s_j\)</span> within a radius <span class="math notranslate nohighlight">\(r_j\)</span>; the next
+shift is placed beyond the interval of the real axis already covered, until
+the lowest positive real multiplier found is not beyond the covered
+interval, see <code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._eigs_shift_search()</span></code>. A parity
+check completes the verification of the residuals:</p>
+<div class="math notranslate nohighlight" id="equation-es-parity">
+<span class="eqno">(6)<a class="headerlink" href="#equation-es-parity" title="Link to this equation">#</a></span>\[\det(\boldsymbol{K} + s \boldsymbol{K}_G) = \det \boldsymbol{K} \prod_i (1 + s \mu_i)\]</div>
+<p>where a complex conjugate pair gives the positive factor <span class="math notranslate nohighlight">\(|1 + s
+\mu_i|^2\)</span> and a real <span class="math notranslate nohighlight">\(\mu_i\)</span> a negative factor exactly when <span class="math notranslate nohighlight">\(0 &lt;
+\lambda_i &lt; s\)</span>, so <span class="math notranslate nohighlight">\(\det(\boldsymbol{K} + s \boldsymbol{K}_G)\)</span> just below the critical
+multiplier must have the sign of <span class="math notranslate nohighlight">\(\det \boldsymbol{K}\)</span>. The signs come from the LU
+factorizations. This check cannot detect two missing real multipliers, nor
+a missing complex pair.</p>
+</section>
+<section id="damped-frequencies-linearization">
+<h2>Damped frequencies: linearization<a class="headerlink" href="#damped-frequencies-linearization" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a> writes the quadratic problem <a class="reference internal" href="eigenvalue_analyses.html#equation-ev-qep">(5)</a>, with
+<span class="math notranslate nohighlight">\(\boldsymbol{z} = \{\boldsymbol{u}^\top, \lambda \boldsymbol{u}^\top\}^\top\)</span>, as the
+generalized eigenvalue problem of size <span class="math notranslate nohighlight">\(2n\)</span></p>
+<div class="math notranslate nohighlight" id="equation-es-companion">
+<span class="eqno">(7)<a class="headerlink" href="#equation-es-companion" title="Link to this equation">#</a></span>\[\begin{split}\begin{bmatrix} \boldsymbol{0} &amp; \boldsymbol{I} \\ -\boldsymbol{K} &amp; -\boldsymbol{C} \end{bmatrix} \boldsymbol{z} =
+\lambda \begin{bmatrix} \boldsymbol{I} &amp; \boldsymbol{0} \\ \boldsymbol{0} &amp; \boldsymbol{M} \end{bmatrix} \boldsymbol{z}\end{split}\]</div>
+<p>the first companion form of Tisseur and Meerbergen (2001, Sec. 3.4, Eq.
+(3.6)), valid for any <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>, symmetric or not, and requiring neither a
+non-singular <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> nor a non-singular <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>, whose singularity
+only gives infinite eigenvalues, discarded. Its shift-invert operator needs
+the factorization of the <span class="math notranslate nohighlight">\(n \times n\)</span> matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{dyn}(\sigma) =
+\sigma^2 \boldsymbol{M} + \sigma \boldsymbol{C} + \boldsymbol{K}\)</span> only (Sec. 6.1, Eq. (6.3)), see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._eigs_qep()</span></code>. The default shift <span class="math notranslate nohighlight">\(\sigma = 1\)</span> rad/s
+is the counterpart of the shift <span class="math notranslate nohighlight">\(-1\)</span> of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>: with
+<span class="math notranslate nohighlight">\(\boldsymbol{C} = \boldsymbol{0}\)</span> the factorized matrix is the same, <span class="math notranslate nohighlight">\(\boldsymbol{K} +
+\boldsymbol{M}\)</span>, and, for <span class="math notranslate nohighlight">\(\lambda = \omega_n(-\zeta \pm i \sqrt{1 -
+\zeta^2})\)</span>, <span class="math notranslate nohighlight">\(|\lambda - 1|^2 = 1 + 2 \zeta \omega_n + \omega_n^2\)</span> grows with
+<span class="math notranslate nohighlight">\(\omega_n\)</span> for <span class="math notranslate nohighlight">\(\omega_n &gt; -\zeta\)</span>, such that the lowest frequencies are found first. The
+symmetric linearizations of symmetric matrices give indefinite pencils,
+unless the system is overdamped (Sec. 3.8.2), and exclude the unsymmetric
+matrices of the piston theory. The residuals and the backward errors are
+verified, but no inertia count applies to the complex eigenvalues of a
+damped system: that no eigenvalue nearer the shift was missed is not
+verified, and the dense solution, <code class="docutils literal notranslate"><span class="pre">sparse_solver=False</span></code>, is the
+reference.</p>
+</section>
+<section id="solver-policy-and-dense-fallback">
+<h2>Solver policy and dense fallback<a class="headerlink" href="#solver-policy-and-dense-fallback" title="Link to this heading">#</a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">sparse_solver=True</span></code>, the default, the sparse solvers run first for
+every problem size, and each result must pass the verification. Only when
+all of them failed, e.g. a failed verification, an ARPACK error or a
+singular factorization, a dense solver of SciPy is used, if the dense
+problem has at most <code class="docutils literal notranslate"><span class="pre">max_dense_size</span></code> dofs, 2000 by default, with a
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.DenseFallbackWarning" title="pyfe3d.solver.eigen.DenseFallbackWarning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DenseFallbackWarning</span></code></a> giving the reasons of the failures; its
+result is verified as well. Otherwise a <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> lists every
+attempted solver, such that no unverified result is returned silently, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._sparse_first()</span></code>. The dense fallback of the
+buckling problem condenses out the dofs where <code class="docutils literal notranslate"><span class="pre">KG</span></code> has null rows, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._condense()</span></code>. <code class="docutils literal notranslate"><span class="pre">sparse_solver=False</span></code> solves the
+full problem with a dense solver and returns all the eigenvalues, without
+verification, as a reference for validations, and <code class="docutils literal notranslate"><span class="pre">check=False</span></code> returns
+the first sparse result without verification. The fallback can be turned
+into an error, e.g. in a test suite, with
+<code class="docutils literal notranslate"><span class="pre">warnings.simplefilter('error',</span> <span class="pre">DenseFallbackWarning)</span></code>.</p>
+<p>For symmetric matrices, <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> requires a positive
+definite <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, the matrix of its Cayley mode and of its inertia
+count: with <code class="docutils literal notranslate"><span class="pre">check=True</span></code> a negative or a zero pivot raises a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> naming the likely causes, insufficient
+boundary conditions, a mechanism, distorted elements or a preload beyond
+the buckling load, see <a class="reference internal" href="boundary_conditions.html"><span class="doc">Boundary conditions and prescribed displacements</span></a>. When the solvers of
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> fail and <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> is not positive definite,
+its <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> starts with the same diagnosis.</p>
+<p>A dof without stiffness, a null row or column of <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>, raises a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> naming the dofs, see
+<a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>: with the same null row of <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span> or
+<span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span> the pencil is singular, every value being an eigenvalue, and
+otherwise it gives a spurious null eigenvalue. <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span> and
+<span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span> may have null rows, e.g. a lumped mass matrix without rotary
+inertia. <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.is_symmetric" title="pyfe3d.solver.sparseutils.is_symmetric"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_symmetric()</span></code></a> selects the solvers of symmetric or
+unsymmetric matrices when <code class="docutils literal notranslate"><span class="pre">symmetric=None</span></code>.</p>
+</section>
+<section id="arpack-and-intel-mkl">
+<h2>ARPACK and Intel MKL<a class="headerlink" href="#arpack-and-intel-mkl" title="Link to this heading">#</a></h2>
+<p>With Intel MKL 2024.2.0 to 2025.0.0, the routine <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code>, which the
+symmetric drivers of ARPACK call on the tridiagonal matrix of the Lanczos
+process, returns wrong eigenvectors for matrices larger than 32 by 32, and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> returns wrong eigenpairs, without error,
+whenever its number of Lanczos vectors <code class="docutils literal notranslate"><span class="pre">ncv</span></code> exceeds 32. These versions
+are detected, see <a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.dsteqr_is_faulty" title="pyfe3d.solver.arpackutils.dsteqr_is_faulty"><code class="xref py py-func docutils literal notranslate"><span class="pre">dsteqr_is_faulty()</span></code></a> and <a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.arpack_max_ncv" title="pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="xref py py-func docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a>,
+and <code class="docutils literal notranslate"><span class="pre">ncv</span></code> is then capped at 32: <a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.capped_eigsh" title="pyfe3d.solver.arpackutils.capped_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a> computes more than
+15 eigenpairs in passes with the eigenvectors already found deflated,
+combined with a Rayleigh-Ritz projection, see
+<a class="reference internal" href="solver_arpackutils.html#module-pyfe3d.solver.arpackutils" title="pyfe3d.solver.arpackutils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code></a>, which also describes the override with
+the environment variable <code class="docutils literal notranslate"><span class="pre">PYFE3D_ARPACK_MAX_NCV</span></code>. The verification above
+catches such a failure too, which is another reason to keep it on.</p>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Bathe, K. J., Finite Element Procedures, 2nd ed., K. J. Bathe,
+Watertown, MA, 2014.</p></li>
+<li><p>Lehoucq, R. B., Sorensen, D. C. and Yang, C., ARPACK Users’ Guide:
+Solution of Large-Scale Eigenvalue Problems with Implicitly Restarted
+Arnoldi Methods, SIAM, Philadelphia, 1998.
+<a class="reference external" href="https://doi.org/10.1137/1.9780898719628">https://doi.org/10.1137/1.9780898719628</a></p></li>
+<li><p>Tisseur, F., Backward error and condition of polynomial eigenvalue
+problems, Linear Algebra and its Applications, 309(1-3), 339-361, 2000.
+<a class="reference external" href="https://doi.org/10.1016/S0024-3795(99)00063-4">https://doi.org/10.1016/S0024-3795(99)00063-4</a></p></li>
+<li><p>Tisseur, F. and Meerbergen, K., The quadratic eigenvalue problem, SIAM
+Review, 43(2), 235-286, 2001. <a class="reference external" href="https://doi.org/10.1137/S0036144500381988">https://doi.org/10.1137/S0036144500381988</a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="eigenvalue_analyses.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Linear buckling and natural frequencies</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="notebooks/ex_linear_static.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Linear static analysis of a plate</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equilibration-of-the-diagonal">Equilibration of the diagonal</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linear-buckling-the-cayley-mode">Linear buckling: the Cayley mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#verification-residuals-and-the-inertia-count">Verification: residuals and the inertia count</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#repeated-eigenvalues">Repeated eigenvalues</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#natural-frequencies-shift-invert-mode">Natural frequencies: shift-invert mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unsymmetric-problems">Unsymmetric problems</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#damped-frequencies-linearization">Damped frequencies: linearization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solver-policy-and-dense-fallback">Solver policy and dense fallback</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#arpack-and-intel-mkl">ARPACK and Intel MKL</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/eigenvalue_solvers.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Choosing an element &#8212; pyfe3d 0.12.0 documentation</title>
+    <title>Choosing an element &#8212; pyfe3d 0.12.1 documentation</title>
   
   
   
@@ -26,19 +26,19 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
+    <script src="_static/documentation_options.js?v=c5b435e8"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,7 +48,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Shell and beam properties" href="shell_properties.html" />
+    <link rel="next" title="Shell properties" href="shell_properties.html" />
     <link rel="prev" title="Conventions" href="conventions.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -101,7 +101,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
   
 </a></div>
     
@@ -165,7 +165,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
-    Shell and beam properties
+    Shell properties
   </a>
 </li>
 
@@ -178,8 +178,92 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
     Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
   </a>
 </li>
 
@@ -206,6 +290,34 @@
 
 
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
   </a>
@@ -213,64 +325,162 @@
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_static.html">
     Linear static analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_beam_frame.html">
     Linear static analysis of beams and frames
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_column.html">
     Linear buckling analysis of a column
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_plate.html">
     Natural frequency analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_nonlinear_static.html">
     Non-linear static analysis with pyfe3d.solver
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
   </a>
 </li>
 
@@ -328,14 +538,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -355,7 +565,7 @@
   
 
   
-    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -369,7 +579,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -415,7 +625,84 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
-    Shell and beam properties
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
   </a>
 </li>
 
@@ -423,6 +710,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
     Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
   </a>
 </li>
 
@@ -449,6 +743,34 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
   </a>
@@ -456,64 +778,162 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_static.html">
+  <a class="nav-link nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_static.html">
     Linear static analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_beam_frame.html">
     Linear static analysis of beams and frames
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_column.html">
     Linear buckling analysis of a column
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_plate.html">
     Natural frequency analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_nonlinear_static.html">
     Non-linear static analysis with pyfe3d.solver
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
   </a>
 </li>
 
@@ -559,14 +979,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -623,7 +1043,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Choosing an element</span></li>
@@ -652,8 +1072,13 @@ share the dofs of the nodes, see <a class="reference internal" href="conventions
 <h2>Shells<a class="headerlink" href="#shells" title="Link to this heading">#</a></h2>
 <p>The shell elements are flat, with first-order shear deformation theory
 (FSDT) kinematics, the constitutive matrices of a <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a>, see
-<a class="reference internal" href="shell_properties.html"><span class="doc">Shell and beam properties</span></a>, and the von Kármán membrane strains in the
-geometrically non-linear analyses.</p>
+<a class="reference internal" href="shell_properties.html"><span class="doc">Shell properties</span></a>, and the von Kármán membrane strains in the
+geometrically non-linear analyses, see <a class="reference internal" href="shell_formulation.html"><span class="doc">Shell elements: kinematics and formulation</span></a>. They
+differ in how they avoid shear locking and spurious modes, in their
+membrane and in their cost; the theory of each one is in
+<a class="reference internal" href="shell_quad4.html"><span class="doc">Quad4: assumed transverse shear strains (MITC4)</span></a>, <a class="reference internal" href="shell_quad4r.html"><span class="doc">Quad4R: one-point integration and hourglass control</span></a>, <a class="reference internal" href="shell_tria3dsg.html"><span class="doc">Tria3DSG: the discrete shear gap triangle</span></a> and
+<a class="reference internal" href="shell_tria3r.html"><span class="doc">Tria3R: discrete shear gap with the Allman membrane</span></a>, and that of the drilling rotation in
+<a class="reference internal" href="shell_drilling.html"><span class="doc">Drilling rotations</span></a>.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Element</p></th>
@@ -668,11 +1093,11 @@ geometrically non-linear analyses.</p>
 the MITC4 element against shear locking, two-by-two bending, and
 the drilling enrichment of the in-plane displacement field, see
 <a class="reference internal" href="quad4.html#module-pyfe3d.quad4" title="pyfe3d.quad4"><code class="xref py py-mod docutils literal notranslate"><span class="pre">quad4</span></code></a>; only the six rigid-body modes have zero energy and
-the element passes the membrane and bending patch tests. Up to
-0.11, and with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, the transverse shear of the
-elements with <span class="math notranslate nohighlight">\(h/\ell &lt; 1\)</span> was integrated with one point, after
-Hughes et al. (1977), whose two zero-energy modes made a strip one
-element wide too flexible in torsion, see the zero-energy modes in
+the element passes the membrane and bending patch tests. With
+<code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, the transverse shear of the elements with
+<span class="math notranslate nohighlight">\(h/\ell &lt; 1\)</span> is integrated with one point, after Hughes et al.
+(1977), whose two zero-energy modes make a strip one element wide
+too flexible in torsion, see the zero-energy modes in
 the Notes of <a class="reference internal" href="quad4.html#module-pyfe3d.quad4" title="pyfe3d.quad4"><code class="xref py py-mod docutils literal notranslate"><span class="pre">quad4</span></code></a>. The geometric stiffness takes the
 slopes of <span class="math notranslate nohighlight">\(w\)</span> at the two-by-two points by default, and at the
 centroid with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">centroid_slopes</span> <span class="pre">=</span> <span class="pre">1</span></code>, such
@@ -695,12 +1120,10 @@ the hourglass modes of <span class="math notranslate nohighlight">\(u\)</span> a
 Brockman (1987), with the membrane moduli of a laminate, and the
 one-element-deep strips of MacNeal and Harder lock in in-plane
 bending. <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code> and <code class="docutils literal notranslate"><span class="pre">hgfactor_membrane</span></code> of
-<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_KC0()</span></code></a> multiply the two. Up to 0.11 the
-hourglass modes of <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span> had Brockman’s artificial
-stiffnesses, set with <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code>, <code class="docutils literal notranslate"><span class="pre">hgfactor_rx</span></code> and
-<code class="docutils literal notranslate"><span class="pre">hgfactor_ry</span></code>, which also stiffened a uniform twist, by up to 78 %
-of its energy whatever the mesh where the element areas were large
-in the unit of length.</p></td>
+<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_KC0()</span></code></a> multiply the two. Brockman’s artificial
+stiffnesses on the hourglass modes of <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span> would
+also stiffen a uniform twist, by up to 78 % of its energy whatever
+the mesh where the element areas are large in the unit of length.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a></p></td>
 <td><p>3</p></td>
@@ -718,7 +1141,7 @@ hemisphere with 8x8 cells, the two agreeing from 32x32, see
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a></p></td>
 <td><p>3</p></td>
-<td><p>The recommended triangle. Since 0.12.0 the same discrete shear gap
+<td><p>The recommended triangle. The same discrete shear gap
 transverse shear field as <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>, <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">1</span></code>,
 free of shear locking without a tuning parameter, with the membrane
 enriched by the drilling rotations of Allman: identical to
@@ -726,9 +1149,8 @@ enriched by the drilling rotations of Allman: identical to
 vibration, better in in-plane bending, on the Scordelis-Lo roof and
 on the twisted beam, stiffer on the coarse meshes of the pinched
 hemisphere, and assembled in half the time, see <a class="reference internal" href="tria3r.html#module-pyfe3d.tria3r" title="pyfe3d.tria3r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tria3r</span></code></a>.
-<code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> with <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code> reproduces
-the centroid-sampled shear of the versions up to 0.11, which does not
-converge on thin plates and shells: -14 % on the deflection of a
+<code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> with <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code> gives the
+centroid-sampled shear, which does not converge on thin plates and shells: -14 % on the deflection of a
 simply supported plate with <span class="math notranslate nohighlight">\(a/h = 1000\)</span>.</p></td>
 </tr>
 </tbody>
@@ -751,8 +1173,7 @@ distortion an element tolerates.</p></li>
 <li><p>The drilling rotation <span class="math notranslate nohighlight">\(r_z\)</span> of all the shells has, by default, a
 physics-based stiffness, <code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, without user parameter.
 <code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">1</span></code> selects the fictitious penalty of Nastran,
-controlled by <code class="docutils literal notranslate"><span class="pre">K6ROT</span></code>, which reproduces the results of versions older
-than 0.10.0.</p></li>
+controlled by <code class="docutils literal notranslate"><span class="pre">K6ROT</span></code>.</p></li>
 <li><p>The aerodynamic matrices of the piston theory, <code class="docutils literal notranslate"><span class="pre">update_KA_beta</span></code>,
 <code class="docutils literal notranslate"><span class="pre">update_KA_gamma</span></code> and <code class="docutils literal notranslate"><span class="pre">update_CA</span></code>, exist for <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> and
 <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> only.</p></li>
@@ -773,7 +1194,7 @@ projected facet, measures it; it is the attribute <code class="docutils literal 
 in-plane axis moves the nodes of the facet in an alternating in-plane
 pattern, which strains it, and the facet alone is too stiff in warped
 meshes.</p>
-<p>Since version 0.12.0 the attribute <code class="docutils literal notranslate"><span class="pre">warp_offsets</span></code> of both elements,
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">warp_offsets</span></code> of both elements,
 <code class="docutils literal notranslate"><span class="pre">1</span></code> by default, links the facet to the nodes by rigid offsets along its
 normal, <span class="math notranslate nohighlight">\(u^f_a = u_a - \tilde{z}_a r_{y,a}\)</span> and <span class="math notranslate nohighlight">\(v^f_a = v_a + \tilde{z}_a
 r_{x,a}\)</span> in element coordinates, <span class="math notranslate nohighlight">\(\boldsymbol{u}^f = \boldsymbol{J}
@@ -790,7 +1211,7 @@ and <code class="docutils literal notranslate"><span class="pre">KC0</span></cod
 Notes of <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>, <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4.update_KG" title="pyfe3d.quad4.Quad4.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4.update_KG()</span></code></a> and
 <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4.update_KCNL" title="pyfe3d.quad4.Quad4.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4.update_KCNL()</span></code></a>. Flat elements
 give the same results, bit for bit, with <code class="docutils literal notranslate"><span class="pre">warp_offsets</span></code> <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>,
-and <code class="docutils literal notranslate"><span class="pre">0</span></code> reproduces the versions up to 0.11. The correction is derived in
+and <code class="docutils literal notranslate"><span class="pre">0</span></code> uses the facet alone. The correction is derived in
 pyfe3d; MacNeal (1978), p. 180, and Cook (1994), p. 552, correct warped
 quadrilaterals differently, balancing the moment of the offset membrane
 forces with normal nodal forces, and Belytschko, Wong and Chiang (1992),
@@ -819,16 +1240,17 @@ out of plane, normalised by those of their Table 3:</p>
 </div>
 <p>The remaining error of <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> is that of its in-plane bending
 with one element across the width. With 6x1 <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> elements,
-warping ratio 0.049, the tip displacements are 0.6 % from those of a 96x16
-mesh, against 74 to 91 % without the offsets. On the same beam, the offsets
+warping ratio 0.049, the tip displacements are within 1 % of those of a
+96x16 mesh, and more than 70 % too small without the offsets. On the same
+beam, the offsets
 also bring the linear buckling load under an axial tip load and the first
 natural frequency of coarse meshes to those of fine meshes, see
 <a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>. <code class="docutils literal notranslate"><span class="pre">tests/test_quad_warp_offsets.py</span></code> checks the
 correction and the twisted beam.</p>
 <p>Practical rules for warped quadrilaterals:</p>
 <ul class="simple">
-<li><p>Keep the default <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code>; <code class="docutils literal notranslate"><span class="pre">0</span></code> serves only to reproduce
-earlier results. The offsets were measured up to the warping ratio of
+<li><p>Keep the default <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code>; with <code class="docutils literal notranslate"><span class="pre">0</span></code> the facet alone is too
+stiff in warped meshes. The offsets were measured up to the warping ratio of
 0.049 above, and <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalShell</span></code></a> warns above 0.07, the
 ratio up to which its exact offsets were verified: beyond it, refine the
 mesh or use triangles.</p></li>
@@ -860,33 +1282,29 @@ shape functions of Luo (2008), which solve the static equilibrium
 equations of the beam with an uncoupled section, such that one
 element gives the exact tip deflection of a cantilever with shear
 deformation, and the nodal displacements of a frame under nodal
-loads, see <a class="reference internal" href="ex_beam_frame.html"><span class="doc">Linear static analysis of beams and frames</span></a>. With couplings in the sectional
+loads, see <code class="docutils literal notranslate"><span class="pre">tests/test_beamc_frame.py</span></code>. With couplings in the sectional
 stiffness matrix other than extension-twist, e.g. an axis off the
 centroid or the bending-shear couplings of a composite section, its
 shape functions are derived from the same equations with the full
 matrix, evaluated numerically for each element, and one element
 remains exact under nodal loads, see the Notes of
-<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>. Since version 0.12.0 its von Kármán axial
+<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>. Its von Kármán axial
 strain takes the element mean of <span class="math notranslate nohighlight">\((v_{,x}^2 + w_{,x}^2)/2\)</span>, after
 Crisfield (1991), Section 7.1.3, which removes its membrane
-locking: the central deflection of a beam clamped at both ends,
-with a linear deflection three times its height, is 0.60 % below
-the converged one with 4 elements, against 8.1 % before, and the
-lower limit load of the arch of Fung and Kaplan (1952) with 40
-elements is within 0.38 % of theirs, against 5.8 %, see the Notes
-of <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> and
+locking: the lower limit load of the arch of Fung and Kaplan (1952)
+with 40 elements is within 0.38 % of theirs, against 5.8 % with
+the pointwise strain, see the Notes of <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> and
 <code class="docutils literal notranslate"><span class="pre">tests/test_solver_arc_length_fung_kaplan.py</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a></p></td>
 <td><p>Timoshenko kinematics with linear interpolation and reduced
 integration; it converges to the same solutions with mesh
 refinement, quadratically, and needs many more elements, see
-<code class="docutils literal notranslate"><span class="pre">tests/test_timoshenko_beam_literature.py</span></code>. Since version 0.12.0
-its buckling load includes the reduction due to shear deformation,
-see <a class="reference internal" href="ex_linear_buckling_column.html"><span class="doc">Linear buckling analysis of a column</span></a>, and its constant slopes leave
+<code class="docutils literal notranslate"><span class="pre">tests/test_timoshenko_beam_literature.py</span></code>. Its buckling load includes the reduction due to shear deformation,
+see <code class="docutils literal notranslate"><span class="pre">tests/test_beam_linear_buckling_3D_column.py</span></code>, and its constant slopes leave
 it free of membrane locking in the geometrically non-linear
 cantilever under an end moment, as <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> with its
-averaged axial strain, see <a class="reference internal" href="tut-nonlinear-benchmarks.html"><span class="doc">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</span></a>. Its
+averaged axial strain, see <code class="docutils literal notranslate"><span class="pre">tests/test_nonlinear_benchmarks_sze2004.py</span></code>. Its
 interpolation does not depend on the sectional stiffness matrix,
 and it converges as fast with strong bending-shear couplings, e.g.
 of composite box beams, as without them, while <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> is
@@ -909,7 +1327,7 @@ geometric stiffness matrix.</p></td>
 </div>
 <p>The cross section of the beams and of the truss is given by a
 <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, whose integrals are taken in the element coordinate
-system, see <a class="reference internal" href="shell_properties.html"><span class="doc">Shell and beam properties</span></a>. Its orientation is defined by the
+system, see <a class="reference internal" href="shell_properties.html"><span class="doc">Shell properties</span></a>. Its orientation is defined by the
 vector <code class="docutils literal notranslate"><span class="pre">vxyi,</span> <span class="pre">vxyj,</span> <span class="pre">vxyk</span></code> of <code class="docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code>, see
 <a class="reference internal" href="conventions.html"><span class="doc">Conventions</span></a>. The beams have a transverse shear modulus for each
 plane of bending, <code class="docutils literal notranslate"><span class="pre">G12</span></code> for the element <span class="math notranslate nohighlight">\(xy\)</span> plane and <code class="docutils literal notranslate"><span class="pre">G13</span></code> for the
@@ -1018,32 +1436,16 @@ the element is integrated, with the same values for every element:</p>
 <p>Any other value, and <code class="docutils literal notranslate"><span class="pre">2</span></code> for an element without a reduced-integration
 mass matrix, raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. Each matrix is the integral over
 the element of the inertia of the section between the interpolated
-velocities: for the shells, <span class="math notranslate nohighlight">\(I_\rho\)</span>, <span class="math notranslate nohighlight">\(I_{\rho z}\)</span> and <span class="math notranslate nohighlight">\(I_{\rho z^2}\)</span>, the
-<code class="docutils literal notranslate"><span class="pre">intrho</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> and <code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code> of the <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a>, which
-include the offset, see <a class="reference internal" href="shell_properties.html"><span class="doc">Shell and beam properties</span></a>; for the beams, the
-integrals of the <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>. The consistent matrices integrate it
-exactly. The lumped matrices integrate it with the points at the nodes,
-where each shape function is 1 at its own node and 0 at the others, such
-that, for the shells, node <span class="math notranslate nohighlight">\(i\)</span> carries the weight <span class="math notranslate nohighlight">\(w_i\)</span> times</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{bmatrix}
-    I_\rho &amp; 0 &amp; 0 &amp; 0 &amp; I_{\rho z} &amp; 0 \\
-    0 &amp; I_\rho &amp; 0 &amp; -I_{\rho z} &amp; 0 &amp; 0 \\
-    0 &amp; 0 &amp; I_\rho &amp; 0 &amp; 0 &amp; 0 \\
-    0 &amp; -I_{\rho z} &amp; 0 &amp; I_{\rho z^2} &amp; 0 &amp; 0 \\
-    I_{\rho z} &amp; 0 &amp; 0 &amp; 0 &amp; I_{\rho z^2} &amp; 0 \\
-    0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0
-\end{bmatrix}\end{split}\]</div>
-<p>in element coordinates, for <span class="math notranslate nohighlight">\(u, v, w, r_x, r_y, r_z\)</span>, with <span class="math notranslate nohighlight">\(w_i = A/3\)</span> for
-the triangles and the Jacobian determinant at the node for the
-quadrilaterals, and no coupling between nodes. A lumped shell matrix is
-diagonal only without offset, when <span class="math notranslate nohighlight">\(I_{\rho z} = 0\)</span>; with an offset, the
-coupling keeps the centre of mass of the element at the offset. A warped
-quadrilateral adds the coupling of its rigid offsets, see <a class="reference internal" href="#warped-quadrilaterals">Warped
-quadrilaterals</a>. The mass,
-first moment and rotary inertia given by each scheme are discussed in the
-Notes of <code class="docutils literal notranslate"><span class="pre">update_M</span></code>, e.g. <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.update_M" title="pyfe3d.tria3r.Tria3R.update_M"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3R.update_M()</span></code></a> and
-<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_M" title="pyfe3d.quad4r.Quad4R.update_M"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_M()</span></code></a>. The lumped beam matrices are diagonal, without
+velocities: for the shells, the integrals <code class="docutils literal notranslate"><span class="pre">intrho</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> and
+<code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code> of the <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a>, which include the offset; for the
+beams, the integrals of the <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>. The consistent matrices
+integrate it exactly, and the lumped matrices with the points at the
+nodes, such that they couple no different nodes. A lumped shell matrix is
+block-diagonal per node, diagonal only when <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> is zero, and keeps
+the centre of mass of the element at the offset; the mass, first moment
+and rotary inertia of each scheme are derived in <a class="reference internal" href="shell_mass.html"><span class="doc">Mass matrices of the shells</span></a>, and a
+warped quadrilateral adds the coupling of its rigid offsets, see <a class="reference internal" href="#warped-quadrilaterals">Warped
+quadrilaterals</a>. The lumped beam matrices are diagonal, without
 the first moments <code class="docutils literal notranslate"><span class="pre">intrhoy</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> and the product <code class="docutils literal notranslate"><span class="pre">intrhoyz</span></code> of
 the section, see <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.update_M" title="pyfe3d.beamc.BeamC.update_M"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BeamC.update_M()</span></code></a>.</p>
 </section>
@@ -1098,7 +1500,7 @@ test finite element accuracy, Finite Elements in Analysis and Design,
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Shell and beam properties</p>
+        <p class="prev-next-title">Shell properties</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1109,7 +1511,7 @@ test finite element accuracy, Finite Elements in Analysis and Design,
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -1152,8 +1554,8 @@ test finite element accuracy, Finite Elements in Analysis and Design,
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1186,7 +1588,7 @@ test finite element accuracy, Finite Elements in Analysis and Design,
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
 </p></div>
       
     </div>

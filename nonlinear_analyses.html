@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Non-linear static analyses &#8212; pyfe3d 0.12.0 documentation</title>
+    <title>Non-linear static analyses &#8212; pyfe3d 0.12.1 documentation</title>
   
   
   
@@ -26,19 +26,19 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
+    <script src="_static/documentation_options.js?v=c5b435e8"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,7 +48,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Linear buckling and natural frequencies" href="eigenvalue_analyses.html" />
+    <link rel="next" title="The Newton-Raphson method" href="newton_raphson_method.html" />
     <link rel="prev" title="Inertia relief" href="inertia_relief.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -101,7 +101,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
   
 </a></div>
     
@@ -165,7 +165,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
-    Shell and beam properties
+    Shell properties
   </a>
 </li>
 
@@ -178,8 +178,92 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
     Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
   </a>
 </li>
 
@@ -206,6 +290,34 @@
 
 
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
   </a>
@@ -213,64 +325,162 @@
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_static.html">
     Linear static analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_beam_frame.html">
     Linear static analysis of beams and frames
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_column.html">
     Linear buckling analysis of a column
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_plate.html">
     Natural frequency analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_nonlinear_static.html">
     Non-linear static analysis with pyfe3d.solver
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
   </a>
 </li>
 
@@ -328,14 +538,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -355,7 +565,7 @@
   
 
   
-    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -369,7 +579,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -415,7 +625,84 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
-    Shell and beam properties
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
   </a>
 </li>
 
@@ -423,6 +710,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
     Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
   </a>
 </li>
 
@@ -449,6 +743,34 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
   </a>
@@ -456,64 +778,162 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_static.html">
+  <a class="nav-link nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_static.html">
     Linear static analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_beam_frame.html">
     Linear static analysis of beams and frames
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_column.html">
     Linear buckling analysis of a column
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_plate.html">
     Natural frequency analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_nonlinear_static.html">
     Non-linear static analysis with pyfe3d.solver
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
   </a>
 </li>
 
@@ -559,14 +979,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -623,7 +1043,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Non-linear static analyses</span></li>
@@ -645,16 +1065,70 @@
                   
   <section id="non-linear-static-analyses">
 <h1>Non-linear static analyses<a class="headerlink" href="#non-linear-static-analyses" title="Link to this heading">#</a></h1>
-<p>The geometrically non-linear static analyses are run with
-<a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a>, which receives four callables of the model and finds
-the configurations <span class="math notranslate nohighlight">\(\boldsymbol{u}\)</span> in equilibrium with the external load scaled by
-the load factor <span class="math notranslate nohighlight">\(\lambda\)</span>:</p>
-<div class="math notranslate nohighlight">
-\[\boldsymbol{R}(\boldsymbol{u}, \lambda) = \boldsymbol{F}_{int}(\boldsymbol{u}) - \lambda \boldsymbol{F}_{ext} = \boldsymbol{0}\]</div>
-<p>The elements give the terms of the residual and of its Jacobian, the
-solvers of <a class="reference internal" href="solver.html#module-pyfe3d.solver" title="pyfe3d.solver"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code></a> the increments and the iterations.</p>
-<section id="from-the-elements-to-the-callables">
-<h2>From the elements to the callables<a class="headerlink" href="#from-the-elements-to-the-callables" title="Link to this heading">#</a></h2>
+<p>When the displacements change the geometry enough to change the
+equilibrium, e.g. the membrane stiffening of a plate under pressure, the
+softening of a compressed shell after buckling, or the snap-through of an
+arch, the equilibrium equations are non-linear in the displacements and
+are solved incrementally and iteratively. This chapter states the
+equations that pyfe3d solves, how a model is passed to the solvers, and how
+to choose the solution method and the kinematics. The algorithms are in
+<a class="reference internal" href="newton_raphson_method.html"><span class="doc">The Newton-Raphson method</span></a> and <a class="reference internal" href="arc_length_methods.html"><span class="doc">Arc-length methods</span></a>, the stopping
+test of the iterations in <a class="reference internal" href="convergence_criteria.html"><span class="doc">Convergence criteria</span></a>, and the loads that
+depend on the configuration or on the load factor in
+<a class="reference internal" href="configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent loads</span></a>.</p>
+<section id="equilibrium-residual-and-tangent-stiffness">
+<h2>Equilibrium, residual and tangent stiffness<a class="headerlink" href="#equilibrium-residual-and-tangent-stiffness" title="Link to this heading">#</a></h2>
+<p>The external loads are applied proportionally to the load factor
+<span class="math notranslate nohighlight">\(\lambda\)</span>, with <span class="math notranslate nohighlight">\(\boldsymbol{F}_{ext}\)</span> the reference external force vector and
+<span class="math notranslate nohighlight">\(\lambda = 1\)</span> the full load. An equilibrium configuration <span class="math notranslate nohighlight">\(\boldsymbol{u}\)</span> makes
+the residual null, the principle of virtual work in discrete form:</p>
+<div class="math notranslate nohighlight" id="equation-nl-residual">
+<span class="eqno">(1)<a class="headerlink" href="#equation-nl-residual" title="Link to this equation">#</a></span>\[\boldsymbol{R}(\boldsymbol{u}, \lambda) = \boldsymbol{F}_{int}(\boldsymbol{u}) - \lambda \boldsymbol{F}_{ext} = \boldsymbol{0},
+\qquad
+\boldsymbol{F}_{int} = \int_{\Omega} (\boldsymbol{B}_L + \boldsymbol{B}_{NL})^\top \boldsymbol{\sigma} \, d\Omega\]</div>
+<p>with the strains <span class="math notranslate nohighlight">\(\boldsymbol{\varepsilon} = (\boldsymbol{B}_L + \frac{1}{2}
+\boldsymbol{B}_{NL}) \boldsymbol{u}\)</span> and their variations <span class="math notranslate nohighlight">\(\delta
+\boldsymbol{\varepsilon} = (\boldsymbol{B}_L + \boldsymbol{B}_{NL}) \delta \boldsymbol{u}\)</span>, where
+<span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}\)</span> depends on <span class="math notranslate nohighlight">\(\boldsymbol{u}\)</span>. The sign convention is that of
+the residual <span class="math notranslate nohighlight">\(\boldsymbol{R} = \boldsymbol{F}_{int} - \lambda \boldsymbol{F}_{ext}\)</span>, whose
+Jacobian is the tangent stiffness matrix</p>
+<div class="math notranslate nohighlight" id="equation-nl-tangent">
+<span class="eqno">(2)<a class="headerlink" href="#equation-nl-tangent" title="Link to this equation">#</a></span>\[\boldsymbol{K}_T = \frac{\partial \boldsymbol{R}}{\partial \boldsymbol{u}}
+= \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_{GNL}(\boldsymbol{u})
++ \boldsymbol{K}_G(\boldsymbol{u}) + \boldsymbol{K}_F\]</div>
+<p>with the linear constitutive stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> of
+<span class="math notranslate nohighlight">\(\boldsymbol{B}_L\)</span>, the non-linear constitutive stiffness matrix
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL}\)</span> of the terms of <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}\)</span>, the geometric stiffness
+matrices of the stresses of the linear strains, <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span>, and of the
+non-linear strains, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{GNL}\)</span>, and the load stiffness matrix
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_F = -\partial (\lambda \boldsymbol{F}_{ext})/\partial \boldsymbol{u}\)</span>, null for
+dead loads, see <a class="reference internal" href="configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent loads</span></a>. Without <span class="math notranslate nohighlight">\(\boldsymbol{K}_F\)</span>,
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_T\)</span> is symmetric: the constitutive terms have the same operator
+<span class="math notranslate nohighlight">\(\boldsymbol{B}_L + \boldsymbol{B}_{NL}\)</span> on both sides of the symmetric
+<span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>, and the geometric terms contain the mixed second
+derivatives of the strains. The elements group the terms as their <code class="docutils literal notranslate"><span class="pre">update_*</span></code> methods compute them:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">KC0</span></code>, of <code class="docutils literal notranslate"><span class="pre">update_KC0</span></code>, is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">KCNL</span></code>, of <code class="docutils literal notranslate"><span class="pre">update_KCNL</span></code>, is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}\)</span>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">KG</span></code>, of <code class="docutils literal notranslate"><span class="pre">update_KG</span></code>, is <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span>, which is linear in
+<span class="math notranslate nohighlight">\(\boldsymbol{u}\)</span> and therefore scales with the load multiplier of the linear
+buckling analysis, see <a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fint</span></code>, of <code class="docutils literal notranslate"><span class="pre">update_fint(...,</span> <span class="pre">nonlinear=1)</span></code>, is <span class="math notranslate nohighlight">\(\boldsymbol{F}_{int}\)</span>.</p></li>
+</ul>
+<p>Their sum <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code> is the exact derivative of <code class="docutils literal notranslate"><span class="pre">fint</span></code> for every
+element with <code class="docutils literal notranslate"><span class="pre">update_KCNL</span></code>, which <code class="docutils literal notranslate"><span class="pre">tests/test_tangent_consistency.py</span></code>
+checks with a Taylor test and finite differences on distorted elements in
+arbitrary orientations. The internal force vector is not <span class="math notranslate nohighlight">\(\boldsymbol{K}_C
+\boldsymbol{u}\)</span>: because of the factor <span class="math notranslate nohighlight">\(\frac{1}{2}\)</span> of the strains, it must be
+computed from the stresses, as <code class="docutils literal notranslate"><span class="pre">update_fint</span></code> does. The strains are the
+von Kármán strains of each element, valid for small strains and small to
+moderate rotations; for large rotations, see the kinematics below.</p>
+</section>
+<section id="the-model-as-four-callables">
+<h2>The model as four callables<a class="headerlink" href="#the-model-as-four-callables" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a> receives the model as four callables and stores the
+solution in <code class="docutils literal notranslate"><span class="pre">an.increments</span></code>, the converged load factors, and <code class="docutils literal notranslate"><span class="pre">an.cs</span></code>,
+the converged configurations:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Callable</p></th>
@@ -673,7 +1147,8 @@ solvers of <a class="reference internal" href="solver.html#module-pyfe3d.solver"
 <code class="docutils literal notranslate"><span class="pre">update_probe_xe(x)</span></code> and <code class="docutils literal notranslate"><span class="pre">update_probe_ue(c)</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">calc_kC(c=None,</span> <span class="pre">NLgeom=False,</span> <span class="pre">silent=True)</span></code></p></td>
-<td><p><span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, or <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{c}) + \boldsymbol{K}_{GNL}(\boldsymbol{c})\)</span> with <code class="docutils literal notranslate"><span class="pre">NLgeom=True</span></code></p></td>
+<td><p><span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, or <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{c}) +
+\boldsymbol{K}_{GNL}(\boldsymbol{c})\)</span> with <code class="docutils literal notranslate"><span class="pre">NLgeom=True</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">update_KC0</span></code> once, <code class="docutils literal notranslate"><span class="pre">update_KCNL</span></code> at <code class="docutils literal notranslate"><span class="pre">c</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">calc_kG(c=None,</span> <span class="pre">NLgeom=False,</span> <span class="pre">silent=True)</span></code></p></td>
@@ -683,187 +1158,110 @@ solvers of <a class="reference internal" href="solver.html#module-pyfe3d.solver"
 </tbody>
 </table>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">calc_kC()</span> <span class="pre">+</span> <span class="pre">calc_kG()</span></code> is then the exact Jacobian of <code class="docutils literal notranslate"><span class="pre">calc_fint</span></code>,
-<span class="math notranslate nohighlight">\(\boldsymbol{K}_T = \partial \boldsymbol{R}/\partial \boldsymbol{u}\)</span>, and the full Newton-Raphson method
-converges quadratically. The class <code class="docutils literal notranslate"><span class="pre">Model</span></code> of
-<code class="docutils literal notranslate"><span class="pre">tests/test_solver_nonlinear_static.py</span></code>, see <a class="reference internal" href="ex_nonlinear_static.html"><span class="doc">Non-linear static analysis with pyfe3d.solver</span></a>,
-wraps a list of elements of one type into these four callables.
-<code class="docutils literal notranslate"><span class="pre">calc_kC()</span></code>, the linear stiffness matrix, also gives the scaling of the
-convergence criterion.</p>
+<p>The solvers call <code class="docutils literal notranslate"><span class="pre">calc_fext(inc=1.)</span></code> and scale the vector by the load
+factor themselves; <code class="docutils literal notranslate"><span class="pre">calc_kC()</span></code>, the linear stiffness matrix, gives the
+predictor of the first increment, the scaling of the arc length and the
+scaling of the convergence criterion; and the tangent stiffness matrix is
+<code class="docutils literal notranslate"><span class="pre">calc_kC(c,</span> <span class="pre">NLgeom=True)</span> <span class="pre">+</span> <span class="pre">calc_kG(c,</span> <span class="pre">NLgeom=True)</span></code>, see
+<a class="reference internal" href="solver_callbacks.html#pyfe3d.solver.callbacks.calc_kT" title="pyfe3d.solver.callbacks.calc_kT"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks.calc_kT()</span></code></a>. A callable may declare the
+optional keyword arguments of <a class="reference internal" href="solver_callbacks.html#module-pyfe3d.solver.callbacks" title="pyfe3d.solver.callbacks"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks</span></code></a>, for loads
+that depend on the configuration or on the load factor, see
+<a class="reference internal" href="configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent loads</span></a>. The <code class="docutils literal notranslate"><span class="pre">Model</span></code> class of
+<code class="docutils literal notranslate"><span class="pre">tests/test_solver_nonlinear_static.py</span></code> wraps a list of elements of one
+type into these callables.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">Analysis(...,</span> <span class="pre">bu=bu,</span> <span class="pre">uk=uk)</span></code>, the callables work with the vectors
+and matrices of all the <code class="docutils literal notranslate"><span class="pre">N</span></code> dofs and <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs" title="pyfe3d.solver.analysis.FreeDofs"><code class="xref py py-class docutils literal notranslate"><span class="pre">FreeDofs</span></code></a> restricts them to
+the free dofs, with the prescribed displacements <span class="math notranslate nohighlight">\(\lambda
+\bar{\boldsymbol{u}}_k\)</span> imposed exactly, see <a class="reference internal" href="boundary_conditions.html"><span class="doc">Boundary conditions and prescribed displacements</span></a>; the
+vectors of <code class="docutils literal notranslate"><span class="pre">an.cs</span></code> then have size <code class="docutils literal notranslate"><span class="pre">N</span></code>. Without <code class="docutils literal notranslate"><span class="pre">bu</span></code>, the callables
+work with the free dofs only.</p>
 </section>
-<section id="boundary-conditions-and-prescribed-displacements">
-<h2>Boundary conditions and prescribed displacements<a class="headerlink" href="#boundary-conditions-and-prescribed-displacements" title="Link to this heading">#</a></h2>
-<p>With <code class="docutils literal notranslate"><span class="pre">Analysis(...,</span> <span class="pre">bu=bu)</span></code>, the callables receive and return the
-vectors and matrices of all the <code class="docutils literal notranslate"><span class="pre">N</span></code> dofs, as assembled by the elements,
-and <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs" title="pyfe3d.solver.analysis.FreeDofs"><code class="xref py py-class docutils literal notranslate"><span class="pre">FreeDofs</span></code></a> restricts them to the free dofs <code class="docutils literal notranslate"><span class="pre">bu</span></code>. The solution
-vectors <code class="docutils literal notranslate"><span class="pre">an.cs</span></code> have size <code class="docutils literal notranslate"><span class="pre">N</span></code>, with zeros at the constrained dofs.</p>
-<p>With <code class="docutils literal notranslate"><span class="pre">uk</span></code>, the constrained dofs have the prescribed displacements
-<span class="math notranslate nohighlight">\(\lambda \boldsymbol{u}_k\)</span>, imposed exactly, proportional to the load factor:
-<code class="docutils literal notranslate"><span class="pre">uk[~bu]</span></code> are the values at <span class="math notranslate nohighlight">\(\lambda = 1\)</span>, and a load-free analysis,
-<code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> returning zeros, is displacement controlled. The reaction at
-a prescribed dof is <code class="docutils literal notranslate"><span class="pre">calc_fint(u)</span></code> at that dof minus the load applied
-there.</p>
-<p>In <code class="docutils literal notranslate"><span class="pre">test_prescribed_displacement_and_reaction</span></code> of
-<a class="reference internal" href="ex_nonlinear_static.html"><span class="doc">Non-linear static analysis with pyfe3d.solver</span></a>, a point-loaded plate is first solved under load
-control; its central deflection <code class="docutils literal notranslate"><span class="pre">w_c</span></code>, at the dof <code class="docutils literal notranslate"><span class="pre">dof</span></code>, is then
-prescribed without load, with the callables of the full model:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bu_d</span> <span class="o">=</span> <span class="n">bu</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="n">bu_d</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>        <span class="c1"># the loaded dof becomes a known dof</span>
-<span class="n">uk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
-<span class="n">uk</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span> <span class="o">=</span> <span class="n">w_c</span>            <span class="c1"># value at the load factor 1</span>
-
-<span class="k">def</span><span class="w"> </span><span class="nf">calc_fext</span><span class="p">(</span><span class="n">inc</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>   <span class="c1"># no load: displacement control</span>
-
-<span class="n">an</span> <span class="o">=</span> <span class="n">Analysis</span><span class="p">(</span><span class="n">calc_fext</span><span class="p">,</span> <span class="n">calc_fint</span><span class="p">,</span> <span class="n">calc_kC</span><span class="p">,</span> <span class="n">calc_kG</span><span class="p">,</span> <span class="n">bu</span><span class="o">=</span><span class="n">bu_d</span><span class="p">,</span> <span class="n">uk</span><span class="o">=</span><span class="n">uk</span><span class="p">)</span>
-<span class="n">an</span><span class="o">.</span><span class="n">NL_method</span> <span class="o">=</span> <span class="s1">'arc_length_riks'</span>   <span class="c1"># or 'NR'</span>
-<span class="n">increments</span><span class="p">,</span> <span class="n">cs</span> <span class="o">=</span> <span class="n">an</span><span class="o">.</span><span class="n">static</span><span class="p">(</span><span class="n">NLgeom</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">reaction</span> <span class="o">=</span> <span class="n">calc_fint</span><span class="p">(</span><span class="n">cs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="n">dof</span><span class="p">]</span>  <span class="c1"># minus the load at dof, here none</span>
-</pre></div>
-</div>
-<p>Each <code class="docutils literal notranslate"><span class="pre">cs[i][dof]</span></code> is <code class="docutils literal notranslate"><span class="pre">increments[i]*w_c</span></code>, the displacement field at
-<span class="math notranslate nohighlight">\(\lambda = 1\)</span> is that of the load-controlled analysis, and the reaction
-equals the load. The same <code class="docutils literal notranslate"><span class="pre">bu</span></code> and <code class="docutils literal notranslate"><span class="pre">uk</span></code> serve the linear analysis,
-<code class="docutils literal notranslate"><span class="pre">an.static(NLgeom=False)</span></code>, see <a class="reference internal" href="linear_analyses.html"><span class="doc">Linear static analyses</span></a> and the worked
-example <a class="reference internal" href="tut-prescribed-displacement-cantilever.html"><span class="doc">Tutorial: prescribed displacement at the tip of a cantilever</span></a>.</p>
-<p>The worked example <a class="reference internal" href="tut-prescribed-displacement-dome-riks.html"><span class="doc">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</span></a> traces with
-Riks’ method the reaction of a clamped spherical cap and of a hinged shallow
-shell pressed down by a deflection prescribed at their crown, and
-<a class="reference internal" href="tut-nafems-cap-axisymmetric.html"><span class="doc">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</span></a> restricts the co-rotational model of the
-cap to its axisymmetric deformations with a linear constraint <code class="docutils literal notranslate"><span class="pre">u</span> <span class="pre">=</span> <span class="pre">T</span> <span class="pre">q</span></code>,
-passing the restricted callables to <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a>.</p>
-<p>Without <code class="docutils literal notranslate"><span class="pre">bu</span></code>, the callables return the vectors and matrices of the free
-dofs only. The solvers do not remove null rows and columns: a null row or
-column of the linear stiffness matrix, a dof without stiffness, raises a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> naming the dofs, see
-<a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>.</p>
-</section>
-<section id="solvers">
-<h2>Solvers<a class="headerlink" href="#solvers" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">an.NL_method</span></code> selects the solver, and <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a> with
-<code class="docutils literal notranslate"><span class="pre">NLgeom=True</span></code> runs it, returning the converged load factors
-<code class="docutils literal notranslate"><span class="pre">an.increments</span></code> and solutions <code class="docutils literal notranslate"><span class="pre">an.cs</span></code>:</p>
+<section id="incremental-iterative-solution">
+<h2>Incremental-iterative solution<a class="headerlink" href="#incremental-iterative-solution" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">NLgeom=True</span></code> traces the equilibrium path
+<span class="math notranslate nohighlight">\(\boldsymbol{R}(\boldsymbol{u}, \lambda) = \boldsymbol{0}\)</span> from the undeformed state,
+<span class="math notranslate nohighlight">\(\lambda = 0\)</span>, to <span class="math notranslate nohighlight">\(\lambda = 1\)</span>, in increments, each corrected by
+iterations of Newton’s method until the residual is small. <code class="docutils literal notranslate"><span class="pre">an.NL_method</span></code>
+selects how the load factor of each increment is set:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">'NR'</span></code>, the default: load control with the Newton-Raphson method,
-<a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson._solver_NR" title="pyfe3d.solver.newton_raphson._solver_NR"><code class="xref py py-func docutils literal notranslate"><span class="pre">newton_raphson._solver_NR()</span></code></a>, full or modified
-(<code class="docutils literal notranslate"><span class="pre">an.modified_NR</span></code>), see Crisfield (1991), Sections 1.2.2 and 1.2.3,
-with an optional line search (<code class="docutils literal notranslate"><span class="pre">an.line_search</span></code>). The first increment
-is <code class="docutils literal notranslate"><span class="pre">an.initialInc</span></code>; a step
-that fails is repeated with half the increment, and the increment grows
-after a step that converged without being cut, up to <code class="docutils literal notranslate"><span class="pre">an.maxInc</span></code>.
-Beyond a limit point of the load it may converge to another branch of
-the equilibrium path.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'arc_length_riks'</span></code> and <code class="docutils literal notranslate"><span class="pre">'arc_length_crisfield'</span></code>: the arc-length
-methods following Riks (1979) and Crisfield (1981),
-<a class="reference internal" href="solver_arc_length.html#pyfe3d.solver.arc_length._solver_arc_length" title="pyfe3d.solver.arc_length._solver_arc_length"><code class="xref py py-func docutils literal notranslate"><span class="pre">arc_length._solver_arc_length()</span></code></a>, in which the load factor is an
-unknown of each step, such that limit points, snap-through and
-snap-back are traced. The first arc length corresponds to the load
-factor increment <code class="docutils literal notranslate"><span class="pre">an.initialInc</span></code> along the initial tangent.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'NR'</span></code>, the default, load control: <span class="math notranslate nohighlight">\(\lambda\)</span> is prescribed at each
+increment and the iterations solve for <span class="math notranslate nohighlight">\(\boldsymbol{u}\)</span>, see
+<a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson._solver_NR" title="pyfe3d.solver.newton_raphson._solver_NR"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.newton_raphson._solver_NR()</span></code></a> and
+<a class="reference internal" href="newton_raphson_method.html"><span class="doc">The Newton-Raphson method</span></a>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'arc_length_riks'</span></code> and <code class="docutils literal notranslate"><span class="pre">'arc_length_crisfield'</span></code>, path following:
+<span class="math notranslate nohighlight">\(\lambda\)</span> is an unknown of each increment, together with <span class="math notranslate nohighlight">\(\boldsymbol{u}\)</span>, and
+an arc-length constraint fixes the size of the increment, see
+<a class="reference internal" href="solver_arc_length.html#pyfe3d.solver.arc_length._solver_arc_length" title="pyfe3d.solver.arc_length._solver_arc_length"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length._solver_arc_length()</span></code></a> and
+<a class="reference internal" href="arc_length_methods.html"><span class="doc">Arc-length methods</span></a>.</p></li>
 </ul>
-<p>Both stop at the load factor 1.0, or earlier when the increment falls
-below <code class="docutils literal notranslate"><span class="pre">an.minInc</span></code> or, for the arc-length methods, when the cumulative
-arc length reaches <code class="docutils literal notranslate"><span class="pre">an.maxArcLength</span></code>. A run that did not finish is
-detected with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">increments</span><span class="p">,</span> <span class="n">cs</span> <span class="o">=</span> <span class="n">an</span><span class="o">.</span><span class="n">static</span><span class="p">(</span><span class="n">NLgeom</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="n">increments</span> <span class="ow">or</span> <span class="n">increments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">1.</span><span class="p">:</span>
-    <span class="o">...</span>  <span class="c1"># stopped at increments[-1], see the log messages</span>
-</pre></div>
+<p>Both stop at the load factor 1.0 exactly, or earlier, keeping the
+converged increments, when the increment falls below <code class="docutils literal notranslate"><span class="pre">an.minInc</span></code> or, for
+the arc-length methods, when the cumulative arc length reaches
+<code class="docutils literal notranslate"><span class="pre">an.maxArcLength</span></code>; an analysis that did not finish is recognised by
+<code class="docutils literal notranslate"><span class="pre">an.increments[-1]</span> <span class="pre">!=</span> <span class="pre">1.</span></code>. The linear analysis, <code class="docutils literal notranslate"><span class="pre">an.static(NLgeom=False)</span></code>,
+returns a single increment, see <a class="reference internal" href="linear_analyses.html"><span class="doc">Linear static analyses</span></a>.</p>
+<p>At a limit point of the load, <span class="math notranslate nohighlight">\(\boldsymbol{K}_T\)</span> is singular and the load factor
+reaches a maximum along the path. Under load control, no equilibrium
+exists just above the limit load near the current configuration, and the
+iterations either fail, the increment being cut until <code class="docutils literal notranslate"><span class="pre">an.minInc</span></code>, or
+converge to a distant configuration on another part of the path, which
+hides the snap-through. The arc-length methods
+pass limit points of the load, snap-through, and also points where the
+displacements turn back, snap-back, since they do not prescribe either of
+them.</p>
+</section>
+<section id="choice-of-the-method">
+<h2>Choice of the method<a class="headerlink" href="#choice-of-the-method" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Problem</p></th>
+<th class="head"><p>Method</p></th>
+<th class="head"><p>Remarks</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>path without limit points, e.g. membrane stiffening, moderate
+softening</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'NR'</span></code>, full Newton-Raphson</p></td>
+<td><p>quadratic convergence with the consistent tangent of the elements;
+the default</p></td>
+</tr>
+<tr class="row-odd"><td><p>same, expensive factorizations</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'NR'</span></code> with <code class="docutils literal notranslate"><span class="pre">an.modified_NR</span> <span class="pre">=</span> <span class="pre">True</span></code></p></td>
+<td><p>linear convergence, see <a class="reference internal" href="newton_raphson_method.html"><span class="doc">The Newton-Raphson method</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>corrections that overshoot, e.g. strongly non-linear springs or
+large increments</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'NR'</span></code> with <code class="docutils literal notranslate"><span class="pre">an.line_search</span> <span class="pre">=</span> <span class="pre">True</span></code></p></td>
+<td><p>the full step is kept when it reduces the residual enough</p></td>
+</tr>
+<tr class="row-odd"><td><p>limit points, snap-through, snap-back, post-buckling paths</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'arc_length_riks'</span></code> or <code class="docutils literal notranslate"><span class="pre">'arc_length_crisfield'</span></code></p></td>
+<td><p>Riks: Newton’s method on the augmented system, quadratic
+convergence; Crisfield: spherical constraint solved exactly, see
+<a class="reference internal" href="arc_length_methods.html"><span class="doc">Arc-length methods</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>an analysis controlled by a prescribed displacement</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bu</span></code> and <code class="docutils literal notranslate"><span class="pre">uk</span></code> without load, with any method</p></td>
+<td><p>load control traces the reaction as long as the prescribed
+displacement grows along the path; a snap-back of that
+displacement needs an arc-length method</p></td>
+</tr>
+</tbody>
+</table>
 </div>
-<p>The linear static analysis, <code class="docutils literal notranslate"><span class="pre">an.static(NLgeom=False)</span></code>, returns a single
-increment, see <a class="reference internal" href="linear_analyses.html"><span class="doc">Linear static analyses</span></a>.</p>
-</section>
-<section id="convergence-criterion">
-<h2>Convergence criterion<a class="headerlink" href="#convergence-criterion" title="Link to this heading">#</a></h2>
-<p>The iterations of each increment stop when the residual is small according
-to <code class="docutils literal notranslate"><span class="pre">an.convergence</span></code>, see <a class="reference internal" href="solver_convergence.html#module-pyfe3d.solver.convergence" title="pyfe3d.solver.convergence"><code class="xref py py-mod docutils literal notranslate"><span class="pre">convergence</span></code></a>:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">'crisfield'</span></code>, the default: the residual scaled with the diagonal of
-the linear stiffness matrix of the free dofs, <span class="math notranslate nohighlight">\(d_j = K_{{C0}_{jj}}\)</span>, the
-entries of the diagonal scaling vector <span class="math notranslate nohighlight">\(\boldsymbol{d}\)</span>,</p>
-<div class="math notranslate nohighlight">
-\[\zeta = \frac{\|\boldsymbol{R}\|_{\boldsymbol{d}}}{\max(
-\|\lambda \boldsymbol{F}_{ext}\|_{\boldsymbol{d}}, \|\boldsymbol{F}_{int}\|_{\boldsymbol{d}},
-\ldots)} \le \text{relTOL}, \qquad
-\|v\|_{\boldsymbol{d}} = \sqrt{\sum_j v_j^2/|d_j|}\]</div>
-<p>with <code class="docutils literal notranslate"><span class="pre">an.relTOL</span> <span class="pre">=</span> <span class="pre">1e-9</span></code> by default, see <a class="reference internal" href="solver_convergence.html#pyfe3d.solver.convergence.crisfield_zeta" title="pyfe3d.solver.convergence.crisfield_zeta"><code class="xref py py-func docutils literal notranslate"><span class="pre">crisfield_zeta()</span></code></a> for
-the references in the denominator. It does not depend on the units of
-each dof, e.g. on whether the rotations are in radians or in
-milliradians, and it ignores the support reactions;</p>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'relative'</span></code>: the Euclidean norm of the residual over the largest
-Euclidean norm of the references, which adds the squares of forces and
-of moments.</p></li>
-</ul>
-<p><code class="docutils literal notranslate"><span class="pre">an.absTOL</span></code> also accepts the iterations whose largest absolute residual
-is smaller, in the units of force of the model. With both criteria, an
-iteration has also converged at the round-off floor of the residual,</p>
-<div class="math notranslate nohighlight">
-\[\|\boldsymbol{R}\|_{\boldsymbol{d}} \le 3 \varepsilon \, \| |\boldsymbol{K}_{C0}| \, |\boldsymbol{u}| \|_{\boldsymbol{d}}\]</div>
-<p>with <span class="math notranslate nohighlight">\(\varepsilon\)</span> the machine precision, <span class="math notranslate nohighlight">\(|\boldsymbol{K}_{C0}|\)</span> and <span class="math notranslate nohighlight">\(|\boldsymbol{u}|\)</span> the
-elementwise absolute values of the linear stiffness matrix and of the
-displacements of the free dofs, and the Euclidean norm with
-<code class="docutils literal notranslate"><span class="pre">'relative'</span></code>, see <a class="reference internal" href="solver_convergence.html#pyfe3d.solver.convergence.roundoff_floor" title="pyfe3d.solver.convergence.roundoff_floor"><code class="xref py py-func docutils literal notranslate"><span class="pre">roundoff_floor()</span></code></a>: the residual cannot be
-computed more accurately, and, under large self-equilibrated axial forces,
-e.g. of an arch near a null load, <span class="math notranslate nohighlight">\(\zeta\)</span> would otherwise stagnate above
-<code class="docutils literal notranslate"><span class="pre">relTOL</span></code> and the analysis stop, see <code class="docutils literal notranslate"><span class="pre">test_fung_kaplan_beam_arch</span></code> in
-<a class="reference internal" href="ex_nonlinear_static.html"><span class="doc">Non-linear static analysis with pyfe3d.solver</span></a>. The log messages mark the iterations converged
-at the round-off floor. With a consistent tangent
-stiffness matrix and full Newton-Raphson, <span class="math notranslate nohighlight">\(\zeta\)</span> falls quadratically, as
-verified in <a class="reference internal" href="ex_nonlinear_static.html"><span class="doc">Non-linear static analysis with pyfe3d.solver</span></a>; a slow decrease of <span class="math notranslate nohighlight">\(\zeta\)</span> reveals
-an inconsistent tangent stiffness matrix, e.g. a missing <code class="docutils literal notranslate"><span class="pre">calc_kG</span></code>, which
-changes the iterations but not the converged solution.</p>
-</section>
-<section id="configuration-dependent-loads">
-<h2>Configuration-dependent loads<a class="headerlink" href="#configuration-dependent-loads" title="Link to this heading">#</a></h2>
-<p>A load that depends on the configuration, e.g. a follower pressure or the
-aerodynamic load of the piston theory, is given through optional keyword
-arguments, passed only to the callables that declare them, see
-<a class="reference internal" href="solver_callbacks.html#module-pyfe3d.solver.callbacks" title="pyfe3d.solver.callbacks"><code class="xref py py-mod docutils literal notranslate"><span class="pre">callbacks</span></code></a>:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">calc_fint(c,</span> <span class="pre">inc=...)</span></code> receives the load factor and includes the
-configuration-dependent part of the load, <span class="math notranslate nohighlight">\(-\lambda \boldsymbol{F}(\boldsymbol{c})\)</span>, and
-<code class="docutils literal notranslate"><span class="pre">calc_kC(c,</span> <span class="pre">NLgeom=True,</span> <span class="pre">inc=...)</span></code> its derivative, the load stiffness
-matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_F = \lambda \boldsymbol{K}_{F_{ref}}\)</span>, with <span class="math notranslate nohighlight">\(\boldsymbol{K}_{F_{ref}} = -\partial \boldsymbol{F}/\partial \boldsymbol{c}\)</span>, which is
-unsymmetric in general, see below; the solvers use LU factorizations;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calc_fext(inc=1.,</span> <span class="pre">c=...)</span></code> returns the load vector of the
-configuration <code class="docutils literal notranslate"><span class="pre">c</span></code> for a unit load factor, <span class="math notranslate nohighlight">\(-\partial \boldsymbol{R}/\partial
-\lambda\)</span>, used by the arc-length methods.</p></li>
-</ul>
-<p>The aerodynamic load of the piston theory, <span class="math notranslate nohighlight">\(\lambda \beta
-\boldsymbol{K}_{A_\beta} \boldsymbol{u}\)</span>, with <code class="docutils literal notranslate"><span class="pre">update_KA_beta</span></code> of <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> or
-<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>, is such a load, see <code class="docutils literal notranslate"><span class="pre">test_piston_theory_load_unsymmetric_tangent</span></code>
-in <a class="reference internal" href="ex_nonlinear_static.html"><span class="doc">Non-linear static analysis with pyfe3d.solver</span></a>. The keyword argument <code class="docutils literal notranslate"><span class="pre">lbd</span></code> of
-<code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> gives a load vector that depends on the load factor, which is
-how <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs" title="pyfe3d.solver.analysis.FreeDofs"><code class="xref py py-class docutils literal notranslate"><span class="pre">FreeDofs</span></code></a> imposes the prescribed displacements.</p>
-<p><span class="math notranslate nohighlight">\(\boldsymbol{K}_F\)</span> is symmetric, and the load conservative, only in particular cases.
-For a pressure normal to the deformed surface, Hibbitt (1979, p. 938)
-splits the load stiffness of a uniform pressure into a symmetric surface
-integral and an antisymmetric integral along the boundary of the loaded
-surface, which vanishes where the displacements are prescribed: a uniform
-pressure on a fully enclosed volume, or on a surface whose boundaries have
-prescribed displacements, gives a symmetric <span class="math notranslate nohighlight">\(\boldsymbol{K}_F\)</span>, whereas free edges,
-where the pressure changes, and a non-uniform pressure give unsymmetric
-terms (p. 939). In Table 2 of Schweizerhof and Ramm (1984), the domain
-terms are symmetric for a uniform pressure, and for a non-uniform one only
-when the pressure field is fixed in space, and the boundary terms vanish
-under one of the conditions of their Sec. 3.2.1, Eqs. (32)-(35): the
-pressure is zero on the whole boundary; at least two displacement
-components are prescribed at the edge; the edge is restrained normal to a
-continuous surface, e.g. the undeformed surface, <span class="math notranslate nohighlight">\(w = 0\)</span> for a plate on
-the <span class="math notranslate nohighlight">\(XY\)</span> plane; or the boundary terms add up to zero. pyfe3d does not
-symmetrise <span class="math notranslate nohighlight">\(\boldsymbol{K}_F\)</span>: the tangent stiffness matrix, with the matrix returned
-by <code class="docutils literal notranslate"><span class="pre">calc_kC</span></code>, is factorized with <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.splu()</span></code>, as in
-<a class="reference internal" href="solver_static.html#pyfe3d.solver.static.solve" title="pyfe3d.solver.static.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">solve()</span></code></a>, such that a consistent unsymmetric <span class="math notranslate nohighlight">\(\boldsymbol{K}_F\)</span> keeps the
-quadratic convergence of the Newton-Raphson method, as verified by
-<code class="docutils literal notranslate"><span class="pre">test_newton_raphson_quadratic_with_follower_load</span></code> of
-<code class="docutils literal notranslate"><span class="pre">tests/test_solver_follower_loads.py</span></code>.</p>
+<p>The tolerance of the iterations, <code class="docutils literal notranslate"><span class="pre">an.relTOL</span> <span class="pre">=</span> <span class="pre">1e-9</span></code> by default, is that
+of Crisfield’s criterion with a consistent tangent stiffness matrix, see
+<a class="reference internal" href="convergence_criteria.html"><span class="doc">Convergence criteria</span></a>. A tight tolerance matters when the converged
+state feeds an eigenvalue analysis, since the geometric stiffness matrix of
+<a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a> is built from the stresses of that state.</p>
 </section>
 <section id="choosing-the-kinematics">
 <h2>Choosing the kinematics<a class="headerlink" href="#choosing-the-kinematics" title="Link to this heading">#</a></h2>
 <p>The callables of the table above give the von Kármán kinematics of the
 elements. For large rotations, <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel" title="pyfe3d.corotational.CorotationalModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalModel</span></code></a> of
-<a class="reference internal" href="corotational.html#module-pyfe3d.corotational" title="pyfe3d.corotational"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code></a> assembles a model in which each element is
-added with one of four kinematics, and provides the four callables of
+<a class="reference internal" href="corotational.html#module-pyfe3d.corotational" title="pyfe3d.corotational"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code></a> assembles a model in which each element is added
+with one of four kinematics, and provides the four callables of
 <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a>, which is used unchanged:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
@@ -880,177 +1278,56 @@ added with one of four kinematics, and provides the four callables of
 <td><p>all</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">'von_karman'</span></code></p></td>
-<td><p>the von Kármán strains of each element, <code class="docutils literal notranslate"><span class="pre">update_fint(...,</span>
-<span class="pre">nonlinear=1)</span></code>, <code class="docutils literal notranslate"><span class="pre">update_KCNL</span></code> and <code class="docutils literal notranslate"><span class="pre">update_KG</span></code>, in the fixed
-element axes; small strains</p></td>
+<td><p>the von Kármán strains of each element in the fixed element axes,
+<code class="docutils literal notranslate"><span class="pre">update_fint(...,</span> <span class="pre">nonlinear=1)</span></code>, <code class="docutils literal notranslate"><span class="pre">update_KCNL</span></code> and
+<code class="docutils literal notranslate"><span class="pre">update_KG</span></code>; small strains</p></td>
 <td><p>small to moderate rotations</p></td>
 <td><p><a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>, <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>, <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a>,
 <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>, <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>, <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">'corotational'</span></code></p></td>
-<td><p>the element-independent co-rotational (EICR) formulation of Felippa
-and Haugen (2005): the rigid motion of each element is removed, and
-its local linear stiffness matrix acts on the deformational
-displacements; small strains</p></td>
+<td><p>the element-independent co-rotational formulation of Felippa and
+Haugen (2005): the rigid motion of each element is removed, and its
+linear local stiffness acts on the deformational displacements;
+small strains</p></td>
 <td><p>large displacements and rotations, each nodal rotation vector
 below one full revolution, <span class="math notranslate nohighlight">\(|\boldsymbol{\psi}_a| &lt; 2 \pi\)</span></p></td>
 <td><p>all, <a class="reference internal" href="truss.html#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> and <a class="reference internal" href="spring.html#pyfe3d.spring.Spring" title="pyfe3d.spring.Spring"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spring</span></code></a> included</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code></p></td>
 <td><p>as <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code>, with the von Kármán strains of the element
-in its co-rotational frame instead of its linear strains,
-Crisfield (1997), Section 17.1.5</p></td>
+in its co-rotational frame, Crisfield (1997), Sec. 17.1.5</p></td>
 <td><p>as <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code></p></td>
 <td><p>as <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code>; it differs only for <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>The von Kármán terms of the shells and of <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a> vanish in their
-co-rotational frames, where the transverse translations of a warped
-quadrilateral are the hourglass pattern of its warp and <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>
-takes the slopes of <span class="math notranslate nohighlight">\(w\)</span> at the centroid, see <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalShell</span></code></a>,
-so <code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code> gives the results of
-<code class="docutils literal notranslate"><span class="pre">'corotational'</span></code> for them, to round-off; <a class="reference internal" href="truss.html#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> and
-<a class="reference internal" href="spring.html#pyfe3d.spring.Spring" title="pyfe3d.spring.Spring"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spring</span></code></a>, which have no von Kármán strains, take it as
-<code class="docutils literal notranslate"><span class="pre">'corotational'</span></code>. For <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> it adds the higher-order terms of
-the local element, with its element-averaged axial strain, see
-<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>: on the cantilever under an end force of Sze, Liu and Lo
-(2004), Section 3.1, the tip deflections <span class="math notranslate nohighlight">\(-U\)</span> and <span class="math notranslate nohighlight">\(W\)</span> of 16 elements differ
-from the elastica by -0.02 % and +0.05 % with <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code>, and by
-+0.002 % and +0.007 % with <code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code>, see
-<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalBeam" title="pyfe3d.corotational.CorotationalBeam"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalBeam</span></code></a>. <code class="docutils literal notranslate"><span class="pre">'von_karman'</span></code> follows the elastica only up
-to moderate rotations: on the cantilever rolled up by an end moment, Sze,
-Liu and Lo (2004), Section 3.2, its tip leaves the exact one by 0.6 % of
-the length at a tenth of the moment that closes the circle, see
-<code class="docutils literal notranslate"><span class="pre">test_cantilever_end_moment_full_circle</span></code> of
-<code class="docutils literal notranslate"><span class="pre">tests/test_corotational_benchmarks.py</span></code>.</p>
 <p>The rotational dofs of a <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel" title="pyfe3d.corotational.CorotationalModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalModel</span></code></a> are total rotation
 vectors <span class="math notranslate nohighlight">\(\boldsymbol{\psi}_a\)</span>, whose nodal rotation matrices are
-<span class="math notranslate nohighlight">\(\exp(\mathrm{Spin}(\boldsymbol{\psi}_a))\)</span>, see <a class="reference internal" href="corotational.html#pyfe3d.corotational.expso3" title="pyfe3d.corotational.expso3"><code class="xref py py-func docutils literal notranslate"><span class="pre">expso3()</span></code></a>, added by
-the solvers like the translations, without a state kept between the
-calls. The map is singular at <span class="math notranslate nohighlight">\(|\boldsymbol{\psi}_a| = 2 \pi\)</span>; the
-benchmark above reaches it at the tip only because the out-of-plane
-rotations are restrained, which is exact for that plane problem. A node
-shared by a co-rotational element and an element of another kinematics
-is valid only while its rotations remain small, and a warning is issued.</p>
-<p>A model is built as with the elements alone: set the connectivity, call
-<code class="docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code> with the coordinates <code class="docutils literal notranslate"><span class="pre">x</span></code> of the model, and
-pass each element to <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.add" title="pyfe3d.corotational.CorotationalModel.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CorotationalModel.add()</span></code></a>; the <code class="docutils literal notranslate"><span class="pre">init_k_*</span></code>
-attributes are not needed. The cantilever of Sze, Liu and Lo (2004),
-Section 3.2, with 16 <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> elements, rolled up into half a
-circle by an end moment that follows the tip:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeamC</span><span class="p">,</span> <span class="n">BeamCProbe</span><span class="p">,</span> <span class="n">DOF</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d.beamprop</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeamProp</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d.solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Analysis</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d.corotational</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorotationalModel</span>
-
-<span class="n">L</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="mf">12.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.2e6</span>
-<span class="n">prop</span> <span class="o">=</span> <span class="n">BeamProp</span><span class="p">()</span>
-<span class="n">prop</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">E</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">b</span><span class="o">*</span><span class="n">h</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">E</span><span class="o">/</span><span class="mi">2</span>
-<span class="n">prop</span><span class="o">.</span><span class="n">Iyy</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">Izz</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">J</span> <span class="o">=</span> <span class="n">b</span><span class="o">*</span><span class="n">h</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="mi">12</span><span class="p">,</span> <span class="n">h</span><span class="o">*</span><span class="n">b</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="mi">12</span><span class="p">,</span> <span class="n">b</span><span class="o">*</span><span class="n">h</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="mi">3</span>
-<span class="n">n</span> <span class="o">=</span> <span class="mi">16</span>
-<span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">xs</span><span class="p">,</span> <span class="mi">0</span><span class="o">*</span><span class="n">xs</span><span class="p">,</span> <span class="mi">0</span><span class="o">*</span><span class="n">xs</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">CorotationalModel</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="n">probe</span> <span class="o">=</span> <span class="n">BeamCProbe</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-    <span class="n">elem</span> <span class="o">=</span> <span class="n">BeamC</span><span class="p">(</span><span class="n">probe</span><span class="p">)</span>
-    <span class="n">elem</span><span class="o">.</span><span class="n">n1</span><span class="p">,</span> <span class="n">elem</span><span class="o">.</span><span class="n">n2</span> <span class="o">=</span> <span class="n">k</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="n">elem</span><span class="o">.</span><span class="n">c1</span><span class="p">,</span> <span class="n">elem</span><span class="o">.</span><span class="n">c2</span> <span class="o">=</span> <span class="n">DOF</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="n">DOF</span><span class="o">*</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">elem</span><span class="o">.</span><span class="n">update_rotation_matrix</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">kinematics</span><span class="o">=</span><span class="s1">'corotational'</span><span class="p">)</span>
-
-<span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">E</span><span class="o">*</span><span class="n">prop</span><span class="o">.</span><span class="n">Iyy</span><span class="o">/</span><span class="n">L</span>   <span class="c1"># half of the moment that closes the circle</span>
-<span class="n">model</span><span class="o">.</span><span class="n">add_moment</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="o">-</span><span class="n">M</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s1">'follower'</span><span class="p">)</span>
-<span class="n">bu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-<span class="n">bu</span><span class="p">[:</span><span class="n">DOF</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>         <span class="c1"># clamped at X = 0</span>
-
-<span class="n">an</span> <span class="o">=</span> <span class="n">Analysis</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">calc_fext</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">calc_fint</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">calc_kC</span><span class="p">,</span>
-              <span class="n">model</span><span class="o">.</span><span class="n">calc_kG</span><span class="p">,</span> <span class="n">bu</span><span class="o">=</span><span class="n">bu</span><span class="p">)</span>
-<span class="n">an</span><span class="o">.</span><span class="n">initialInc</span> <span class="o">=</span> <span class="n">an</span><span class="o">.</span><span class="n">maxInc</span> <span class="o">=</span> <span class="mf">0.1</span>
-<span class="n">increments</span><span class="p">,</span> <span class="n">cs</span> <span class="o">=</span> <span class="n">an</span><span class="o">.</span><span class="n">static</span><span class="p">(</span><span class="n">NLgeom</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">tip</span> <span class="o">=</span> <span class="n">cs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">DOF</span><span class="o">*</span><span class="n">n</span><span class="p">:</span><span class="n">DOF</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>   <span class="c1"># -L, 0, 7.6517, 0, -pi, 0</span>
-</pre></div>
-</div>
-<p>The tip reaches the end of the polygon of 16 equal chords inscribed in the
-circle of radius <span class="math notranslate nohighlight">\(L/\pi\)</span>, <span class="math notranslate nohighlight">\(W = 7.6517\)</span>, to round-off, against <span class="math notranslate nohighlight">\(2 L/\pi =
-7.6394\)</span> for the exact circle, and turns by <span class="math notranslate nohighlight">\(-\pi\)</span> about <span class="math notranslate nohighlight">\(Y\)</span>.</p>
-<p>Applied moments. The forces and moments in the attribute <code class="docutils literal notranslate"><span class="pre">fext</span></code> of the
-model are constant; a moment in <code class="docutils literal notranslate"><span class="pre">fext</span></code> is conjugate to the rotation
-vector, and equals a moment about fixed axes only while the rotation
-vector keeps a fixed direction, e.g. in plane problems.
-<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.add_moment" title="pyfe3d.corotational.CorotationalModel.add_moment"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CorotationalModel.add_moment()</span></code></a> adds a concentrated moment with
-<code class="docutils literal notranslate"><span class="pre">kind='rotation_vector'</span></code> (into <code class="docutils literal notranslate"><span class="pre">fext</span></code>), <code class="docutils literal notranslate"><span class="pre">'fixed_axes'</span></code>, a moment
-about the fixed global axes, which is non-conservative and gives an
-unsymmetric tangent stiffness matrix, or <code class="docutils literal notranslate"><span class="pre">'follower'</span></code>, a moment that
-rotates with the nodal triad. The last two depend on the configuration
-and enter <code class="docutils literal notranslate"><span class="pre">calc_fint</span></code>, <code class="docutils literal notranslate"><span class="pre">calc_kG</span></code> and <code class="docutils literal notranslate"><span class="pre">calc_fext(c=...)</span></code> as described
-in the section above; pass <code class="docutils literal notranslate"><span class="pre">model.calc_fext</span></code> to <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a> after
-adding them, since the callable it returns depends on them.</p>
-<p>Shells and warping. <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalShell</span></code></a> links a warped
-quadrilateral to its nodes with rigid offsets, <code class="docutils literal notranslate"><span class="pre">warping='offsets'</span></code> by
-default, and warns above the warp ratio of 0.07, up to which the offsets
-were verified; with <code class="docutils literal notranslate"><span class="pre">warping=None</span></code> it warns above 0.01, see
-<a class="reference internal" href="element_choice.html"><span class="doc">Choosing an element</span></a>. The frame of the triangles is along their side 1-2,
-so that their solution depends on the numbering of the nodes, see the
-Notes of <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalShell</span></code></a>. The keyword arguments of
-<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.add" title="pyfe3d.corotational.CorotationalModel.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CorotationalModel.add()</span></code></a> reach the wrappers, e.g. <code class="docutils literal notranslate"><span class="pre">warping</span></code> and the
-<code class="docutils literal notranslate"><span class="pre">frame</span></code> of <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalTruss" title="pyfe3d.corotational.CorotationalTruss"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalTruss</span></code></a> and <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalSpring" title="pyfe3d.corotational.CorotationalSpring"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalSpring</span></code></a>,
-and the <code class="docutils literal notranslate"><span class="pre">update_KC0</span></code> of the element, e.g. the <code class="docutils literal notranslate"><span class="pre">hgfactor_*</span></code> of
-<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>.</p>
-<p>Convergence tolerance. The default criterion, <code class="docutils literal notranslate"><span class="pre">relTOL</span> <span class="pre">=</span> <span class="pre">1e-9</span></code> with the
-round-off floor of the section above, applies without <code class="docutils literal notranslate"><span class="pre">absTOL</span></code>. The
-co-rotational elements compute the current nodal positions relative to the
-base centroid of each element, see the Notes of
-<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalShell</span></code></a>, so that the round-off of the internal force
-does not depend on the origin of the coordinates, which changes neither
-<span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> nor the force vectors of the criterion. Computed as
-<span class="math notranslate nohighlight">\(\boldsymbol{X} + \boldsymbol{u}\)</span>, with <span class="math notranslate nohighlight">\(\boldsymbol{X}\)</span> the nodal
-coordinates, the positions had a round-off of the order of <span class="math notranslate nohighlight">\(\varepsilon
-|\boldsymbol{X}|\)</span>, above the round-off floor <span class="math notranslate nohighlight">\(3 \varepsilon \|
-|\boldsymbol{K}_{C0}| |\boldsymbol{u}| \|_{\boldsymbol{d}}\)</span> on fine meshes:
-up to 2026-10-30, the iterations of the cantilever with 64 <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>
-elements stagnated at <span class="math notranslate nohighlight">\(\zeta \approx 10^{-8}\)</span> and needed <code class="docutils literal notranslate"><span class="pre">an.absTOL</span></code>, and
-with its root at 1000 from the origin at <span class="math notranslate nohighlight">\(\zeta \approx 10^{-6}\)</span>, see
-<code class="docutils literal notranslate"><span class="pre">test_cantilever_end_shear_translated</span></code> in
-<code class="docutils literal notranslate"><span class="pre">tests/test_corotational_benchmarks.py</span></code>.</p>
-<p>Post-processing. <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.nodal_rotations" title="pyfe3d.corotational.CorotationalModel.nodal_rotations"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CorotationalModel.nodal_rotations()</span></code></a> gives the
-rotation matrices of the nodes and
-<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.deformational_displacements" title="pyfe3d.corotational.CorotationalModel.deformational_displacements"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CorotationalModel.deformational_displacements()</span></code></a> the deformational
-displacements of each co-rotational element in its frame;
-<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell.update_probe" title="pyfe3d.corotational.CorotationalShell.update_probe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CorotationalShell.update_probe()</span></code></a> writes them into the probe of the
-element, whose own routines then recover the stresses. <code class="docutils literal notranslate"><span class="pre">model.KC0</span></code> is
-the linear stiffness matrix of the elements; for a warped quadrilateral
-added with <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code> or <code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code> it is that
-of the flat element, since the wrapper switches off the offsets of the
-element, see the Notes of <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalShell</span></code></a>.</p>
-<p>Benchmarks. <code class="docutils literal notranslate"><span class="pre">tests/test_corotational_benchmarks.py</span></code> reproduces cases 3.1
-(cantilever under an end force), 3.2 (cantilever rolled up into a full
-circle by an end moment), 3.3 (slit annular plate), 3.4 (hemispherical
-shell) and 3.8 (hinged cylindrical roof, with the arc-length method) of
-Sze, Liu and Lo (2004) with <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>, <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> and
-<a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a>, and <code class="docutils literal notranslate"><span class="pre">tests/test_corotational_core.py</span></code> checks the
-finite-rotation utilities, the wrappers and their tangent stiffness
-matrices by finite differences. The worked example
-<a class="reference internal" href="tut-corotational-large-rotations.html"><span class="doc">Tutorial: large rotations with the co-rotational kinematics</span></a> shows such analyses step by step.</p>
+<span class="math notranslate nohighlight">\(\exp(\mathrm{Spin}(\boldsymbol{\psi}_a))\)</span>, see <a class="reference internal" href="corotational.html#pyfe3d.corotational.expso3" title="pyfe3d.corotational.expso3"><code class="xref py py-func docutils literal notranslate"><span class="pre">expso3()</span></code></a>; the solvers
+add their corrections like those of the translations, without a state
+kept between the calls of the callables. Concentrated moments about fixed
+axes or following the nodal triads, <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.add_moment" title="pyfe3d.corotational.CorotationalModel.add_moment"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CorotationalModel.add_moment()</span></code></a>,
+are configuration-dependent loads and give an unsymmetric tangent
+stiffness matrix, which the solvers support, see
+<a class="reference internal" href="configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent loads</span></a>. The theory of the co-rotational layer,
+its frames, its treatment of warped quadrilaterals and its verification
+are given in <a class="reference internal" href="corotational_formulation.html"><span class="doc">Co-rotational formulation for large rotations</span></a>.</p>
 </section>
 <section id="log-messages">
 <h2>Log messages<a class="headerlink" href="#log-messages" title="Link to this heading">#</a></h2>
-<p>The solvers print their progress, the increments and the <span class="math notranslate nohighlight">\(\zeta\)</span> of each
-iteration, with <a class="reference internal" href="solver_logger.html#module-pyfe3d.solver.logger" title="pyfe3d.solver.logger"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.logger</span></code></a>, unless <code class="docutils literal notranslate"><span class="pre">silent=True</span></code> is
-passed to <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a>. The callables must accept <code class="docutils literal notranslate"><span class="pre">silent</span></code>.</p>
+<p>The solvers print the increments and, at each iteration, the largest
+absolute residual and the <span class="math notranslate nohighlight">\(\zeta\)</span> of Crisfield’s criterion, with
+<a class="reference internal" href="solver_logger.html#module-pyfe3d.solver.logger" title="pyfe3d.solver.logger"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.logger</span></code></a>, unless <code class="docutils literal notranslate"><span class="pre">silent=True</span></code> is passed to
+<a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a>; the callables must accept <code class="docutils literal notranslate"><span class="pre">silent</span></code>. The number
+of iterations per increment is the first diagnostic of a model: with a
+consistent tangent, two to four iterations per moderate increment, see
+<a class="reference internal" href="convergence_criteria.html"><span class="doc">Convergence criteria</span></a>.</p>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Riks, E., An incremental approach to the solution of snapping and
-buckling problems, International Journal of Solids and Structures,
-15(7), 529-551, 1979. <a class="reference external" href="https://doi.org/10.1016/0020-7683(79)90081-7">https://doi.org/10.1016/0020-7683(79)90081-7</a></p></li>
-<li><p>Crisfield, M. A., A fast incremental/iterative solution procedure that
-handles “snap-through”, Computers &amp; Structures, 13(1-3), 55-62, 1981.
-<a class="reference external" href="https://doi.org/10.1016/0045-7949(81)90108-5">https://doi.org/10.1016/0045-7949(81)90108-5</a></p></li>
 <li><p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
 Structures, Volume 1: Essentials, John Wiley &amp; Sons, Chichester, 1991.</p></li>
 <li><p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
@@ -1060,16 +1337,6 @@ Structures, Volume 2: Advanced Topics, John Wiley &amp; Sons, Chichester,
 corotational finite elements: I. Theory, Computer Methods in Applied
 Mechanics and Engineering, 194(21-24), 2285-2335, 2005.
 <a class="reference external" href="https://doi.org/10.1016/j.cma.2004.07.035">https://doi.org/10.1016/j.cma.2004.07.035</a></p></li>
-<li><p>Hibbitt, H. D., Some follower forces and load stiffness, International
-Journal for Numerical Methods in Engineering, 14(6), 937-941, 1979.
-<a class="reference external" href="https://doi.org/10.1002/nme.1620140613">https://doi.org/10.1002/nme.1620140613</a></p></li>
-<li><p>Schweizerhof, K. and Ramm, E., Displacement dependent pressure loads in
-nonlinear finite element analyses, Computers &amp; Structures, 18(6),
-1099-1114, 1984. <a class="reference external" href="https://doi.org/10.1016/0045-7949(84)90154-8">https://doi.org/10.1016/0045-7949(84)90154-8</a></p></li>
-<li><p>Sze, K. Y., Liu, X. H. and Lo, S. H., Popular benchmark problems for
-geometric nonlinear analysis of shells, Finite Elements in Analysis and
-Design, 40(11), 1551-1569, 2004.
-<a class="reference external" href="https://doi.org/10.1016/j.finel.2003.11.001">https://doi.org/10.1016/j.finel.2003.11.001</a></p></li>
 </ul>
 </section>
 </section>
@@ -1094,11 +1361,11 @@ Design, 40(11), 1551-1569, 2004.
       </div>
     </a>
     <a class="right-next"
-       href="eigenvalue_analyses.html"
+       href="newton_raphson_method.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Linear buckling and natural frequencies</p>
+        <p class="prev-next-title">The Newton-Raphson method</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1109,7 +1376,7 @@ Design, 40(11), 1551-1569, 2004.
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -1121,11 +1388,10 @@ Design, 40(11), 1551-1569, 2004.
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#from-the-elements-to-the-callables">From the elements to the callables</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#boundary-conditions-and-prescribed-displacements">Boundary conditions and prescribed displacements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solvers">Solvers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convergence-criterion">Convergence criterion</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-dependent-loads">Configuration-dependent loads</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equilibrium-residual-and-tangent-stiffness">Equilibrium, residual and tangent stiffness</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-model-as-four-callables">The model as four callables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#incremental-iterative-solution">Incremental-iterative solution</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choice-of-the-method">Choice of the method</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-the-kinematics">Choosing the kinematics</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#log-messages">Log messages</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
@@ -1154,8 +1420,8 @@ Design, 40(11), 1551-1569, 2004.
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1188,7 +1454,7 @@ Design, 40(11), 1551-1569, 2004.
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
 </p></div>
       
     </div>

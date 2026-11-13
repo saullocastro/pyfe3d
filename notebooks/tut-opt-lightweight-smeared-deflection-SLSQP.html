@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load &#8212; pyfe3d 0.12.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/tut-opt-lightweight-smeared-deflection-SLSQP';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial: topology optimisation using pyfe3d" href="tut-opt-topology.html" />
+    <link rel="prev" title="Tutorial: Ply tailoring using GA for a simply-supported plate under normal load" href="tut-opt-lightweight-smeared-deflection-GA.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#" aria-current="page">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Tutorial:-Ply-tailoring-using-SLSQP-for-a-simply-supported-plate-under-normal-load">
+<h1>Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load<a class="headerlink" href="#Tutorial:-Ply-tailoring-using-SLSQP-for-a-simply-supported-plate-under-normal-load" title="Link to this heading">#</a></h1>
+<p>Date: 4 February 2026</p>
+<p>Author: Saullo G. P. Castro</p>
+<p>Cite this tutorial as:</p>
+<p>Saullo G. P. Castro. General-purpose finite element solver based on Python and Cython. Zenodo. DOI: <a class="reference external" href="https://doi.org/10.5281/zenodo.6573489">https://doi.org/10.5281/zenodo.6573489</a>.</p>
+<section id="Requirements">
+<h2>Requirements<a class="headerlink" href="#Requirements" title="Link to this heading">#</a></h2>
+<p>This tutorial needs <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy</span></code>, <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code>, <code class="docutils literal notranslate"><span class="pre">pymoo</span></code> and <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">numpy</span> <span class="pre">scipy</span> <span class="pre">matplotlib</span> <span class="pre">pymoo</span> <span class="pre">pyfe3d</span></code>.</p>
+</section>
+<section id="Importing-modules">
+<h2>Importing modules<a class="headerlink" href="#Importing-modules" title="Link to this heading">#</a></h2>
+<p>The thicknesses of the <span class="math notranslate nohighlight">\(0^\circ\)</span>, <span class="math notranslate nohighlight">\(\pm 45^\circ\)</span> and <span class="math notranslate nohighlight">\(90^\circ\)</span> plies of every element of a composite plate are optimised with the gradient-based SLSQP algorithm of <code class="docutils literal notranslate"><span class="pre">scipy</span></code> to minimise the volume of the plate, under a limit on its maximum deflection.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>%matplotlib inline
+import numpy as np
+import matplotlib.pyplot as plt
+from pymoo.core.problem import ElementwiseProblem
+from scipy.optimize import minimize as scipy_minimize
+from scipy.optimize import Bounds
+from scipy.sparse.linalg import spsolve
+from scipy.sparse import coo_matrix
+from pyfe3d.shellprop import ShellProp
+from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Ply-stiffness">
+<h2>Ply stiffness<a class="headerlink" href="#Ply-stiffness" title="Link to this heading">#</a></h2>
+<p>Each ply is orthotropic with the in-plane reduced stiffnesses</p>
+<div class="math notranslate nohighlight">
+\[Q_{11} = \frac{E_1}{1 - \nu_{12}\nu_{21}}, \quad Q_{22} = \frac{E_2}{1 - \nu_{12}\nu_{21}}, \quad
+Q_{12} = \frac{\nu_{12} E_2}{1 - \nu_{12}\nu_{21}}, \quad Q_{66} = G_{12}, \quad \nu_{21} = \nu_{12}\frac{E_2}{E_1}\]</div>
+<p>and the transverse shear stiffnesses <span class="math notranslate nohighlight">\(G_{13}\)</span>, <span class="math notranslate nohighlight">\(G_{23}\)</span>. A ply at the angle <span class="math notranslate nohighlight">\(\theta\)</span> has the transformed stiffnesses <span class="math notranslate nohighlight">\(\bar{Q}_{ij}(\theta)\)</span>, with <span class="math notranslate nohighlight">\(c = \cos\theta\)</span>, <span class="math notranslate nohighlight">\(s = \sin\theta\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\bar{Q}_{11} = Q_{11}c^4 + 2(Q_{12} + 2Q_{66})s^2c^2 + Q_{22}s^4, \quad
+\bar{Q}_{22} = Q_{11}s^4 + 2(Q_{12} + 2Q_{66})s^2c^2 + Q_{22}c^4\]</div>
+<div class="math notranslate nohighlight">
+\[\bar{Q}_{12} = (Q_{11} + Q_{22} - 4Q_{66})s^2c^2 + Q_{12}(s^4 + c^4), \quad
+\bar{Q}_{66} = (Q_{11} + Q_{22} - 2Q_{12} - 2Q_{66})s^2c^2 + Q_{66}(s^4 + c^4)\]</div>
+<div class="math notranslate nohighlight">
+\[\bar{Q}_{44} = G_{23}c^2 + G_{13}s^2, \quad \bar{Q}_{55} = G_{13}c^2 + G_{23}s^2, \quad
+\bar{Q}_{45} = (G_{13} - G_{23})cs\]</div>
+<p>The function below returns them in a <span class="math notranslate nohighlight">\(6 \times 6\)</span> matrix with the Voigt ordering used by the code (<span class="math notranslate nohighlight">\(\bar{Q}_{11}, \bar{Q}_{12}, \bar{Q}_{22}\)</span> in the first block, the transverse shear terms at indices 3 and 4, <span class="math notranslate nohighlight">\(\bar{Q}_{66}\)</span> at index 5); the transverse normal row and column are zero.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def get_Q_matrix(E1, E2, nu12, G12, G13, G23, theta_deg):
+    """
+    Calculate the transformed reduced stiffness matrix Q_bar for a given angle.
+    """
+    nu21 = nu12 * E2 / E1
+    denom = 1 - nu12 * nu21
+    Q11 = E1 / denom
+    Q22 = E2 / denom
+    Q12 = nu12 * E2 / denom
+    Q66 = G12
+
+    c = np.cos(np.radians(theta_deg))
+    s = np.sin(np.radians(theta_deg))
+
+    c2 = c**2; s2 = s**2; c4 = c**4; s4 = s**4
+
+    Q_bar_11 = Q11*c4 + 2*(Q12 + 2*Q66)*s2*c2 + Q22*s4
+    Q_bar_22 = Q11*s4 + 2*(Q12 + 2*Q66)*s2*c2 + Q22*c4
+    Q_bar_12 = (Q11 + Q22 - 4*Q66)*s2*c2 + Q12*(s4 + c4)
+    Q_bar_66 = (Q11 + Q22 - 2*Q12 - 2*Q66)*s2*c2 + Q66*(s4 + c4)
+
+    Q_bar_44 = G23 * c2 + G13 * s2
+    Q_bar_55 = G13 * c2 + G23 * s2
+    Q_bar_45 = (G13 - G23) * c * s
+
+    Q_bar = np.array([
+        [Q_bar_11, Q_bar_12, 0, 0, 0, 0],
+        [Q_bar_12, Q_bar_22, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, Q_bar_44, Q_bar_45, 0],
+        [0, 0, 0, Q_bar_45, Q_bar_55, 0],
+        [0, 0, 0, 0, 0, Q_bar_66]
+    ])
+    return Q_bar
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Smeared-laminate-and-plate-model">
+<h2>Smeared laminate and plate model<a class="headerlink" href="#Smeared-laminate-and-plate-model" title="Link to this heading">#</a></h2>
+<p>A rectangular plate <span class="math notranslate nohighlight">\(a \times b\)</span>, simply supported on its four edges, carries a point load <span class="math notranslate nohighlight">\(P\)</span> normal to its mid-plane at the centre. The design variables are three continuous thicknesses per element: <span class="math notranslate nohighlight">\(h_0\)</span> of the <span class="math notranslate nohighlight">\(0^\circ\)</span> plies, <span class="math notranslate nohighlight">\(h_{45}\)</span> of each of the <span class="math notranslate nohighlight">\(+45^\circ\)</span> and <span class="math notranslate nohighlight">\(-45^\circ\)</span> plies, and <span class="math notranslate nohighlight">\(h_{90}\)</span> of the <span class="math notranslate nohighlight">\(90^\circ\)</span> plies. The laminate of each element is smeared: the stacking sequence is not modelled, and the stiffnesses are</p>
+<div class="math notranslate nohighlight">
+\[h = h_0 + 2h_{45} + h_{90}, \qquad
+\mathbf{A} = h_0\bar{\mathbf{Q}}(0^\circ) + h_{45}\left[\bar{\mathbf{Q}}(45^\circ) + \bar{\mathbf{Q}}(-45^\circ)\right] + h_{90}\bar{\mathbf{Q}}(90^\circ), \qquad
+\mathbf{D} = \frac{h^2}{12}\mathbf{A}, \qquad \mathbf{B} = \mathbf{0}\]</div>
+<p>that is, <span class="math notranslate nohighlight">\(\mathbf{D}\)</span> is the bending stiffness of a homogeneous plate with the averaged stiffness <span class="math notranslate nohighlight">\(\mathbf{A}/h\)</span>. The transverse shear stiffnesses <span class="math notranslate nohighlight">\(A_{44}, A_{45}, A_{55}\)</span> take the shear correction factor <span class="math notranslate nohighlight">\(5/6\)</span>. These values are written directly into a <code class="docutils literal notranslate"><span class="pre">ShellProp</span></code> of each <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> element.</p>
+<p>By symmetry only the quarter <span class="math notranslate nohighlight">\(0 \le x \le a/2\)</span>, <span class="math notranslate nohighlight">\(0 \le y \le b/2\)</span> is modelled:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(w = 0\)</span> at the simply supported edges <span class="math notranslate nohighlight">\(x = 0\)</span> and <span class="math notranslate nohighlight">\(y = 0\)</span>;</p></li>
+<li><p>the rotation about <span class="math notranslate nohighlight">\(y\)</span> is zero along the symmetry line <span class="math notranslate nohighlight">\(x = a/2\)</span>, and the rotation about <span class="math notranslate nohighlight">\(x\)</span> is zero along <span class="math notranslate nohighlight">\(y = b/2\)</span>;</p></li>
+<li><p>the in-plane displacements <span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(v\)</span> are restrained everywhere: with <span class="math notranslate nohighlight">\(\mathbf{B} = \mathbf{0}\)</span> the bending problem is uncoupled from the membrane one, and this also satisfies <span class="math notranslate nohighlight">\(u = 0\)</span> at <span class="math notranslate nohighlight">\(x = a/2\)</span> and <span class="math notranslate nohighlight">\(v = 0\)</span> at <span class="math notranslate nohighlight">\(y = b/2\)</span>;</p></li>
+<li><p>the centre node lies on both symmetry lines, so it carries <span class="math notranslate nohighlight">\(P/4\)</span>.</p></li>
+</ul>
+<p>The method <code class="docutils literal notranslate"><span class="pre">_evaluate</span></code> updates the element stiffness matrices for a design <code class="docutils literal notranslate"><span class="pre">var</span></code>, solves the static problem and returns the objective <code class="docutils literal notranslate"><span class="pre">F</span></code>, the volume of the full plate (four times that of the quarter), and the constraint <code class="docutils literal notranslate"><span class="pre">G</span></code> on the maximum deflection (next section). The class follows the <code class="docutils literal notranslate"><span class="pre">pymoo</span></code> <code class="docutils literal notranslate"><span class="pre">ElementwiseProblem</span></code> interface.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>class SmearedPlateOptimization(ElementwiseProblem):
+    def __init__(self, nx, ny, a, b, load_val, max_deflection, h_min, h_max, mat_data):
+        self.nx = nx
+        self.ny = ny
+        self.n_elems = (self.nx - 1)*(self.ny - 1)
+        self.a = a
+        self.b = b
+        self.load_val = load_val
+        self.max_deflection = max_deflection
+        self.rho = mat_data['rho']
+
+        # ply stiffness matrices for 0, 90, +45 and -45 degrees
+        E1, E2 = mat_data['E1'], mat_data['E2']
+        nu12, G12 = mat_data['nu12'], mat_data['G12']
+        G13, G23 = mat_data['G13'], mat_data['G23']
+
+        num_orientations = 3
+
+        self.Q0 = get_Q_matrix(E1, E2, nu12, G12, G13, G23, 0)
+        self.Q90 = get_Q_matrix(E1, E2, nu12, G12, G13, G23, 90)
+        self.Q45p = get_Q_matrix(E1, E2, nu12, G12, G13, G23, 45)
+        self.Q45m = get_Q_matrix(E1, E2, nu12, G12, G13, G23, -45)
+        self.Q45_sum = self.Q45p + self.Q45m
+
+        self.eid_prop = {}
+
+        n_var = num_orientations*self.n_elems
+
+        self._init_fe_model()
+
+        super().__init__(n_var=n_var, n_obj=1,
+                         n_ieq_constr=1,
+                         xl=h_min,
+                         xu=h_max)
+
+    def _init_fe_model(self):
+        data = Quad4Data()
+        probe = Quad4Probe()
+
+        # quarter plate, 0 &lt;= x &lt;= a/2, 0 &lt;= y &lt;= b/2
+        xtmp = np.linspace(0, self.a/2, self.nx)
+        ytmp = np.linspace(0, self.b/2, self.ny)
+        xmesh, ymesh = np.meshgrid(xtmp, ytmp)
+        ncoords = np.vstack((xmesh.T.flatten(), ymesh.T.flatten(), np.zeros_like(ymesh.T.flatten()))).T
+        self.ncoords = ncoords
+        ncoords_flatten = ncoords.flatten()
+        self.ncoords_flatten = ncoords_flatten
+
+        nids = 1 + np.arange(ncoords.shape[0])
+        nid_pos = dict(zip(nids, np.arange(len(nids))))
+        nids_mesh = nids.reshape(self.nx, self.ny)
+        n1s = nids_mesh[:-1, :-1].flatten()
+        n2s = nids_mesh[1:, :-1].flatten()
+        n3s = nids_mesh[1:, 1:].flatten()
+        n4s = nids_mesh[:-1, 1:].flatten()
+
+        num_elements = len(n1s)
+
+        self.KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+        self.KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+        self.KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+        self.N = DOF*self.nx*self.ny
+
+        self.quads = []
+        init_k_KC0 = 0
+        eid = -1
+        for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
+            # placeholder property, overwritten in _evaluate
+            prop = ShellProp()
+            eid += 1
+            self.eid_prop[eid] = prop
+
+            quad = Quad4(probe)
+            quad.eid = eid
+            quad.n1 = n1
+            quad.n2 = n2
+            quad.n3 = n3
+            quad.n4 = n4
+            quad.c1 = DOF*nid_pos[n1]
+            quad.c2 = DOF*nid_pos[n2]
+            quad.c3 = DOF*nid_pos[n3]
+            quad.c4 = DOF*nid_pos[n4]
+            quad.init_k_KC0 = init_k_KC0
+            quad.update_rotation_matrix(ncoords_flatten)
+            quad.update_probe_xe(ncoords_flatten)
+            quad.update_KC0(self.KC0r, self.KC0c, self.KC0v, prop)
+            self.quads.append(quad)
+            init_k_KC0 += data.KC0_SPARSE_SIZE
+
+    def _evaluate(self, var, out, *args, **kwargs):
+        total_volume = 0.0
+
+        # zeroing the values of the sparse stiffness matrix before updating them
+        self.KC0v *= 0
+
+        for i, quad in enumerate(self.quads):
+            prop = self.eid_prop[quad.eid]
+            h0 = var[3*i]
+            h45 = var[3*i + 1]
+            h90 = var[3*i + 2]
+
+            h_total = h0 + 2*h45 + h90
+
+            # smeared stiffness
+            A = (h0 * self.Q0) + (h90 * self.Q90) + (h45 * self.Q45_sum)
+            D = (h_total**2 / 12.0) * A
+
+            # membrane stiffness
+            prop.A11 = A[0, 0]
+            prop.A12 = A[0, 1]
+            prop.A22 = A[1, 1]
+            prop.A66 = A[5, 5]
+
+            # transverse shear stiffness, with the shear correction factor 5/6
+            prop.A44 = 5/6.*A[3, 3]
+            prop.A45 = 5/6.*A[3, 4]
+            prop.A55 = 5/6.*A[4, 4]
+
+            # bending stiffness
+            prop.D11 = D[0, 0]
+            prop.D12 = D[0, 1]
+            prop.D22 = D[1, 1]
+            prop.D66 = D[5, 5]
+
+            prop.h = h_total
+
+            quad.update_probe_xe(self.ncoords_flatten)
+            quad.update_KC0(self.KC0r, self.KC0c, self.KC0v, prop, update_KC0v_only=1)
+
+            total_volume += quad.area * h_total
+
+        KC0 = coo_matrix((self.KC0v, (self.KC0r, self.KC0c)), shape=(self.N, self.N)).tocsc()
+
+        bk = np.zeros(self.N, dtype=bool)
+
+        x = self.ncoords[:, 0]
+        y = self.ncoords[:, 1]
+
+        # in-plane displacements u and v restrained everywhere
+        bk[0::DOF] = True
+        bk[1::DOF] = True
+
+        # simply supported edges x = 0 and y = 0
+        at_edges = np.isclose(x, 0.) | np.isclose(y, 0.)
+        bk[2::DOF][at_edges] = True
+
+        # symmetry about x = a/2: rotation about y restrained
+        at_sym_along_x = np.isclose(x, self.a/2)
+        bk[4::DOF][at_sym_along_x] = True
+
+        # symmetry about y = b/2: rotation about x restrained
+        at_sym_along_y = np.isclose(y, self.b/2)
+        bk[3::DOF][at_sym_along_y] = True
+
+        bu = ~bk
+
+        # point load at the centre node, one quarter of the load of the full plate
+        fext = np.zeros(self.N)
+        fmid = self.load_val/4
+        check = np.isclose(x, self.a/2) &amp; np.isclose(y, self.b/2)
+        fext[2::DOF][check] = fmid
+
+        KC0uu = KC0[bu, :][:, bu]
+
+        # solving the static system
+        uu = spsolve(KC0uu, fext[bu])
+
+        u = np.zeros(self.N)
+        u[bu] = uu
+
+        # deflections in the z direction and their maximum absolute value
+        self.result_w = u[2::DOF]
+        w_max = np.max(np.abs(self.result_w))
+
+        # volume of the full plate, four times that of the quarter
+        out["F"] = 4*total_volume
+        out["G"] = w_max/self.max_deflection - 1
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Objective-and-constraint">
+<h2>Objective and constraint<a class="headerlink" href="#Objective-and-constraint" title="Link to this heading">#</a></h2>
+<p>The optimisation problem reads</p>
+<div class="math notranslate nohighlight">
+\[\min_{\mathbf{h}} V(\mathbf{h}) \quad \text{subject to} \quad
+g(\mathbf{h}) = \frac{w_{\max}(\mathbf{h})}{w_{\text{allow}}} - 1 \le 0, \qquad
+h_{\min} \le h_j \le h_{\max}\]</div>
+<p>with <span class="math notranslate nohighlight">\(V\)</span> the volume of the plate and <span class="math notranslate nohighlight">\(w_{\max}\)</span> its maximum absolute deflection. <code class="docutils literal notranslate"><span class="pre">scipy</span></code> takes separate functions for the objective and the constraints, and its inequality constraints are written as <span class="math notranslate nohighlight">\(c(\mathbf{h}) \ge 0\)</span>; the constraint function therefore returns <span class="math notranslate nohighlight">\(-g\)</span>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def objective_function(x, problem):
+    out = {}
+    problem._evaluate(x, out)
+    return out["F"]
+
+def constraint_function(x, problem):
+    out = {}
+    problem._evaluate(x, out)
+    return -out["G"]
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Problem-data">
+<h2>Problem data<a class="headerlink" href="#Problem-data" title="Link to this heading">#</a></h2>
+<p>A <span class="math notranslate nohighlight">\(2 \times 1\)</span> m plate under a central load <span class="math notranslate nohighlight">\(P = 80\)</span> N, with the allowed deflection <span class="math notranslate nohighlight">\(w_{\text{allow}} = 1\)</span> mm. The quarter model has <span class="math notranslate nohighlight">\(13 \times 7\)</span> nodes, i.e. <span class="math notranslate nohighlight">\(12 \times 6\)</span> elements and three thickness variables per element, each between <span class="math notranslate nohighlight">\(h_{\min} = 0.125\)</span> mm and <span class="math notranslate nohighlight">\(h_{\max} = 2.5\)</span> mm.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># carbon/epoxy ply properties
+mat_data = {
+    'E1': 140e9,
+    'E2': 10e9,
+    'nu12': 0.3,
+    'G12': 5e9,
+    'G13': 5e9,
+    'G23': 5e9,
+    'rho': 1600.0
+}
+
+h_min = 0.125e-3
+h_max = 2.5e-3
+
+problem = SmearedPlateOptimization(
+    nx=13, ny=7,
+    a=2.0, b=1.0,
+    load_val=80.0,
+    max_deflection=0.001,
+    h_min=h_min,
+    h_max=h_max,
+    mat_data=mat_data
+)
+print('number of elements of the quarter model:', problem.n_elems)
+print('number of design variables:', problem.n_var)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+number of elements of the quarter model: 72
+number of design variables: 216
+</pre></div></div>
+</div>
+</section>
+<section id="Optimisation-with-SLSQP">
+<h2>Optimisation with SLSQP<a class="headerlink" href="#Optimisation-with-SLSQP" title="Link to this heading">#</a></h2>
+<p>SLSQP (sequential least-squares quadratic programming) solves a sequence of quadratic sub-problems built from the gradients of the objective and of the constraints. Here the gradients are approximated by forward finite differences (<code class="docutils literal notranslate"><span class="pre">jac=&quot;2-point&quot;</span></code>), so each gradient costs one finite element analysis per design variable. The start design has all thicknesses at <span class="math notranslate nohighlight">\((h_{\min} + h_{\max})/2\)</span>. The callback prints the volume and the constraint value <span class="math notranslate nohighlight">\(g\)</span> at each iteration.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>x0 = np.ones(problem.n_var) * (h_min + h_max) / 2.0
+bounds = Bounds([h_min]*problem.n_var, [h_max]*problem.n_var)
+
+# inequality constraint, fun(x) &gt;= 0
+cons = {'type': 'ineq', 'fun': lambda x: constraint_function(x, problem)}
+
+iteration = 0
+def print_callback(xk):
+    global iteration
+    iteration += 1
+    out = {}
+    problem._evaluate(xk, out)
+    print(f"iteration {iteration}: volume = {out['F']:.4e} m^3, g = {out['G']:.4e}")
+
+res = scipy_minimize(
+    lambda x: objective_function(x, problem),
+    x0,
+    method='SLSQP',
+    bounds=bounds,
+    constraints=cons,
+    callback=print_callback,
+    options={'ftol': 1e-6, 'disp': True, 'maxiter': 200},
+    jac="2-point"
+)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+iteration 1: volume = 3.6853e-03 m^3, g = 2.9718e+02
+iteration 2: volume = 4.0813e-03 m^3, g = 1.1630e+02
+iteration 3: volume = 4.3750e-03 m^3, g = 2.0174e+01
+iteration 4: volume = 4.5795e-03 m^3, g = 1.4750e+01
+iteration 5: volume = 4.7635e-03 m^3, g = 3.7677e-01
+iteration 6: volume = 5.0156e-03 m^3, g = 1.1788e-01
+iteration 7: volume = 4.4294e-03 m^3, g = 7.4450e-01
+iteration 8: volume = 3.6435e-03 m^3, g = 4.5772e+00
+iteration 9: volume = 3.9806e-03 m^3, g = 7.5188e-01
+iteration 10: volume = 4.2793e-03 m^3, g = 8.1847e-02
+iteration 11: volume = 4.1880e-03 m^3, g = 4.8259e-02
+iteration 12: volume = 3.9463e-03 m^3, g = 3.0609e-01
+iteration 13: volume = 4.1486e-03 m^3, g = 7.4797e-02
+iteration 14: volume = 4.2004e-03 m^3, g = 6.2020e-03
+iteration 15: volume = 4.1794e-03 m^3, g = -3.1282e-03
+iteration 16: volume = 4.1626e-03 m^3, g = 6.3331e-04
+iteration 17: volume = 4.1403e-03 m^3, g = 1.1737e-03
+iteration 18: volume = 4.1304e-03 m^3, g = 1.1788e-06
+iteration 19: volume = 4.1154e-03 m^3, g = -1.2426e-04
+iteration 20: volume = 4.1112e-03 m^3, g = 2.3036e-04
+iteration 21: volume = 4.1108e-03 m^3, g = 9.3608e-05
+iteration 22: volume = 4.1101e-03 m^3, g = 1.2587e-04
+iteration 23: volume = 4.1102e-03 m^3, g = 2.1415e-05
+iteration 24: volume = 4.1102e-03 m^3, g = 1.6867e-05
+iteration 25: volume = 4.1102e-03 m^3, g = 3.5762e-08
+Optimization terminated successfully    (Exit mode 0)
+            Current function value: 0.004110246352650484
+            Iterations: 25
+            Function evaluations: 5437
+            Gradient evaluations: 25
+</pre></div></div>
+</div>
+</section>
+<section id="Results">
+<h2>Results<a class="headerlink" href="#Results" title="Link to this heading">#</a></h2>
+<p>The optimised design is analysed once more to print its volume and maximum deflection, and the mean thickness of each ply orientation over the elements.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>out_final = {}
+problem._evaluate(res.x, out_final)
+w_max = np.max(np.abs(problem.result_w))
+h0_vals, h45_vals, h90_vals = res.x[0::3], res.x[1::3], res.x[2::3]
+V0 = objective_function(x0, problem)
+
+print(f"success: {res.success}, message: {res.message}")
+print(f"iterations: {res.nit}, function evaluations: {res.nfev}")
+print(f"volume of the start design: {V0:.4e} m^3")
+print(f"volume of the optimised plate: {out_final['F']:.4e} m^3")
+print(f"maximum deflection: {w_max*1e3:.4f} mm (allowed {problem.max_deflection*1e3:.1f} mm)")
+print(f"constraint value g: {out_final['G']:.4e}")
+print(f"mean thicknesses [mm]: h0 = {h0_vals.mean()*1e3:.4f}, h45 = {h45_vals.mean()*1e3:.4f}, "
+      f"h90 = {h90_vals.mean()*1e3:.4f}")
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+success: True, message: Optimization terminated successfully
+iterations: 25, function evaluations: 5437
+volume of the start design: 1.0500e-02 m^3
+volume of the optimised plate: 4.1102e-03 m^3
+maximum deflection: 1.0000 mm (allowed 1.0 mm)
+constraint value g: 3.5762e-08
+mean thicknesses [mm]: h0 = 0.4667, h45 = 0.5173, h90 = 0.5538
+</pre></div></div>
+</div>
+</section>
+<section id="Optimised-design">
+<h2>Optimised design<a class="headerlink" href="#Optimised-design" title="Link to this heading">#</a></h2>
+<p>The figure shows, on the modelled quarter of the plate (<span class="math notranslate nohighlight">\(x\)</span> from the simply supported edge to the centre line at <span class="math notranslate nohighlight">\(a/2\)</span>), the deflection <span class="math notranslate nohighlight">\(w\)</span> of the optimised design and the thicknesses <span class="math notranslate nohighlight">\(h_0\)</span>, <span class="math notranslate nohighlight">\(h_{45}\)</span> and <span class="math notranslate nohighlight">\(h_{90}\)</span> of each element.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def plot_design(problem, h0_vals, h45_vals, h90_vals):
+    nx, ny = problem.nx, problem.ny
+    xg = problem.ncoords[:, 0].reshape(nx, ny)
+    yg = problem.ncoords[:, 1].reshape(nx, ny)
+    w = problem.result_w.reshape(nx, ny)
+
+    fig, axes = plt.subplots(2, 2, figsize=(10, 6), constrained_layout=True)
+
+    ax = axes[0, 0]
+    cs = ax.contourf(xg, yg, w*1e3, levels=20, cmap='viridis')
+    fig.colorbar(cs, ax=ax, label='$w$ [mm]')
+    ax.set_title('Deflection')
+
+    for ax, vals, name in zip([axes[0, 1], axes[1, 0], axes[1, 1]],
+                              [h0_vals, h45_vals, h90_vals],
+                              ['$h_0$', '$h_{45}$', '$h_{90}$']):
+        # element i has the indices (ix, iy) with i = ix*(ny - 1) + iy
+        vals_grid = np.asarray(vals).reshape(nx - 1, ny - 1)
+        pc = ax.pcolormesh(xg, yg, vals_grid*1e3, cmap='viridis', edgecolors='k',
+                           linewidth=0.3, vmin=0, vmax=np.max(vals_grid*1e3))
+        fig.colorbar(pc, ax=ax, label=name + ' [mm]')
+        ax.set_title('Thickness ' + name)
+
+    for ax in axes.flatten():
+        ax.set_aspect('equal')
+        ax.set_xlabel('$x$ [m]')
+        ax.set_ylabel('$y$ [m]')
+    plt.show()
+
+
+plot_design(problem, h0_vals, h45_vals, h90_vals)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tut-opt-lightweight-smeared-deflection-SLSQP_17_0.png" src="../_images/notebooks_tut-opt-lightweight-smeared-deflection-SLSQP_17_0.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tut-opt-lightweight-smeared-deflection-GA.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial: Ply tailoring using GA for a simply-supported plate under normal load</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tut-opt-topology.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial: topology optimisation using pyfe3d</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Importing-modules">Importing modules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Ply-stiffness">Ply stiffness</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Smeared-laminate-and-plate-model">Smeared laminate and plate model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Objective-and-constraint">Objective and constraint</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Problem-data">Problem data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Optimisation-with-SLSQP">Optimisation with SLSQP</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Results">Results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Optimised-design">Optimised design</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.nblink.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

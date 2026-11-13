@@ -1,0 +1,3 @@
+{
+    "path": "../../../notebooks/tut-bench-shell-obstacle-course.ipynb"
+}

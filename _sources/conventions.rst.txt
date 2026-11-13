@@ -127,6 +127,39 @@ Sign conventions
   :doc:`eigenvalue_analyses`.
 
 
+Shell elements
+--------------
+
+- **Element vectors.** The element displacements, e.g. ``ue`` of
+  :class:`.Quad4Probe`, and the internal forces ``finte`` are ordered node
+  by node, `u, v, w, r_x, r_y, r_z` of node 1, then node 2, ..., in element
+  coordinates; the coordinates ``xe`` are `x, y, z` of each node.
+- **Rotations.** `r_x` and `r_y` are right-hand rotations about the
+  element axes, such that the rotations of the transverse normal of the
+  FSDT are `\phi_x = r_y` and `\phi_y = -r_x`, see
+  :doc:`shell_formulation`. The curvatures are `\kappa_{xx} = r_{y,x}`,
+  `\kappa_{yy} = -r_{x,y}` and `\kappa_{xy} = r_{y,y} - r_{x,x}`, and the
+  transverse shear strains `\gamma_{xz} = w_{,x} + r_y` and `\gamma_{yz} =
+  w_{,y} - r_x`.
+- **Transverse shear.** The strains, the stresses and the forces are
+  ordered `\{\gamma_{yz}, \gamma_{xz}\}`, `\{\tau_{yz}, \tau_{xz}\}` and
+  `\{Q_y, Q_x\}`, with `\boldsymbol{A}_{ts} = [[A_{44}, A_{45}], [A_{45},
+  A_{55}]]`: index 4 for `yz` and 5 for `xz`, see :class:`.ShellProp`.
+- **Stress resultants.** `\boldsymbol{N} = \int \{\sigma_{xx},
+  \sigma_{yy}, \tau_{xy}\} dz` and `\boldsymbol{M} = \int z \{\sigma_{xx},
+  \sigma_{yy}, \tau_{xy}\} dz`, with `z` measured from the reference
+  surface along the element normal; the laminate occupies `-h/2 + e \le z
+  \le h/2 + e`, `e` the ``offset`` of the :class:`.ShellProp`. The
+  membrane forces `N_{xx}`, `N_{yy}`, `N_{xy}` given to
+  ``update_KG_given_stress`` are in element coordinates.
+- **Angles.** The ply angles of ``stack`` are measured from the laminate
+  `x` axis, i.e. the material direction of the element, to the fibre
+  direction 1. The angle `\theta` from the element `x` axis to the material
+  direction projected on the element, positive towards the element `y`
+  axis, gives ``m11 = m22 =`` `\cos\theta` and ``m21 = -m12 =``
+  `\sin\theta`, see :meth:`.ShellProp.calc_constitutive_element`.
+
+
 Units
 -----
 

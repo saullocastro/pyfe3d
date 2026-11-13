@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Inertia relief &#8212; pyfe3d 0.12.0 documentation</title>
+    <title>Inertia relief &#8212; pyfe3d 0.12.1 documentation</title>
   
   
   
@@ -26,19 +26,19 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
+    <script src="_static/documentation_options.js?v=c5b435e8"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -101,7 +101,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
   
 </a></div>
     
@@ -165,7 +165,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
-    Shell and beam properties
+    Shell properties
   </a>
 </li>
 
@@ -178,8 +178,92 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
     Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
   </a>
 </li>
 
@@ -206,6 +290,34 @@
 
 
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
   </a>
@@ -213,64 +325,162 @@
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_static.html">
     Linear static analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_beam_frame.html">
     Linear static analysis of beams and frames
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_column.html">
     Linear buckling analysis of a column
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_plate.html">
     Natural frequency analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_nonlinear_static.html">
     Non-linear static analysis with pyfe3d.solver
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
   </a>
 </li>
 
@@ -328,14 +538,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -355,7 +565,7 @@
   
 
   
-    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -369,7 +579,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -415,7 +625,84 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
-    Shell and beam properties
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
   </a>
 </li>
 
@@ -423,6 +710,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
     Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
   </a>
 </li>
 
@@ -449,6 +743,34 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
   </a>
@@ -456,64 +778,162 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_static.html">
+  <a class="nav-link nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_static.html">
     Linear static analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_beam_frame.html">
     Linear static analysis of beams and frames
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_column.html">
     Linear buckling analysis of a column
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_plate.html">
     Natural frequency analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_nonlinear_static.html">
     Non-linear static analysis with pyfe3d.solver
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
   </a>
 </li>
 
@@ -559,14 +979,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -623,7 +1043,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Inertia relief</span></li>
@@ -647,126 +1067,127 @@
 <h1>Inertia relief<a class="headerlink" href="#inertia-relief" title="Link to this heading">#</a></h1>
 <p>A structure without supports, e.g. an aircraft or a launch vehicle in
 flight, a spacecraft, or any free-free model, can move as a rigid body: its
-stiffness matrix <code class="docutils literal notranslate"><span class="pre">KC0</span></code> is singular, with the rigid-body modes in its null
-space, and the linear static system of <a class="reference internal" href="linear_analyses.html"><span class="doc">Linear static analyses</span></a> cannot be
-solved as it stands. A static solution exists only for balanced loads,
-without a resultant force or moment. Under unbalanced loads, e.g. the
-aerodynamic loads and the weights of an aircraft that is not trimmed, or
-the thrust of a launch vehicle, the free structure accelerates; under
-steady loads it deforms elastically while it accelerates as a rigid body.
-Inertia relief balances the loads with the d’Alembert forces of this
-rigid-body acceleration and computes the displacements relative to a
-reference support. In pyfe3d this is done by
-<a class="reference internal" href="solver_inertia_relief.html#pyfe3d.solver.inertia_relief.apply_inertia_relief" title="pyfe3d.solver.inertia_relief.apply_inertia_relief"><code class="xref py py-func docutils literal notranslate"><span class="pre">apply_inertia_relief()</span></code></a>, whose Notes give the equations and the
-references.</p>
-<section id="workflow">
-<h2>Workflow<a class="headerlink" href="#workflow" title="Link to this heading">#</a></h2>
-<ol class="arabic">
-<li><p>Assemble <code class="docutils literal notranslate"><span class="pre">KC0</span></code> as for a linear static analysis, see <a class="reference internal" href="overview.html"><span class="doc">Overview and workflow</span></a>,
-without any support.</p></li>
-<li><p>Assemble the mass matrix <code class="docutils literal notranslate"><span class="pre">M</span></code> with the <code class="docutils literal notranslate"><span class="pre">update_M</span></code> methods of the
-elements, consistent (<code class="docutils literal notranslate"><span class="pre">mtype=0</span></code>) or lumped (<code class="docutils literal notranslate"><span class="pre">mtype=1</span></code>), see
-<a class="reference internal" href="element_choice.html"><span class="doc">Choosing an element</span></a>, and add the point masses on the diagonal. The
-mass matrix must give every rigid-body mode a mass, e.g. a beam needs a
-rotary inertia about its axis, <code class="docutils literal notranslate"><span class="pre">intrhoy2</span> <span class="pre">+</span> <span class="pre">intrhoz2</span></code> of
-<a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>.</p></li>
-<li><p>Build the load vector <code class="docutils literal notranslate"><span class="pre">fext</span></code>. A gravity field is <code class="docutils literal notranslate"><span class="pre">M</span> <span class="pre">&#64;</span> <span class="pre">a_g</span></code>, with
-<code class="docutils literal notranslate"><span class="pre">a_g</span></code> the uniform acceleration field of the gravity at the
-translational dofs.</p></li>
-<li><p>Choose the reference support, the Boolean array <code class="docutils literal notranslate"><span class="pre">bref</span></code>, and, when the
-model itself is constrained, e.g. by a plane of symmetry or by the dofs
-that a model in one or two dimensions does not use, the Boolean array
-<code class="docutils literal notranslate"><span class="pre">bfix</span></code> of these constraints.</p></li>
-<li><p>Solve:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d.solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_inertia_relief</span>
-<span class="n">u</span><span class="p">,</span> <span class="n">acc</span><span class="p">,</span> <span class="n">Phi</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">apply_inertia_relief</span><span class="p">(</span><span class="n">KC0</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">fext</span><span class="p">,</span> <span class="n">bref</span><span class="p">,</span> <span class="n">bfix</span><span class="p">,</span>
-                                      <span class="n">return_reactions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">u</span></code> are the displacements relative to the reference support, <code class="docutils literal notranslate"><span class="pre">acc</span></code>
-the rigid-body accelerations of the reference dofs, <code class="docutils literal notranslate"><span class="pre">Phi</span></code> the
-rigid-body modes, with which <code class="docutils literal notranslate"><span class="pre">Phi</span> <span class="pre">&#64;</span> <span class="pre">acc</span></code> is the acceleration of every
-dof and <code class="docutils literal notranslate"><span class="pre">-M</span> <span class="pre">&#64;</span> <span class="pre">Phi</span> <span class="pre">&#64;</span> <span class="pre">acc</span></code> the d’Alembert forces, and <code class="docutils literal notranslate"><span class="pre">R</span></code> the residual,
-whose values at <code class="docutils literal notranslate"><span class="pre">bref</span></code> are the reactions of the reference support,
-zero up to the round-off.</p>
-</li>
-<li><p>Post-process <code class="docutils literal notranslate"><span class="pre">u</span></code> as in a linear static analysis, e.g. with
-<code class="docutils literal notranslate"><span class="pre">update_probe_ue</span></code> and <code class="docutils literal notranslate"><span class="pre">update_probe_finte</span></code> of the elements. The
-element forces of a distributed inertia load contain the element’s own
-share of it, as for any distributed load.</p></li>
-</ol>
+stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> is singular, with the rigid-body modes in
+its null space, and the linear static system of <a class="reference internal" href="linear_analyses.html"><span class="doc">Linear static analyses</span></a>
+cannot be solved as it stands. Under steady loads that are not balanced,
+e.g. the aerodynamic loads and the weights of an aircraft that is not
+trimmed, or the thrust of a launch vehicle, the free structure accelerates
+as a rigid body while it deforms elastically. Inertia relief balances the
+loads with the d’Alembert forces of this rigid-body acceleration and
+computes the displacements relative to a reference support, with
+<a class="reference internal" href="solver_inertia_relief.html#pyfe3d.solver.inertia_relief.apply_inertia_relief" title="pyfe3d.solver.inertia_relief.apply_inertia_relief"><code class="xref py py-func docutils literal notranslate"><span class="pre">apply_inertia_relief()</span></code></a>.</p>
+<section id="solvability-of-the-singular-system">
+<h2>Solvability of the singular system<a class="headerlink" href="#solvability-of-the-singular-system" title="Link to this heading">#</a></h2>
+<p>The <span class="math notranslate nohighlight">\(n_r\)</span> rigid-body modes, six for a free structure in 3D, are the columns
+of <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}\)</span>, with <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} \boldsymbol{\Phi} = \boldsymbol{0}\)</span> and, by symmetry,
+<span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{K}_{C0} = \boldsymbol{0}\)</span>. Premultiplying <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}
+\boldsymbol{u} = \boldsymbol{F}_{ext}\)</span> by <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top\)</span> shows that a static solution
+exists only for loads orthogonal to the rigid-body modes,</p>
+<div class="math notranslate nohighlight" id="equation-ir-solvability">
+<span class="eqno">(1)<a class="headerlink" href="#equation-ir-solvability" title="Link to this equation">#</a></span>\[\boldsymbol{\Phi}^\top \boldsymbol{F}_{ext} = \boldsymbol{0}\]</div>
+<p>i.e. without a resultant force or moment (Farhat and Géradin 1998;
+Cavaliere et al. 2021, Sec. 3, Eqs. (12) and (15)), and that it is then defined up to a
+rigid-body motion <span class="math notranslate nohighlight">\(\boldsymbol{\Phi} \boldsymbol{\alpha}\)</span>. A particular solution is
+obtained by prescribing <span class="math notranslate nohighlight">\(n_r\)</span> null displacements, the reference support,
+chosen such that they suppress the rigid-body modes without restraining any
+deformation: a statically determinate support, for which the rows of
+<span class="math notranslate nohighlight">\(\boldsymbol{\Phi}\)</span> at the reference dofs form a non-singular square matrix.</p>
+</section>
+<section id="rigid-body-modes-and-accelerations">
+<h2>Rigid-body modes and accelerations<a class="headerlink" href="#rigid-body-modes-and-accelerations" title="Link to this heading">#</a></h2>
+<p>The dofs are partitioned as in <a class="reference internal" href="boundary_conditions.html"><span class="doc">Boundary conditions and prescribed displacements</span></a>, into the known
+set <span class="math notranslate nohighlight">\(k\)</span>, the reference support <code class="docutils literal notranslate"><span class="pre">bref</span></code> together with the dofs <code class="docutils literal notranslate"><span class="pre">bfix</span></code>
+that the model itself constrains, e.g. a plane of symmetry, and the free
+set <span class="math notranslate nohighlight">\(u\)</span>. With unit displacements at the reference dofs and zero at those of
+<code class="docutils literal notranslate"><span class="pre">bfix</span></code>, the rigid-body modes follow from the stiffness matrix (Barnett et
+al. 1995, p. 6, Eq. (19)):</p>
+<div class="math notranslate nohighlight" id="equation-ir-modes">
+<span class="eqno">(2)<a class="headerlink" href="#equation-ir-modes" title="Link to this equation">#</a></span>\[\begin{split}\boldsymbol{\Phi}_k = \begin{bmatrix} \boldsymbol{I} \\ \boldsymbol{0} \end{bmatrix}, \qquad
+\boldsymbol{\Phi}_u = -\boldsymbol{K}_{{C0}_{uu}}^{-1} \boldsymbol{K}_{{C0}_{uk}} \boldsymbol{\Phi}_k\end{split}\]</div>
+<p>with the rows of <code class="docutils literal notranslate"><span class="pre">bref</span></code> first and those of <code class="docutils literal notranslate"><span class="pre">bfix</span></code> second in
+<span class="math notranslate nohighlight">\(\boldsymbol{\Phi}_k\)</span>, where <span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{uu}}\)</span> is positive definite only when the
+supports suppress all the rigid-body modes (Bathe 2014, Sec. 8.2.5). Under
+steady loads, the acceleration is that of a rigid body, <span class="math notranslate nohighlight">\(\ddot{\boldsymbol{u}} =
+\boldsymbol{\Phi} \ddot{\boldsymbol{\alpha}}\)</span>; premultiplying the equations of motion
+<span class="math notranslate nohighlight">\(\boldsymbol{M} \ddot{\boldsymbol{u}} + \boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{F}_{ext}\)</span> by
+<span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top\)</span> gives the rigid-body accelerations (Eqs. (21) and (22)),</p>
+<div class="math notranslate nohighlight" id="equation-ir-acc">
+<span class="eqno">(3)<a class="headerlink" href="#equation-ir-acc" title="Link to this equation">#</a></span>\[\boldsymbol{\Phi}^\top \boldsymbol{M} \boldsymbol{\Phi} \, \ddot{\boldsymbol{\alpha}} = \boldsymbol{\Phi}^\top \boldsymbol{F}_{ext}\]</div>
+<p>and the displacements relative to the reference support, <span class="math notranslate nohighlight">\(\boldsymbol{u}_k =
+\boldsymbol{0}\)</span>, solve the free rows of the static system with the d’Alembert
+forces added to the loads (Eqs. (23) and (24)):</p>
+<div class="math notranslate nohighlight" id="equation-ir-u">
+<span class="eqno">(4)<a class="headerlink" href="#equation-ir-u" title="Link to this equation">#</a></span>\[\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u = \boldsymbol{F}_{{ext}_u} - \boldsymbol{M}_u \boldsymbol{\Phi} \ddot{\boldsymbol{\alpha}}\]</div>
+<p>whose total load <span class="math notranslate nohighlight">\(\boldsymbol{F}_{ext} - \boldsymbol{M} \boldsymbol{\Phi} \ddot{\boldsymbol{\alpha}}\)</span> satisfies
+the solvability condition <a class="reference internal" href="#equation-ir-solvability">(1)</a>. The mass matrix must give
+every rigid-body mode a mass, <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{M} \boldsymbol{\Phi}\)</span> positive
+definite: e.g. a beam needs a rotary inertia about its axis, <code class="docutils literal notranslate"><span class="pre">intrhoy2</span> <span class="pre">+</span>
+<span class="pre">intrhoz2</span></code> of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>. A gravity field enters
+<span class="math notranslate nohighlight">\(\boldsymbol{F}_{ext}\)</span> as <span class="math notranslate nohighlight">\(\boldsymbol{M} \boldsymbol{a}_g\)</span>, with <span class="math notranslate nohighlight">\(\boldsymbol{a}_g\)</span> the uniform
+acceleration at the translational dofs.</p>
 </section>
 <section id="the-reference-support">
 <h2>The reference support<a class="headerlink" href="#the-reference-support" title="Link to this heading">#</a></h2>
-<p>The reference support sets to zero as many dofs as there are rigid-body
-modes, six for a free structure in 3D, fewer with <code class="docutils literal notranslate"><span class="pre">bfix</span></code>, e.g. two, heave
-and pitch, for the half model of the airplane of
-<a class="reference internal" href="tut-inertia-relief-aircraft-ha144a.html"><span class="doc">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</span></a>, whose plane of symmetry and
-fore-aft translation are constrained by <code class="docutils literal notranslate"><span class="pre">bfix</span></code>. It must be
-statically determinate: it suppresses every rigid-body mode without
-restraining any deformation, i.e. the rows of the rigid-body modes at the
-reference dofs form a non-singular square matrix. Typical choices are the
-six dofs of one node, or three translations of one node, two of a second
-node and one of a third node that are not aligned.
-<a class="reference internal" href="solver_inertia_relief.html#pyfe3d.solver.inertia_relief.apply_inertia_relief" title="pyfe3d.solver.inertia_relief.apply_inertia_relief"><code class="xref py py-func docutils literal notranslate"><span class="pre">apply_inertia_relief()</span></code></a> checks the choice:</p>
-<ul class="simple">
-<li><p>with too few dofs, or dofs that leave a rigid-body mode free, e.g. two
-translations along the line joining their nodes, the stiffness matrix of
-the free dofs, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{uu}}\)</span>, is singular, which raises a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code>, as for insufficient boundary
-conditions in <a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a>;</p></li>
-<li><p>with more dofs than the rigid-body modes, the support is statically
-indeterminate: it would restrain the deformation and carry reactions,
-which raises a <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> too.</p></li>
-</ul>
-<p>With a statically determinate support, the reactions are zero and the
-support does not change the solution: another choice changes the
-displacements by a rigid-body motion only, while the strains, the stresses
-and the internal forces are the same. The displacements are thus always
+<p>The reactions are the residual at the known dofs, <span class="math notranslate nohighlight">\(\boldsymbol{R} = \boldsymbol{K}_{C0}
+\boldsymbol{u} - \boldsymbol{F}_{ext} + \boldsymbol{M} \boldsymbol{\Phi} \ddot{\boldsymbol{\alpha}}\)</span>, as in
+<a class="reference internal" href="boundary_conditions.html#equation-bc-reactions">(3)</a>. Since <span class="math notranslate nohighlight">\(\boldsymbol{R}_u = \boldsymbol{0}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top
+\boldsymbol{K}_{C0} = \boldsymbol{0}\)</span>, premultiplying it by <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top\)</span> shows that the
+reactions of a statically determinate reference support are zero: the
+support carries no load and does not change the strains, the stresses and
+the internal forces; another statically determinate support changes the
+displacements by a rigid-body motion only. The displacements are thus
 relative to the chosen support, which moves with the rigid-body
 acceleration; a support at a point of interest, e.g. the centre of gravity
-or a payload interface, makes them easier to read.</p>
+or a payload interface, makes them easier to read. Typical choices are the
+six dofs of one node, or three translations of one node, two of a second
+node and one of a third node that are not aligned; with <code class="docutils literal notranslate"><span class="pre">bfix</span></code>, fewer,
+e.g. heave and pitch for a half model of an airplane whose plane of
+symmetry and fore-aft translation are constrained, see
+<code class="docutils literal notranslate"><span class="pre">tests/test_inertia_relief_ha144a.py</span></code>.</p>
+<p><a class="reference internal" href="solver_inertia_relief.html#pyfe3d.solver.inertia_relief.apply_inertia_relief" title="pyfe3d.solver.inertia_relief.apply_inertia_relief"><code class="xref py py-func docutils literal notranslate"><span class="pre">apply_inertia_relief()</span></code></a> checks the choice: with too few reference
+dofs, or dofs that leave a rigid-body mode free, e.g. two translations along
+the line joining their nodes, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{uu}}\)</span> is singular, which is
+detected from the signs and the magnitudes of the pivots of its
+factorization, see <code class="docutils literal notranslate"><span class="pre">pivot_rtol</span></code>; with more dofs than the rigid-body modes,
+the support is statically indeterminate, and a column of <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}\)</span> of
+<a class="reference internal" href="#equation-ir-modes">(2)</a> is not a rigid-body mode, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} \boldsymbol{\Phi}_j \ne
+\boldsymbol{0}\)</span>, see <code class="docutils literal notranslate"><span class="pre">rtol</span></code>. Both raise a <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code>.
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{uu}}\)</span> is factorized once, as in <a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a>, and
+the factorization gives both <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}_u\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{u}_u\)</span>.</p>
 </section>
 <section id="balanced-and-unbalanced-loads">
 <h2>Balanced and unbalanced loads<a class="headerlink" href="#balanced-and-unbalanced-loads" title="Link to this heading">#</a></h2>
-<p>For balanced loads, e.g. a structure under its own weight balanced by
-other loads, or self-equilibrated loads, the rigid-body accelerations are
-zero up to the round-off and inertia relief reduces to a fictitious support
-of the singular static problem: the displacements are those of the
-structure supported by the reference support, which carries no reaction.</p>
-<p>For unbalanced loads, the plain linear static solution with the same
-support would carry the resultant of the loads at the support, with
-unrealistic reactions and internal forces near it. Inertia relief replaces
-these reactions by the d’Alembert forces of the rigid-body acceleration,
-distributed as the mass. The result is a quasi-static state, valid when the
-loads are steady and the transient response has been damped out; it is not
-a dynamic response.</p>
+<p>For balanced loads, e.g. self-equilibrated loads, the rigid-body
+accelerations are zero up to the round-off and inertia relief reduces to a
+fictitious support of the singular static problem: the displacements are
+those of the structure supported by the reference support, which carries no
+reaction. For unbalanced loads, the plain linear static solution with the
+same support would carry the resultant of the loads at the support, with
+unrealistic reactions and an unrealistic distribution of the internal
+forces (Cavaliere et al. 2021, Sec. 1). Inertia relief replaces these reactions by the d’Alembert forces
+of the rigid-body acceleration, distributed as the mass. The element forces
+of a distributed inertia load contain the element’s own share of it, as
+for any distributed load. The result is a quasi-static state, valid when
+the loads are steady and the transient response has been damped out; it is
+not a dynamic response.</p>
 </section>
 <section id="relation-to-the-prescribed-displacements">
 <h2>Relation to the prescribed displacements<a class="headerlink" href="#relation-to-the-prescribed-displacements" title="Link to this heading">#</a></h2>
 <p>The reference support is a set of prescribed null displacements, the known
-set <span class="math notranslate nohighlight">\(k\)</span> of the partition of <a class="reference internal" href="linear_analyses.html"><span class="doc">Linear static analyses</span></a>, with <code class="docutils literal notranslate"><span class="pre">bk</span> <span class="pre">=</span> <span class="pre">bref</span> <span class="pre">|</span>
-<span class="pre">bfix</span></code> and <code class="docutils literal notranslate"><span class="pre">uk</span> <span class="pre">=</span> <span class="pre">0</span></code>, and the reactions are computed as there, with the
-d’Alembert forces added to the external forces. The difference is the
-choice of these dofs: a support of a linear static analysis restrains the
-structure and carries the loads, whereas the reference support of inertia
-relief only fixes the rigid-body motion and carries no load.</p>
-</section>
-<section id="worked-examples">
-<h2>Worked examples<a class="headerlink" href="#worked-examples" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="tut-inertia-relief.html"><span class="doc">Tutorial: static analysis with inertia relief</span></a>: springs and point masses, with the closed-form
-solutions, a free beam under a balanced load set, and a free beam and bar
-under an end force, against closed-form solutions;</p></li>
-<li><p><a class="reference internal" href="tut-inertia-relief-aircraft-ha144a.html"><span class="doc">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</span></a>: the stick model of an airplane
-in trimmed level flight, the MSC Nastran example HA144A, against the
-published results. The published aerodynamic box forces, transferred to
-the beams with Nastran’s linear splines (SPLINE2), which carry the
-moments of the forces through their rigid arms, reproduce the published
-bar forces and displacements to the printed digits; an inverse-distance
-load transfer and the loads of a vortex lattice method are compared as
-well (see the references of the tutorial).</p></li>
-</ul>
+set of <a class="reference internal" href="boundary_conditions.html"><span class="doc">Boundary conditions and prescribed displacements</span></a> with <code class="docutils literal notranslate"><span class="pre">bk</span> <span class="pre">=</span> <span class="pre">bref</span> <span class="pre">|</span> <span class="pre">bfix</span></code> and <code class="docutils literal notranslate"><span class="pre">uk</span> <span class="pre">=</span> <span class="pre">0</span></code>,
+and the reactions are computed as there, with the d’Alembert forces added
+to the external forces. The difference is the choice of these dofs: a
+support of a linear static analysis restrains the structure and carries
+the loads, whereas the reference support of inertia relief only fixes the
+rigid-body motion and carries no load. The methods for large singular
+systems without a reference support, which compute the null space of
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> during the factorization, are discussed by Farhat and
+Géradin (1998, Secs. 1-4).</p>
+<p><code class="docutils literal notranslate"><span class="pre">tests/test_inertia_relief.py</span></code> checks the function against closed-form
+solutions, three point masses joined by two springs, a chain of springs and
+masses, free-free beams and bars, and <code class="docutils literal notranslate"><span class="pre">tests/test_inertia_relief_ha144a.py</span></code>
+against the published results of the MSC Nastran example HA144A of Rodden
+and Johnson (1994).</p>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
@@ -777,6 +1198,18 @@ MSC/NASTRAN DMAP Alter, NASA TM-106836, NASA Lewis Research Center,
 Cleveland, OH, 1995. <a class="reference external" href="https://ntrs.nasa.gov/citations/19950013233">https://ntrs.nasa.gov/citations/19950013233</a></p></li>
 <li><p>Bathe, K. J., Finite Element Procedures, 2nd ed., K. J. Bathe,
 Watertown, MA, 2014.</p></li>
+<li><p>Cavaliere, F., Zlotnik, S., Sevilla, R., Larráyoz, X. and Díez, P.,
+Nonintrusive reduced order model for parametric solutions of inertia
+relief problems, International Journal for Numerical Methods in
+Engineering, 122(16), 4270-4291, 2021. <a class="reference external" href="https://doi.org/10.1002/nme.6702">https://doi.org/10.1002/nme.6702</a></p></li>
+<li><p>Farhat, C. and Géradin, M., On the general solution by a direct method of
+a large-scale singular system of linear equations: application to the
+analysis of floating structures, International Journal for Numerical
+Methods in Engineering, 41(4), 675-696, 1998.
+<a class="reference external" href="https://doi.org/10.1002/%28SICI%291097-0207%2819980228%2941%3A4%3C675%3A%3AAID-NME305%3E3.0.CO%3B2-8">https://doi.org/10.1002/%28SICI%291097-0207%2819980228%2941%3A4%3C675%3A%3AAID-NME305%3E3.0.CO%3B2-8</a></p></li>
+<li><p>Rodden, W. P. and Johnson, E. H., MSC/NASTRAN Aeroelastic Analysis
+User’s Guide, Version 68, The MacNeal-Schwendler Corporation, Los
+Angeles, 1994.</p></li>
 </ul>
 </section>
 </section>
@@ -816,7 +1249,7 @@ Watertown, MA, 2014.</p></li>
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -828,11 +1261,11 @@ Watertown, MA, 2014.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workflow">Workflow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solvability-of-the-singular-system">Solvability of the singular system</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rigid-body-modes-and-accelerations">Rigid-body modes and accelerations</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-reference-support">The reference support</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#balanced-and-unbalanced-loads">Balanced and unbalanced loads</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relation-to-the-prescribed-displacements">Relation to the prescribed displacements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#worked-examples">Worked examples</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
   </nav></div>
@@ -859,8 +1292,8 @@ Watertown, MA, 2014.</p></li>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -893,7 +1326,7 @@ Watertown, MA, 2014.</p></li>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
 </p></div>
       
     </div>

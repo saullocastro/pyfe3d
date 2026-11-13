@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial: static analysis with inertia relief &#8212; pyfe3d 0.12.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/tut-inertia-relief';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A" href="tut-inertia-relief-aircraft-ha144a.html" />
+    <link rel="prev" title="Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations" href="tut-nafems-cap-axisymmetric.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#" aria-current="page">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tutorial: static analysis with inertia relief</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Tutorial:-static-analysis-with-inertia-relief">
+<h1>Tutorial: static analysis with inertia relief<a class="headerlink" href="#Tutorial:-static-analysis-with-inertia-relief" title="Link to this heading">#</a></h1>
+<p>A structure without supports, e.g. a launch vehicle or a spacecraft in flight, can move as a rigid body: its stiffness matrix is singular and the linear static solution cannot be applied as it stands. When the loads are not balanced, the free structure accelerates, and inertia relief balances the loads with the d’Alembert (inertia) forces of this rigid-body acceleration. The displacements are then computed relative to a statically determinate reference support, whose reactions vanish.</p>
+<p>The analysis is done by <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver.apply_inertia_relief</span></code>, from the assembled stiffness matrix <code class="docutils literal notranslate"><span class="pre">KC0</span></code> and the mass matrix <code class="docutils literal notranslate"><span class="pre">M</span></code> of the elements’ <code class="docutils literal notranslate"><span class="pre">update_M</span></code>, see the user guide page <a class="reference internal" href="../inertia_relief.html"><span class="doc">Inertia relief</span></a>. This notebook verifies it in four cases:</p>
+<ol class="arabic simple">
+<li><p>three nodes joined by two springs, a singular system of rank 2, with balanced and unbalanced loads, a fictitious support and inertia relief, derived symbolically and solved with pyfe3d;</p></li>
+<li><p>a chain of springs and point masses under unbalanced loads, with two reference supports;</p></li>
+<li><p>a free-free beam of 10 <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements under a balanced load set, its own weight balanced by two point loads and opposite axial end forces;</p></li>
+<li><p>a free-free beam and a free-free bar under an end force, against closed-form solutions derived and checked with SymPy below.</p></li>
+</ol>
+<p>The references are:</p>
+<ul class="simple">
+<li><p>Barnett, A. R., Widrick, T. W., Ludwiczak, D. R., <em>Closed-Form Static Analysis with Inertia Relief and Displacement-Dependent Loads Using a MSC/NASTRAN DMAP Alter</em>, NASA TM-106836, NASA Lewis Research Center, Cleveland, OH, 1995, <a class="reference external" href="https://ntrs.nasa.gov/citations/19950013233">ntrs.nasa.gov/citations/19950013233</a>: p. 2, the quasistatic flight phases and MSC/NASTRAN Solution 91; p. 6, Eqs. (16)-(22), the rigid-body transformation and accelerations; p. 7, Eqs. (23) and (24), the displacements
+relative to the reference support;</p></li>
+<li><p>Bathe, K. J., <em>Finite Element Procedures</em>, 2nd ed., K. J. Bathe, Watertown, MA, 2014: Sec. 4.2.2, Eqs. (4.42)-(4.45), the partition into unknown and prescribed displacements and the reactions; Sec. 8.2.5, pp. 726-727, the stiffness matrix of an unrestrained system is positive semi-definite, with one zero eigenvalue per rigid-body mode;</p></li>
+<li><p>Farhat, C., Géradin, M., On the general solution by a direct method of a large-scale singular system of linear equations: application to the analysis of floating structures, <em>International Journal for Numerical Methods in Engineering</em>, 41(4), 675-696, 1998, <a class="reference external" href="https://doi.org/10.1002/%28SICI%291097-0207%2819980228%2941%3A4%3C675%3A%3AAID-NME305%3E3.0.CO%3B2-8">doi:10.1002/(SICI)1097-0207(19980228)41:4&lt;675::AID-NME305&gt;3.0.CO;2-8</a>, for the null space of large sparse singular stiffness matrices;</p></li>
+<li><p>Cavaliere, F., Zlotnik, S., Sevilla, R., Larráyoz, X., Díez, P., Nonintrusive reduced order model for parametric solutions of inertia relief problems, <em>International Journal for Numerical Methods in Engineering</em>, 122(16), 4270-4291, 2021, <a class="reference external" href="https://doi.org/10.1002/nme.6702">doi:10.1002/nme.6702</a>, for inertia relief in general.</p></li>
+</ul>
+<p>The models and the same checks are in <code class="docutils literal notranslate"><span class="pre">tests/test_inertia_relief.py</span></code>, from which the model builders are imported below.</p>
+<section id="The-procedure-in-pyfe3d-notation">
+<h2>The procedure in pyfe3d notation<a class="headerlink" href="#The-procedure-in-pyfe3d-notation" title="Link to this heading">#</a></h2>
+<p>The degrees of freedom are partitioned as in the linear static analysis of pyfe3d, see the overview: <code class="docutils literal notranslate"><span class="pre">bu</span></code> selects the free degrees of freedom, set <span class="math notranslate nohighlight">\(u\)</span>, and <code class="docutils literal notranslate"><span class="pre">bk</span></code> the constrained ones, set <span class="math notranslate nohighlight">\(k\)</span>, with the prescribed values <code class="docutils literal notranslate"><span class="pre">uk</span></code>. The reference degrees of freedom of inertia relief, the r-set of Barnett et al. (1995, p. 6), belong here to <span class="math notranslate nohighlight">\(k\)</span>, and the remaining ones, their l-set, to <span class="math notranslate nohighlight">\(u\)</span>. In inertia relief, <code class="docutils literal notranslate"><span class="pre">bk</span></code> contains the reference degrees of freedom <code class="docutils literal notranslate"><span class="pre">bref</span></code>, with
+<code class="docutils literal notranslate"><span class="pre">uk</span> <span class="pre">=</span> <span class="pre">0</span></code>, plus any degree of freedom that the model itself constrains (<code class="docutils literal notranslate"><span class="pre">bfix</span></code> below, e.g. the rollers of a model along a line).</p>
+<p>The <span class="math notranslate nohighlight">\(n_r\)</span> rigid-body modes are the columns of <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} \boldsymbol{\Phi} = \boldsymbol{0}\)</span>. A static solution <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{F}_{ext}\)</span> exists only when <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{F}_{ext} = \boldsymbol{0}\)</span>, i.e. when the resultant forces and moments vanish. With a statically determinate reference support, unit displacements at the reference degrees of freedom,
+<span class="math notranslate nohighlight">\(\boldsymbol{\Phi}_k = \boldsymbol{I}\)</span>, give the rigid-body modes from the stiffness matrix itself (Barnett et al. 1995, p. 6, Eq. (19)):</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\Phi} = \begin{bmatrix} \boldsymbol{\Phi}_u \\ \boldsymbol{\Phi}_k \end{bmatrix}
+= \begin{bmatrix} -\boldsymbol{K}_{{C0}_{uu}}^{-1} \boldsymbol{K}_{{C0}_{uk}} \\ \boldsymbol{I} \end{bmatrix}\end{split}\]</div>
+<p>The structure deforms elastically and accelerates as a rigid body, <span class="math notranslate nohighlight">\(\ddot{\boldsymbol{u}} = \boldsymbol{\Phi} \ddot{\boldsymbol{\alpha}}\)</span>. Premultiplying <span class="math notranslate nohighlight">\(\boldsymbol{M} \ddot{\boldsymbol{u}} + \boldsymbol{K}_{C0}
+\boldsymbol{u} = \boldsymbol{F}_{ext}\)</span> by <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top\)</span>, with <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{K}_{C0} = \boldsymbol{0}\)</span>, gives the rigid-body accelerations (Barnett et al. 1995, p. 6, Eqs. (21) and (22)):</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\Phi}^\top \boldsymbol{M} \boldsymbol{\Phi} \, \ddot{\boldsymbol{\alpha}} = \boldsymbol{\Phi}^\top \boldsymbol{F}_{ext}\]</div>
+<p>The d’Alembert forces <span class="math notranslate nohighlight">\(\boldsymbol{F}_I = -\boldsymbol{M} \boldsymbol{\Phi}
+\ddot{\boldsymbol{\alpha}}\)</span> balance the external loads, <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top (\boldsymbol{F}_{ext} + \boldsymbol{F}_I) =
+\boldsymbol{0}\)</span>, and the displacements relative to the reference support are (Barnett et al. 1995, p. 7, Eqs. (23) and (24)):</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u = \boldsymbol{F}_{{ext}_u} - \boldsymbol{M}_u \boldsymbol{\Phi} \ddot{\boldsymbol{\alpha}}, \qquad \boldsymbol{u}_k = \boldsymbol{0}\]</div>
+<p>The reactions of the reference support are the residual at the reference degrees of freedom, <span class="math notranslate nohighlight">\(\boldsymbol{R}_k = (\boldsymbol{K}_{C0} \boldsymbol{u} -
+\boldsymbol{F}_{ext} - \boldsymbol{F}_I)_k\)</span>, as in Bathe (2014), Eq. (4.45), or <span class="math notranslate nohighlight">\(\boldsymbol{F}_{{int}_k} - \boldsymbol{f}_k\)</span> in the overview of pyfe3d. Since <span class="math notranslate nohighlight">\(\boldsymbol{R}_u = \boldsymbol{0}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top
+\boldsymbol{K}_{C0} = \boldsymbol{0}\)</span>, premultiplying the residual by <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top\)</span> gives <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}_k^\top \boldsymbol{R}_k =
+-\boldsymbol{\Phi}^\top (\boldsymbol{F}_{ext} + \boldsymbol{F}_I) =
+\boldsymbol{0}\)</span>, hence <span class="math notranslate nohighlight">\(\boldsymbol{R}_k = \boldsymbol{0}\)</span>: the reference support carries no load.</p>
+<p><strong>Choice of the reference support.</strong> Any set of <span class="math notranslate nohighlight">\(n_r\)</span> degrees of freedom whose rows <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}_k\)</span> form a non-singular matrix, i.e. a statically determinate support, can be chosen: it suppresses the rigid-body modes without restraining any deformation. The displacements are measured relative to it, and so they change with the choice by a rigid-body motion <span class="math notranslate nohighlight">\(\boldsymbol{\Phi} \boldsymbol{\alpha}\)</span>, whereas the strains and internal forces do not. A support with more degrees
+of freedom than <span class="math notranslate nohighlight">\(n_r\)</span> is statically indeterminate and would carry reactions; one that does not suppress all the rigid-body modes leaves <span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{uu}}\)</span> singular.</p>
+<p>These steps are implemented by <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver.apply_inertia_relief</span></code>, which also checks that the reference support is statically determinate. Its argument <code class="docutils literal notranslate"><span class="pre">bfix</span></code> holds the degrees of freedom constrained by the model itself, which are excluded from <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}\)</span>.</p>
+<p>The small function below collects its results in a dictionary, with the d’Alembert forces <span class="math notranslate nohighlight">\(\boldsymbol{F}_I\)</span>, for the printouts of the cases.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>%matplotlib inline
+import os
+import sys
+sys.path.insert(0, os.path.join('..', 'tests'))
+
+import numpy as np
+import sympy as sp
+import matplotlib.pyplot as plt
+from scipy.sparse import csc_matrix
+from scipy.sparse.linalg import spsolve
+
+from pyfe3d import DOF
+from test_inertia_relief import (spring_chain, point_masses, spring_forces,
+                                 beam_prop, beam_model, geometric_rigid_modes,
+                                 beam_end_forces, reference_dofs, chain_data)
+
+
+from pyfe3d.solver import apply_inertia_relief
+
+
+def run_inertia_relief(KC0, M, fext, bref, bfix=None):
+    """Results of pyfe3d.solver.apply_inertia_relief, with the d'Alembert forces"""
+    u, acc, Phi, R = apply_inertia_relief(KC0, M, fext, bref, bfix,
+                                          return_reactions=True)
+    finertia = -(M @ (Phi @ acc))         # d'Alembert (inertia) forces
+    bk = bref if bfix is None else bref | bfix
+    return dict(u=u, acc=acc, Phi=Phi, R=R, finertia=finertia,
+                ftot=fext + finertia, bu=~bk)
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Case-1:-three-nodes-joined-by-two-springs">
+<h2>Case 1: three nodes joined by two springs<a class="headerlink" href="#Case-1:-three-nodes-joined-by-two-springs" title="Link to this heading">#</a></h2>
+<p>Three nodes along <span class="math notranslate nohighlight">\(x\)</span>, a spring <span class="math notranslate nohighlight">\(k_1\)</span> between the nodes 1 and 2 and a spring <span class="math notranslate nohighlight">\(k_2\)</span> between the nodes 2 and 3, the point masses <span class="math notranslate nohighlight">\(m_1\)</span>, <span class="math notranslate nohighlight">\(m_2\)</span>, <span class="math notranslate nohighlight">\(m_3\)</span> and the forces <span class="math notranslate nohighlight">\(F_1\)</span>, <span class="math notranslate nohighlight">\(F_2\)</span>, <span class="math notranslate nohighlight">\(F_3\)</span>, all able to move only along <span class="math notranslate nohighlight">\(x\)</span>. The linear static system</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix} k_1 &amp; -k_1 &amp; 0 \\ -k_1 &amp; k_1 + k_2 &amp; -k_2 \\ 0 &amp; -k_2 &amp; k_2 \end{bmatrix}
+\begin{Bmatrix} u_1 \\ u_2 \\ u_3 \end{Bmatrix}
+= \begin{Bmatrix} F_1 \\ F_2 \\ F_3 \end{Bmatrix}\end{split}\]</div>
+<p>has a stiffness matrix whose rows add to zero, of rank 2, with the rigid translation <span class="math notranslate nohighlight">\(\boldsymbol{\phi} = \{1, 1, 1\}^\top\)</span> in its null space, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} \boldsymbol{\phi} = \boldsymbol{0}\)</span>, so its inverse does not exist. Adding the three rows, i.e. premultiplying by <span class="math notranslate nohighlight">\(\boldsymbol{\phi}^\top\)</span>, shows that a solution exists only for balanced loads:</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\phi}^\top \boldsymbol{F}_{ext} = F_1 + F_2 + F_3 = 0\]</div>
+<p><strong>Balanced loads.</strong> Rows 1 and 3 give <span class="math notranslate nohighlight">\(k_1 (u_2 - u_1) = -F_1\)</span> and <span class="math notranslate nohighlight">\(k_2 (u_3 -
+u_2) = F_3\)</span>, and row 2 is minus their sum. They fix the elongations of the springs but not the position of the system:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{u} = \begin{Bmatrix} 0 \\ -F_1/k_1 \\ -F_1/k_1 + F_3/k_2 \end{Bmatrix}
++ \alpha \begin{Bmatrix} 1 \\ 1 \\ 1 \end{Bmatrix}\end{split}\]</div>
+<p>with an arbitrary amplitude <span class="math notranslate nohighlight">\(\alpha\)</span> of the rigid translation, which does not change the spring forces.</p>
+<p><strong>Fictitious support.</strong> Prescribing <span class="math notranslate nohighlight">\(\bar{u}_1 = 0\)</span>, a statically determinate support (in pyfe3d notation, <code class="docutils literal notranslate"><span class="pre">bref</span></code>, part of <code class="docutils literal notranslate"><span class="pre">bk</span></code>, is the <span class="math notranslate nohighlight">\(x\)</span> degree of freedom of node 1, and <code class="docutils literal notranslate"><span class="pre">bu</span></code> those of the nodes 2 and 3), the partition gives</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{K}_{{C0}_{uu}} = \begin{bmatrix} k_1 + k_2 &amp; -k_2 \\ -k_2 &amp; k_2 \end{bmatrix},
+\qquad \det \boldsymbol{K}_{{C0}_{uu}} = k_1 k_2 &gt; 0,
+\qquad \boldsymbol{K}_{{C0}_{uk}} = \begin{Bmatrix} -k_1 \\ 0 \end{Bmatrix}\end{split}\]</div>
+<p>and <span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{uu}} \{u_2, u_3\}^\top = \{F_2, F_3\}^\top\)</span>, i.e. <span class="math notranslate nohighlight">\(u_2 = (F_2 + F_3)/k_1\)</span> and <span class="math notranslate nohighlight">\(u_3 = u_2 + F_3/k_2\)</span>, with the reaction <span class="math notranslate nohighlight">\(R_1 =
+-k_1 u_2 - F_1 = -(F_1 + F_2 + F_3)\)</span>. For balanced loads, <span class="math notranslate nohighlight">\(u_2 = -F_1/k_1\)</span>, the solution above with <span class="math notranslate nohighlight">\(\alpha = 0\)</span>, and <span class="math notranslate nohighlight">\(R_1 = 0\)</span>: the support does not change the solution. For unbalanced loads, e.g. <span class="math notranslate nohighlight">\(F_1 = F_2 = 0\)</span> and <span class="math notranslate nohighlight">\(F_3 =
+F\)</span>, the support carries the reaction <span class="math notranslate nohighlight">\(R_1 = -F\)</span> and the spring <span class="math notranslate nohighlight">\(k_1\)</span> the full force <span class="math notranslate nohighlight">\(F\)</span>, which is not the state of the free system: the fictitious support alone gives unrealistic reactions and internal forces.</p>
+<p><strong>Inertia relief.</strong> The free system accelerates as a rigid body, and the loads are balanced by the d’Alembert forces of this acceleration. With the same support, now the reference support, the rigid-body mode follows from the stiffness matrix, <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}_u = -\boldsymbol{K}_{{C0}_{uu}}^{-1}
+\boldsymbol{K}_{{C0}_{uk}} = \{1, 1\}^\top\)</span>, i.e. <span class="math notranslate nohighlight">\(\boldsymbol{\Phi} =
+\boldsymbol{\phi}\)</span>, and, with <span class="math notranslate nohighlight">\(\boldsymbol{M} = \mathrm{diag}(m_1, m_2,
+m_3)\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{M} \boldsymbol{\Phi} = m_1 + m_2 +
+m_3\)</span>, so</p>
+<div class="math notranslate nohighlight">
+\[\ddot{\alpha} = \frac{F_1 + F_2 + F_3}{m_1 + m_2 + m_3}\]</div>
+<p>The two free equations are</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix} k_1 + k_2 &amp; -k_2 \\ -k_2 &amp; k_2 \end{bmatrix}
+\begin{Bmatrix} u_2 \\ u_3 \end{Bmatrix}
+= \begin{Bmatrix} F_2 - m_2 \ddot{\alpha} \\ F_3 - m_3 \ddot{\alpha} \end{Bmatrix}\end{split}\]</div>
+<p>whose solution, adding the two rows for the first, is</p>
+<div class="math notranslate nohighlight">
+\[u_2 = \frac{F_2 + F_3 - (m_2 + m_3) \ddot{\alpha}}{k_1}, \qquad
+u_3 = u_2 + \frac{F_3 - m_3 \ddot{\alpha}}{k_2}\]</div>
+<p>For <span class="math notranslate nohighlight">\(F_1 = F_2 = 0\)</span> and <span class="math notranslate nohighlight">\(F_3 = F\)</span>, the spring forces are <span class="math notranslate nohighlight">\(k_1 u_2 = m_1
+\ddot{\alpha}\)</span> and <span class="math notranslate nohighlight">\(k_2 (u_3 - u_2) = (m_1 + m_2) \ddot{\alpha}\)</span>, the forces that accelerate the masses on the left of each spring, and the reaction of the reference support is <span class="math notranslate nohighlight">\(R_1 = -k_1 u_2 - (F_1 - m_1 \ddot{\alpha}) = 0\)</span>. For balanced loads, <span class="math notranslate nohighlight">\(\ddot{\alpha} = 0\)</span> and the fictitious support is recovered.</p>
+<p><strong>Reference support at node 3</strong>, <span class="math notranslate nohighlight">\(\bar{u}_3 = 0\)</span>: the solution changes by the rigid translation <span class="math notranslate nohighlight">\(-u_3 \boldsymbol{\phi}\)</span>, and the spring forces are unchanged.</p>
+<p>SymPy verifies these expressions:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>k1, k2, m1, m2, m3, F1, F2, F3, F = sp.symbols('k_1 k_2 m_1 m_2 m_3 F_1 F_2 F_3 F')
+K3 = sp.Matrix([[k1, -k1, 0], [-k1, k1 + k2, -k2], [0, -k2, k2]])
+M3s = sp.diag(m1, m2, m3)
+F3v = sp.Matrix([F1, F2, F3])
+print('rank:', K3.rank(), ', null space:', [list(v) for v in K3.nullspace()])
+print('K_C0 phi =', list(K3*sp.ones(3, 1)))
+
+# solvability: adding the rows gives F1 + F2 + F3 = 0
+u1s, u2s, u3s, alpha = sp.symbols('u_1 u_2 u_3 alpha')
+us = sp.Matrix([u1s, u2s, u3s])
+print('phi^T K_C0 u =', sp.expand((sp.ones(1, 3)*(K3*us))[0]))
+# balanced loads, F2 = -F1 - F3: u = {0, -F1/k1, -F1/k1 + F3/k2} + alpha phi
+bal = {F2: -F1 - F3}
+u_bal = sp.Matrix([0, -F1/k1, -F1/k1 + F3/k2]) + alpha*sp.ones(3, 1)
+print('balanced loads: u =', list(u_bal))
+print('  residual K_C0 u - F =', list(sp.simplify(K3*u_bal - F3v.subs(bal))))
+
+# fictitious support u1 = 0 without inertia forces: R1 = -(F1 + F2 + F3)
+u23 = K3[1:, 1:].inv()*F3v[1:, :]
+R1_fict = sp.simplify((K3[0, 1:]*u23)[0] - F1)
+print('fictitious support: u2 =', sp.factor(u23[0]), ', u3 =', sp.factor(u23[1]),
+      ', R1 =', R1_fict)
+print('  balanced loads: R1 =', sp.simplify(R1_fict.subs(bal)),
+      ', u - u(alpha = 0) =', list(sp.simplify(u23.subs(bal) - u_bal[1:, :].subs(alpha, 0))))
+
+# reference support at node 1: k = {1}, u = {2, 3}
+Kuu = K3[1:, 1:]
+Kuk = K3[1:, :1]
+print('K_uu =', Kuu.tolist(), ', det =', sp.factor(Kuu.det()), ', K_uk =', list(Kuk))
+Phi3 = sp.Matrix.vstack(sp.eye(1), sp.simplify(-Kuu.inv()*Kuk))
+print('Phi =', list(Phi3))
+add3 = sp.simplify(((Phi3.T*M3s*Phi3).inv()*(Phi3.T*F3v))[0])
+Ftot3 = F3v - M3s*Phi3*add3
+print('alpha_dd =', add3, ', Phi^T F_tot =', sp.simplify((Phi3.T*Ftot3)[0]))
+uu = sp.simplify(Kuu.inv()*Ftot3[1:, :])
+u2_cf = (F2 + F3 - (m2 + m3)*add3)/k1
+u3_cf = u2_cf + (F3 - m3*add3)/k2
+print('u2 =', sp.factor(uu[0]), '\nu3 =', sp.factor(uu[1]))
+print('u2 - u2 (closed form) =', sp.simplify(uu[0] - u2_cf),
+      ', u3 - u3 (closed form) =', sp.simplify(uu[1] - u3_cf))
+
+# F1 = F2 = 0, F3 = F: spring forces and reaction
+sub = {F1: 0, F2: 0, F3: F}
+a = add3.subs(sub)
+N1, N2 = k1*uu[0].subs(sub), k2*(uu[1] - uu[0]).subs(sub)
+R1 = -k1*uu[0].subs(sub) - (0 - m1*a)
+print('F3 = F: k1 u2 =', sp.factor(N1), ', k2 (u3 - u2) =', sp.factor(N2), ', R1 =', sp.simplify(R1))
+
+# reference support at node 3: k = {3}, u = {1, 2}
+u_n1 = sp.Matrix([0, uu[0], uu[1]])
+Kuu3 = K3[:2, :2]
+u12 = sp.simplify(Kuu3.inv()*Ftot3[:2, :])
+u_n3 = sp.Matrix([u12[0], u12[1], 0])
+print('reference at node 3: u - (u(reference at node 1) - u3 phi) =',
+      list(sp.simplify(u_n3 - (u_n1 - uu[1]*sp.ones(3, 1)))))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+rank: 2 , null space: [[1, 1, 1]]
+K_C0 phi = [0, 0, 0]
+phi^T K_C0 u = 0
+balanced loads: u = [alpha, -F_1/k_1 + alpha, -F_1/k_1 + F_3/k_2 + alpha]
+  residual K_C0 u - F = [0, 0, 0]
+fictitious support: u2 = (F_2 + F_3)/k_1 , u3 = (F_2*k_2 + F_3*k_1 + F_3*k_2)/(k_1*k_2) , R1 = -F_1 - F_2 - F_3
+  balanced loads: R1 = 0 , u - u(alpha = 0) = [0, 0]
+K_uu = [[k_1 + k_2, -k_2], [-k_2, k_2]] , det = k_1*k_2 , K_uk = [-k_1, 0]
+Phi = [1, 1, 1]
+alpha_dd = (F_1 + F_2 + F_3)/(m_1 + m_2 + m_3) , Phi^T F_tot = 0
+u2 = -(F_1*m_2 + F_1*m_3 - F_2*m_1 - F_3*m_1)/(k_1*(m_1 + m_2 + m_3))
+u3 = -(F_1*k_1*m_3 + F_1*k_2*m_2 + F_1*k_2*m_3 + F_2*k_1*m_3 - F_2*k_2*m_1 - F_3*k_1*m_1 - F_3*k_1*m_2 - F_3*k_2*m_1)/(k_1*k_2*(m_1 + m_2 + m_3))
+u2 - u2 (closed form) = 0 , u3 - u3 (closed form) = 0
+F3 = F: k1 u2 = F*m_1/(m_1 + m_2 + m_3) , k2 (u3 - u2) = F*(m_1 + m_2)/(m_1 + m_2 + m_3) , R1 = 0
+reference at node 3: u - (u(reference at node 1) - u3 phi) = [0, 0, 0]
+</pre></div></div>
+</div>
+<p>The same model with pyfe3d: two <code class="docutils literal notranslate"><span class="pre">Spring</span></code> elements with <code class="docutils literal notranslate"><span class="pre">kxe</span></code> <span class="math notranslate nohighlight">\(= k_1\)</span> and <span class="math notranslate nohighlight">\(k_2\)</span>, the other degrees of freedom constrained (<code class="docutils literal notranslate"><span class="pre">bfix</span></code>), the point masses in a diagonal <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>, with <span class="math notranslate nohighlight">\(k_1 = 2000\)</span> N/m, <span class="math notranslate nohighlight">\(k_2 = 500\)</span> N/m, <span class="math notranslate nohighlight">\(m_1 = 1\)</span> kg, <span class="math notranslate nohighlight">\(m_2 = 2\)</span> kg, <span class="math notranslate nohighlight">\(m_3 = 3\)</span> kg. First the fictitious support alone, <code class="docutils literal notranslate"><span class="pre">bref</span></code> without inertia forces, solved as a linear static analysis: for the balanced loads <span class="math notranslate nohighlight">\(F_1 = -5\)</span> N, <span class="math notranslate nohighlight">\(F_2 = 1\)</span> N, <span class="math notranslate nohighlight">\(F_3 = 4\)</span> N
+it gives <span class="math notranslate nohighlight">\(u_2 = 2.5\)</span> mm, <span class="math notranslate nohighlight">\(u_3 = 10.5\)</span> mm and <span class="math notranslate nohighlight">\(R_1 = 0\)</span>; for <span class="math notranslate nohighlight">\(F_1 = F_2 = 0\)</span>, <span class="math notranslate nohighlight">\(F_3 = F = 12\)</span> N, <span class="math notranslate nohighlight">\(u_2 = 6\)</span> mm, <span class="math notranslate nohighlight">\(u_3 = 30\)</span> mm and <span class="math notranslate nohighlight">\(R_1 =
+-12\)</span> N. Then inertia relief, with two load sets: <span class="math notranslate nohighlight">\(F_1 = F_2 = 0\)</span>, <span class="math notranslate nohighlight">\(F_3 = F =
+12\)</span> N, for which <span class="math notranslate nohighlight">\(\ddot{\alpha} = 2\)</span> m/s<span class="math notranslate nohighlight">\(^2\)</span>, <span class="math notranslate nohighlight">\(u_2 = 1\)</span> mm and <span class="math notranslate nohighlight">\(u_3 =
+13\)</span> mm; and <span class="math notranslate nohighlight">\(F_1 = 3\)</span> N, <span class="math notranslate nohighlight">\(F_2 = -4\)</span> N, <span class="math notranslate nohighlight">\(F_3 = 10\)</span> N. The rank and the null space of the <span class="math notranslate nohighlight">\(3 \times 3\)</span> stiffness matrix of the <span class="math notranslate nohighlight">\(x\)</span> degrees of freedom are computed numerically.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from scipy.linalg import null_space
+
+k1_, k2_ = 2000., 500.
+mst = np.array([1., 2., 3.])
+KCt, bfixt, springst = spring_chain([k1_, k2_])
+Mt = point_masses(mst)
+Nt = KCt.shape[0]
+Kx = KCt.toarray()[0::DOF, 0::DOF]
+print('K (x dofs) =\n', Kx)
+print('rank =', np.linalg.matrix_rank(Kx), ', row sums =', Kx.sum(axis=1))
+ns = null_space(Kx)[:, 0]
+print('null space, normalised to node 1:', ns/ns[0])
+
+# fictitious support u1 = 0 alone, without inertia forces
+bref1 = np.zeros(Nt, dtype=bool)
+bref1[0] = True
+bu1 = ~(bref1 | bfixt)
+for Fs in ([-5., 1., 4.], [0., 0., 12.]):
+    Fs = np.array(Fs)
+    fext = np.zeros(Nt)
+    fext[0::DOF] = Fs
+    u = np.zeros(Nt)
+    u[bu1] = spsolve(csc_matrix(KCt)[bu1, :][:, bu1], fext[bu1])
+    R1 = (KCt @ u - fext)[0]
+    u2 = (Fs[1] + Fs[2])/k1_
+    u3 = u2 + Fs[2]/k2_
+    print('fictitious support, F = %s N: u = %s mm, R1 = %.1e N (closed form %.1e N)'
+          % (Fs, np.round(1e3*u[0::DOF], 6), R1, -Fs.sum()))
+    print('  closed form: u2 = %.6f mm, u3 = %.6f mm' % (1e3*u2, 1e3*u3))
+
+for Fs in ([0., 0., 12.], [3., -4., 10.]):
+    Fs = np.array(Fs)
+    fext = np.zeros(Nt)
+    fext[0::DOF] = Fs
+    acc = Fs.sum()/mst.sum()
+    u2 = (Fs[1] + Fs[2] - (mst[1] + mst[2])*acc)/k1_
+    u3 = u2 + (Fs[2] - mst[2]*acc)/k2_
+    print('\nF =', Fs, 'N, closed form: alpha_dd = %.4f m/s2, u2 = %.4f mm, u3 = %.4f mm'
+          % (acc, 1e3*u2, 1e3*u3))
+    out = {}
+    table = []
+    for r in (0, 2):
+        bref = np.zeros(Nt, dtype=bool)
+        bref[DOF*r] = True
+        o = run_inertia_relief(KCt, Mt, fext, bref, bfixt)
+        out[r] = o
+        Nsp = spring_forces(springst, o['u'])
+        print('  reference node %d: Phi = %s, alpha_dd = %.4f, u = %s mm, spring forces = %s N, '
+              'R = %.1e N, Phi^T F_tot = %.1e'
+              % (r + 1, o['Phi'][0::DOF, 0], o['acc'][0], np.round(1e3*o['u'][0::DOF], 6),
+                 np.round(Nsp, 6), o['R'][DOF*r], (o['Phi'].T @ o['ftot'])[0]))
+        uref = np.array([0., u2, u3]) - (u3 if r == 2 else 0.)
+        table += [('alpha_dd [m/s2], ref. %d' % (r + 1), o['acc'][0], acc),
+                  ('k1 (u2 - u1) [N], ref. %d' % (r + 1), Nsp[0], k1_*u2),
+                  ('k2 (u3 - u2) [N], ref. %d' % (r + 1), Nsp[1], k2_*(u3 - u2))]
+        table += [('u%d [mm], ref. %d' % (i + 1, r + 1), 1e3*o['u'][DOF*i], 1e3*uref[i])
+                  for i in range(3) if i != r]
+    print('  %-26s %14s %14s %10s' % ('', 'pyfe3d', 'closed form', 'rel. diff.'))
+    for lab, v, ref in table:
+        print('  %-26s %14.8f %14.8f %10.1e' % (lab, v, ref, abs(v/ref - 1)))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+K (x dofs) =
+ [[ 2000. -2000.     0.]
+ [-2000.  2500.  -500.]
+ [    0.  -500.   500.]]
+rank = 2 , row sums = [0. 0. 0.]
+null space, normalised to node 1: [1. 1. 1.]
+fictitious support, F = [-5.  1.  4.] N: u = [ 0.   2.5 10.5] mm, R1 = 0.0e+00 N (closed form -0.0e+00 N)
+  closed form: u2 = 2.500000 mm, u3 = 10.500000 mm
+fictitious support, F = [ 0.  0. 12.] N: u = [ 0.  6. 30.] mm, R1 = -1.2e+01 N (closed form -1.2e+01 N)
+  closed form: u2 = 6.000000 mm, u3 = 30.000000 mm
+
+F = [ 0.  0. 12.] N, closed form: alpha_dd = 2.0000 m/s2, u2 = 1.0000 mm, u3 = 13.0000 mm
+  reference node 1: Phi = [1. 1. 1.], alpha_dd = 2.0000, u = [ 0.  1. 13.] mm, spring forces = [2. 6.] N, R = 0.0e+00 N, Phi^T F_tot = 0.0e+00
+  reference node 3: Phi = [1. 1. 1.], alpha_dd = 2.0000, u = [-13. -12.   0.] mm, spring forces = [2. 6.] N, R = 8.9e-16 N, Phi^T F_tot = 0.0e+00
+                                     pyfe3d    closed form rel. diff.
+  alpha_dd [m/s2], ref. 1        2.00000000     2.00000000    0.0e+00
+  k1 (u2 - u1) [N], ref. 1       2.00000000     2.00000000    0.0e+00
+  k2 (u3 - u2) [N], ref. 1       6.00000000     6.00000000    0.0e+00
+  u2 [mm], ref. 1                1.00000000     1.00000000    0.0e+00
+  u3 [mm], ref. 1               13.00000000    13.00000000    0.0e+00
+  alpha_dd [m/s2], ref. 3        2.00000000     2.00000000    0.0e+00
+  k1 (u2 - u1) [N], ref. 3       2.00000000     2.00000000    8.9e-16
+  k2 (u3 - u2) [N], ref. 3       6.00000000     6.00000000    2.2e-16
+  u1 [mm], ref. 3              -13.00000000   -13.00000000    0.0e+00
+  u2 [mm], ref. 3              -12.00000000   -12.00000000    2.2e-16
+
+F = [ 3. -4. 10.] N, closed form: alpha_dd = 1.5000 m/s2, u2 = -0.7500 mm, u3 = 10.2500 mm
+  reference node 1: Phi = [1. 1. 1.], alpha_dd = 1.5000, u = [ 0.   -0.75 10.25] mm, spring forces = [-1.5  5.5] N, R = 0.0e+00 N, Phi^T F_tot = 0.0e+00
+  reference node 3: Phi = [1. 1. 1.], alpha_dd = 1.5000, u = [-10.25 -11.     0.  ] mm, spring forces = [-1.5  5.5] N, R = 8.9e-16 N, Phi^T F_tot = 0.0e+00
+                                     pyfe3d    closed form rel. diff.
+  alpha_dd [m/s2], ref. 1        1.50000000     1.50000000    0.0e+00
+  k1 (u2 - u1) [N], ref. 1      -1.50000000    -1.50000000    0.0e+00
+  k2 (u3 - u2) [N], ref. 1       5.50000000     5.50000000    2.2e-16
+  u2 [mm], ref. 1               -0.75000000    -0.75000000    0.0e+00
+  u3 [mm], ref. 1               10.25000000    10.25000000    2.2e-16
+  alpha_dd [m/s2], ref. 3        1.50000000     1.50000000    0.0e+00
+  k1 (u2 - u1) [N], ref. 3      -1.50000000    -1.50000000    1.4e-15
+  k2 (u3 - u2) [N], ref. 3       5.50000000     5.50000000    2.2e-16
+  u1 [mm], ref. 3              -10.25000000   -10.25000000    4.4e-16
+  u2 [mm], ref. 3              -11.00000000   -11.00000000    2.2e-16
+</pre></div></div>
+</div>
+<p>With the fictitious support alone, the balanced loads give the general solution with <span class="math notranslate nohighlight">\(\alpha = 0\)</span> and no reaction, whereas the unbalanced loads give the reaction <span class="math notranslate nohighlight">\(-(F_1 + F_2 + F_3)\)</span>. With inertia relief, the rank, the null space, <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}\)</span>, <span class="math notranslate nohighlight">\(\ddot{\alpha}\)</span>, <span class="math notranslate nohighlight">\(u_2\)</span>, <span class="math notranslate nohighlight">\(u_3\)</span> and the spring forces match the closed form, the reaction of the reference support vanishes, and moving the reference support from node 1 to node 3 shifts every displacement by
+<span class="math notranslate nohighlight">\(-u_3\)</span> without changing the spring forces.</p>
+</section>
+<section id="Case-2:-a-chain-of-springs-and-point-masses">
+<h2>Case 2: a chain of springs and point masses<a class="headerlink" href="#Case-2:-a-chain-of-springs-and-point-masses" title="Link to this heading">#</a></h2>
+<p>Five point masses <span class="math notranslate nohighlight">\(m_i\)</span> joined by four springs <span class="math notranslate nohighlight">\(k_j\)</span> along <span class="math notranslate nohighlight">\(x\)</span>, free-free, under unbalanced loads <span class="math notranslate nohighlight">\(F_i\)</span>. As in case 1, the rigid-body acceleration is <span class="math notranslate nohighlight">\(\ddot{\alpha} = \sum_i F_i / \sum_i m_i\)</span> and the inertia forces are <span class="math notranslate nohighlight">\(-m_i \ddot{\alpha}\)</span>. Cutting the spring <span class="math notranslate nohighlight">\(j\)</span>, between the nodes <span class="math notranslate nohighlight">\(j\)</span> and <span class="math notranslate nohighlight">\(j + 1\)</span> (numbered from 0), the equilibrium of the part to its right with the inertia forces gives the spring force, positive in tension,</p>
+<div class="math notranslate nohighlight">
+\[N_j = \sum_{i &gt; j} \left(F_i - m_i \ddot{\alpha}\right)\]</div>
+<p>and the displacements relative to the reference node <span class="math notranslate nohighlight">\(r\)</span> follow from <span class="math notranslate nohighlight">\(u_{j+1} - u_j = N_j / k_j\)</span> with <span class="math notranslate nohighlight">\(u_r = 0\)</span>. Two reference supports are used, node 0 and node 3; both are statically determinate (one degree of freedom for the one rigid-body mode). The spring forces must be the same, and the displacements must differ by a rigid translation.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ks, ms, Fc = chain_data()
+print('k_j [N/m] =', ks, '\nm_i [kg]  =', ms, '\nF_i [N]   =', Fc)
+KC0c, bfix_c, springs_c = spring_chain(ks)
+Mc = point_masses(ms)
+Nc = KC0c.shape[0]
+fext_c = np.zeros(Nc)
+fext_c[0::DOF] = Fc
+
+acc_ref = Fc.sum()/ms.sum()
+Nj_ref = np.array([(Fc[j+1:] - ms[j+1:]*acc_ref).sum() for j in range(len(ks))])
+res = {}
+for r in (0, 3):
+    bref = np.zeros(Nc, dtype=bool)
+    bref[DOF*r] = True
+    out = run_inertia_relief(KC0c, Mc, fext_c, bref, bfix_c)
+    res[r] = out
+    u_ref = np.concatenate(([0.], np.cumsum(Nj_ref/ks)))
+    u_ref -= u_ref[r]
+    print('\nreference node %d' % r)
+    print('  alpha_dd = %.6f m/s2 (closed form %.6f)' % (out['acc'][0], acc_ref))
+    print('  inertia forces [N]    =', np.round(out['finertia'][0::DOF], 6))
+    print('  Phi^T F_tot           = %.1e' % (out['Phi'].T @ out['ftot'])[0])
+    print('  reaction R_r [N]      = %.1e' % out['R'][DOF*r])
+    print('  spring forces FE  [N] =', np.round(spring_forces(springs_c, out['u']), 6))
+    print('  closed form       [N] =', np.round(Nj_ref, 6))
+    print('  u FE [mm]             =', np.round(1e3*out['u'][0::DOF], 6))
+    print('  u closed form [mm]    =', np.round(1e3*u_ref, 6))
+    print('  max relative difference: spring forces %.1e, u %.1e'
+          % (abs(spring_forces(springs_c, out['u'])/Nj_ref - 1).max(),
+             abs(out['u'][0::DOF] - u_ref).max()/abs(u_ref).max()))
+
+diff = res[3]['u'][0::DOF] - res[0]['u'][0::DOF]
+print('\nu(ref 3) - u(ref 0) [mm] =', np.round(1e3*diff, 6), '(a rigid translation)')
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+k_j [N/m] = [1000. 2000. 1500. 3000.]
+m_i [kg]  = [1.  2.  1.5 0.5 3. ]
+F_i [N]   = [ 0.  5. -2.  0. 12.]
+
+reference node 0
+  alpha_dd = 1.875000 m/s2 (closed form 1.875000)
+  inertia forces [N]    = [-1.875  -3.75   -2.8125 -0.9375 -5.625 ]
+  Phi^T F_tot           = -8.9e-16
+  reaction R_r [N]      = 4.4e-16
+  spring forces FE  [N] = [1.875  0.625  5.4375 6.375 ]
+  closed form       [N] = [1.875  0.625  5.4375 6.375 ]
+  u FE [mm]             = [0.     1.875  2.1875 5.8125 7.9375]
+  u closed form [mm]    = [0.     1.875  2.1875 5.8125 7.9375]
+  max relative difference: spring forces 1.6e-15, u 1.1e-16
+
+reference node 3
+  alpha_dd = 1.875000 m/s2 (closed form 1.875000)
+  inertia forces [N]    = [-1.875  -3.75   -2.8125 -0.9375 -5.625 ]
+  Phi^T F_tot           = 8.9e-16
+  reaction R_r [N]      = -2.2e-15
+  spring forces FE  [N] = [1.875  0.625  5.4375 6.375 ]
+  closed form       [N] = [1.875  0.625  5.4375 6.375 ]
+  u FE [mm]             = [-5.8125 -3.9375 -3.625   0.      2.125 ]
+  u closed form [mm]    = [-5.8125 -3.9375 -3.625   0.      2.125 ]
+  max relative difference: spring forces 8.9e-16, u 1.5e-16
+
+u(ref 3) - u(ref 0) [mm] = [-5.8125 -5.8125 -5.8125 -5.8125 -5.8125] (a rigid translation)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig, ax = plt.subplots(figsize=(6, 3.5))
+xn = np.arange(len(ms))
+for r, marker in [(0, 'o'), (3, 's')]:
+    ax.plot(xn, 1e3*res[r]['u'][0::DOF], marker=marker, label='reference node %d' % r)
+ax.set_xlabel('node')
+ax.set_ylabel('$u$ relative to the reference support [mm]')
+ax.set_xticks(xn)
+ax.grid(True, alpha=0.3)
+ax.legend()
+plt.tight_layout()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tut-inertia-relief_10_0.png" src="../_images/notebooks_tut-inertia-relief_10_0.png" />
+</div>
+</div>
+<p>The rigid-body acceleration, the inertia forces and the spring forces are those of the closed form and do not depend on the reference node; the displacements, measured from the reference node, differ by the rigid translation <span class="math notranslate nohighlight">\(u_3 - u_0\)</span> of the first solution.</p>
+</section>
+<section id="Case-3:-a-free-free-beam-under-a-balanced-load-set">
+<h2>Case 3: a free-free beam under a balanced load set<a class="headerlink" href="#Case-3:-a-free-free-beam-under-a-balanced-load-set" title="Link to this heading">#</a></h2>
+<p>A steel beam of length <span class="math notranslate nohighlight">\(L = 2\)</span> m along the global <span class="math notranslate nohighlight">\(x\)</span> axis, rectangular cross section of width <span class="math notranslate nohighlight">\(b = 0.02\)</span> m along <span class="math notranslate nohighlight">\(y\)</span> and height <span class="math notranslate nohighlight">\(h = 0.05\)</span> m along <span class="math notranslate nohighlight">\(z\)</span>, <span class="math notranslate nohighlight">\(E = 210\)</span> GPa, <span class="math notranslate nohighlight">\(G = E/2.6\)</span>, <span class="math notranslate nohighlight">\(\rho = 7850\)</span> kg/m<span class="math notranslate nohighlight">\(^3\)</span>, is modelled with 10 <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements and the consistent mass matrix (<code class="docutils literal notranslate"><span class="pre">mtype=0</span></code>), with the rotary inertia of the section. The element axes are the global axes. It has six rigid-body modes and no support.</p>
+<p>The loads are:</p>
+<ul class="simple">
+<li><p>its own weight, as the product of the mass matrix and the uniform acceleration field <span class="math notranslate nohighlight">\(-g\)</span> along <span class="math notranslate nohighlight">\(z\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{F}_g = \boldsymbol{M}
+\boldsymbol{a}_g\)</span>, <span class="math notranslate nohighlight">\(g = 9.81\)</span> m/s<span class="math notranslate nohighlight">\(^2\)</span>, whose resultant is <span class="math notranslate nohighlight">\(-W\)</span> with <span class="math notranslate nohighlight">\(W = m L
+g\)</span> and <span class="math notranslate nohighlight">\(m = \rho A\)</span>, applied at the centre of mass <span class="math notranslate nohighlight">\(x = L/2\)</span>;</p></li>
+<li><p>two upward point loads <span class="math notranslate nohighlight">\(W/2\)</span> along <span class="math notranslate nohighlight">\(+z\)</span> at the nodes <span class="math notranslate nohighlight">\(x = a = 0.4\)</span> m and <span class="math notranslate nohighlight">\(x = L - a = 1.6\)</span> m, symmetric about the centre of mass, such that the resultant force along <span class="math notranslate nohighlight">\(z\)</span> and the resultant moment about <span class="math notranslate nohighlight">\(y\)</span> vanish;</p></li>
+<li><p>opposite axial forces, <span class="math notranslate nohighlight">\(-P\)</span> at <span class="math notranslate nohighlight">\(x = 0\)</span> and <span class="math notranslate nohighlight">\(+P\)</span> at <span class="math notranslate nohighlight">\(x = L\)</span>, <span class="math notranslate nohighlight">\(P = 1000\)</span> N.</p></li>
+</ul>
+<p>The load set is balanced in force and moment, so inertia relief must give zero rigid-body accelerations and zero reactions of the reference support, to round-off. Two statically determinate reference supports are used: the six degrees of freedom of the first node (<code class="docutils literal notranslate"><span class="pre">'clamp'</span></code>), and <span class="math notranslate nohighlight">\(u, v, w, r_x\)</span> of the first node with <span class="math notranslate nohighlight">\(v, w\)</span> of the last node (<code class="docutils literal notranslate"><span class="pre">'pin-roller'</span></code>).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>L3, nel3, g, Pax, a3 = 2., 10, 9.81, 1000., 0.4
+prop3 = beam_prop()                     # rotary inertia included
+xs3, KC03, M3, beams3 = beam_model(L3, nel3, prop3, mtype=0)
+N3 = KC03.shape[0]
+m3 = prop3.intrho
+
+agrav = np.zeros(N3)
+agrav[2::DOF] = -g                      # uniform acceleration field -g along z
+fgrav = M3 @ agrav                      # own weight, consistent nodal loads
+W = -fgrav[2::DOF].sum()
+fext3 = fgrav.copy()
+for xa in (a3, L3 - a3):
+    fext3[DOF*np.argmin(abs(xs3 - xa)) + 2] += W/2
+fext3[0] -= Pax
+fext3[DOF*nel3] += Pax
+print('W from M a_g = %.6f N, m L g = %.6f N' % (W, m3*L3*g))
+
+Phig = geometric_rigid_modes(xs3)      # translations and rotations about the origin
+print('resultants of the external loads, Phi_geo^T F_ext =', Phig.T @ fext3)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+W from M a_g = 154.017000 N, m L g = 154.017000 N
+resultants of the external loads, Phi_geo^T F_ext = [ 0.00000000e+00  0.00000000e+00  4.44089210e-15  0.00000000e+00
+ -2.24265051e-14  0.00000000e+00]
+</pre></div></div>
+</div>
+<p>The rigid-body modes computed from the stiffness matrix, <span class="math notranslate nohighlight">\(\boldsymbol{\Phi} =
+[-\boldsymbol{K}_{{C0}_{uu}}^{-1} \boldsymbol{K}_{{C0}_{uk}}; \boldsymbol{I}]\)</span>, satisfy <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} \boldsymbol{\Phi} = \boldsymbol{0}\)</span> and span the same space as the geometric rigid-body modes, translations and rotations about the origin: the least-squares fit <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}_{geo} \boldsymbol{C} =
+\boldsymbol{\Phi}\)</span> has a zero residual. <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{M}
+\boldsymbol{\Phi}\)</span> is the <span class="math notranslate nohighlight">\(6 \times 6\)</span> rigid-body mass matrix about the reference node.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>res3 = {}
+for choice in ('clamp', 'pin-roller'):
+    bref = reference_dofs(len(xs3), choice)
+    out = run_inertia_relief(KC03, M3, fext3, bref)
+    res3[choice] = out
+    Phi = out['Phi']
+    C = np.linalg.lstsq(Phig, Phi, rcond=None)[0]
+    print('reference support: %s' % choice)
+    print('  max |K_C0 Phi| / max |K_C0|   = %.1e' % (abs(KC03 @ Phi).max()/abs(KC03).max()))
+    print('  residual of Phi_geo C = Phi   = %.1e' % abs(Phig @ C - Phi).max())
+    print('  rigid-body accelerations      =', np.array2string(out['acc'], precision=2))
+    print('  Phi^T F_tot                   =', np.array2string(Phi.T @ out['ftot'], precision=2))
+    print('  reactions R_k                 =', np.array2string(out['R'][bref], precision=2))
+    print('  max |R_u|                     = %.1e' % abs(out['R'][out['bu']]).max())
+print('\nPhi^T M Phi with the clamp at x = 0 (m L = %.4f kg, m L^3/3 = %.4f kg m2):'
+      % (m3*L3, m3*L3**3/3))
+print(np.array2string(res3['clamp']['Phi'].T @ (M3 @ res3['clamp']['Phi']), precision=4))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+reference support: clamp
+  max |K_C0 Phi| / max |K_C0|   = 1.1e-16
+  residual of Phi_geo C = Phi   = 5.9e-13
+  rigid-body accelerations      = [ 1.45e-14  0.00e+00 -1.38e-14  0.00e+00 -9.97e-15 -0.00e+00]
+  Phi^T F_tot                   = [ 2.27e-13  0.00e+00 -5.45e-16  0.00e+00  2.34e-15  0.00e+00]
+  reactions R_k                 = [ 0.00e+00  0.00e+00 -5.33e-14  0.00e+00  2.52e-14  0.00e+00]
+  max |R_u|                     = 1.8e-12
+reference support: pin-roller
+  max |K_C0 Phi| / max |K_C0|   = 1.1e-16
+  residual of Phi_geo C = Phi   = 9.5e-14
+  rigid-body accelerations      = [1.45e-14 0.00e+00 3.64e-14 0.00e+00 0.00e+00 3.05e-14]
+  Phi^T F_tot                   = [2.27e-13 0.00e+00 5.27e-16 0.00e+00 0.00e+00 3.11e-15]
+  reactions R_k                 = [-3.41e-13  0.00e+00  8.35e-14  0.00e+00  0.00e+00 -8.88e-15]
+  max |R_u|                     = 1.8e-12
+
+Phi^T M Phi with the clamp at x = 0 (m L = 15.7000 kg, m L^3/3 = 20.9333 kg m2):
+[[ 1.5700e+01  0.0000e+00  0.0000e+00  0.0000e+00  0.0000e+00  0.0000e+00]
+ [ 0.0000e+00  1.5700e+01  0.0000e+00  0.0000e+00  0.0000e+00  1.5700e+01]
+ [ 0.0000e+00  0.0000e+00  1.5700e+01  0.0000e+00 -1.5700e+01  0.0000e+00]
+ [ 0.0000e+00  0.0000e+00  0.0000e+00  3.7942e-03  0.0000e+00  0.0000e+00]
+ [ 0.0000e+00  0.0000e+00 -1.5700e+01  0.0000e+00  2.0937e+01  0.0000e+00]
+ [ 0.0000e+00  1.5700e+01  0.0000e+00  0.0000e+00  0.0000e+00  2.0934e+01]]
+</pre></div></div>
+</div>
+<p>The rigid-body accelerations, the reactions of both reference supports and <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{F}_{tot}\)</span> vanish to round-off: for a balanced load set, inertia relief reduces to the fictitious support of the singular static problem.</p>
+<p>The internal forces follow from the end forces of each element, <code class="docutils literal notranslate"><span class="pre">finte</span></code> of <code class="docutils literal notranslate"><span class="pre">update_probe_finte</span></code>, minus the element’s own share of the distributed load, <span class="math notranslate nohighlight">\(\boldsymbol{M}_e \boldsymbol{a}_g\)</span> (the <code class="docutils literal notranslate"><span class="pre">beam_end_forces</span></code> function of the test). Taking the bending moment <span class="math notranslate nohighlight">\(M(x)\)</span> as the moment about <span class="math notranslate nohighlight">\(y\)</span> at the first node of each element, it is compared with the statics of the beam,</p>
+<div class="math notranslate nohighlight">
+\[M(x) = -\frac{m g x^2}{2} + \frac{W}{2} \langle x - a \rangle + \frac{W}{2} \langle x - (L - a) \rangle\]</div>
+<p>with <span class="math notranslate nohighlight">\(\langle x - a \rangle = \max(x - a, 0)\)</span>, and the axial force with <span class="math notranslate nohighlight">\(P\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>Mcf3 = (-m3*g*xs3**2/2 + W/2*np.clip(xs3 - a3, 0, None)
+        + W/2*np.clip(xs3 - (L3 - a3), 0, None))
+fig, axes = plt.subplots(1, 2, figsize=(10, 3.8))
+for choice, ls in [('clamp', '-o'), ('pin-roller', '--s')]:
+    out = res3[choice]
+    S = beam_end_forces(beams3, prop3, out['u'], M3, agrav)
+    Mfe = np.append(S[:, 4], -S[-1, 10])
+    print('%-10s max |M_FE - M_statics| = %.1e N m, axial forces [N]: %s'
+          % (choice, abs(Mfe - Mcf3).max(), np.unique(np.round(S[:, 6], 9))))
+    axes[0].plot(xs3, 1e6*out['u'][2::DOF], ls, label='w, %s' % choice)
+    axes[1].plot(xs3, Mfe, ls, label=choice)
+axes[1].plot(xs3, Mcf3, 'k:', lw=2, label='statics')
+axes[0].set_ylabel(r'$w$ relative to the reference support [$\mu$m]')
+axes[1].set_ylabel('bending moment $M$ [N m]')
+for ax in axes:
+    ax.set_xlabel('$x$ [m]')
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+plt.tight_layout()
+plt.show()
+
+du = res3['pin-roller']['u'] - res3['clamp']['u']
+C = np.linalg.lstsq(Phig, du, rcond=None)[0]
+print('difference of the two solutions = rigid-body motion, residual %.1e m'
+      % abs(Phig @ C - du).max())
+du_ax = res3['clamp']['u'][DOF*nel3] - res3['clamp']['u'][0]
+print('axial elongation u(L) - u(0) = %.4e m, P L/(E A) = %.4e m, relative difference %.1e'
+      % (du_ax, Pax*L3/(prop3.E*prop3.A), abs(du_ax/(Pax*L3/(prop3.E*prop3.A)) - 1)))
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+clamp      max |M_FE - M_statics| = 7.0e-14 N m, axial forces [N]: [1000.]
+pin-roller max |M_FE - M_statics| = 4.0e-14 N m, axial forces [N]: [1000.]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tut-inertia-relief_17_1.png" src="../_images/notebooks_tut-inertia-relief_17_1.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+difference of the two solutions = rigid-body motion, residual 7.3e-19 m
+axial elongation u(L) - u(0) = 9.5238e-06 m, P L/(E A) = 9.5238e-06 m, relative difference 2.2e-16
+</pre></div></div>
+</div>
+<p>The deformed shape depends on the reference support: relative to the clamp at <span class="math notranslate nohighlight">\(x = 0\)</span> the beam deflects as a cantilever, relative to the pin-roller as a simply supported beam. The two differ by a rigid-body motion, while the bending moment, equal to the statics, and the axial force <span class="math notranslate nohighlight">\(P\)</span> are the same.</p>
+</section>
+<section id="Case-4:-free-free-beam-and-bar-under-an-end-force,-closed-form">
+<h2>Case 4: free-free beam and bar under an end force, closed form<a class="headerlink" href="#Case-4:-free-free-beam-and-bar-under-an-end-force,-closed-form" title="Link to this heading">#</a></h2>
+<p><strong>Beam.</strong> A uniform free-free beam of length <span class="math notranslate nohighlight">\(L\)</span>, mass per unit length <span class="math notranslate nohighlight">\(m\)</span>, bending stiffness <span class="math notranslate nohighlight">\(E I\)</span> and shear stiffness <span class="math notranslate nohighlight">\(G A\)</span>, under a transverse force <span class="math notranslate nohighlight">\(P\)</span> along <span class="math notranslate nohighlight">\(+z\)</span> at <span class="math notranslate nohighlight">\(x = L\)</span>. With <span class="math notranslate nohighlight">\(\theta\)</span> the rigid rotation such that the rigid-body deflection is <span class="math notranslate nohighlight">\(w = w_c + \theta (x - L/2)\)</span>, Newton’s and Euler’s equations, about the centre of mass with <span class="math notranslate nohighlight">\(J = m L^3/12\)</span>, give</p>
+<div class="math notranslate nohighlight">
+\[m L \ddot{w}_c = P, \qquad \frac{m L^3}{12} \ddot{\theta} = P \frac{L}{2}
+\quad \Rightarrow \quad
+\ddot{w}_c = \frac{P}{m L}, \qquad \ddot{\theta} = \frac{6 P}{m L^2}\]</div>
+<p>The rigid-body acceleration field is <span class="math notranslate nohighlight">\(\ddot{w}(x) = \frac{P}{m L} \left(
+\frac{6 x}{L} - 2 \right)\)</span>, e.g. <span class="math notranslate nohighlight">\(\ddot{w}(0) = -2 P/(m L)\)</span> and <span class="math notranslate nohighlight">\(\ddot{w}(L) = 4 P/(m L)\)</span>, and the inertia load per unit length is linear in <span class="math notranslate nohighlight">\(x\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[q(x) = -m \ddot{w}(x) = \frac{P}{L} \left( 2 - \frac{6 x}{L} \right)\]</div>
+<p>whose resultant, <span class="math notranslate nohighlight">\(-P\)</span>, and moment, <span class="math notranslate nohighlight">\(-P L\)</span> about <span class="math notranslate nohighlight">\(x = 0\)</span>, balance the end force. In pyfe3d’s convention, the rotation <span class="math notranslate nohighlight">\(r_y\)</span> moves the point <span class="math notranslate nohighlight">\(x\)</span> of the axis by <span class="math notranslate nohighlight">\(w = -x \, r_y\)</span>, so <span class="math notranslate nohighlight">\(\ddot{r}_y = -\ddot{\theta}\)</span>.</p>
+<p>The deflection relative to the reference support follows from the Timoshenko beam with the strains of <code class="docutils literal notranslate"><span class="pre">BeamC</span></code>, curvature <span class="math notranslate nohighlight">\(r_y'\)</span> and shear strain <span class="math notranslate nohighlight">\(\gamma
+= w' + r_y\)</span>. The stationarity of <span class="math notranslate nohighlight">\(\Pi = \int_0^L \left[ \frac{E I}{2}
+r_y'^2 + \frac{G A}{2} (w' + r_y)^2 - q w \right] dx - P w(L)\)</span> gives, with the shear force <span class="math notranslate nohighlight">\(Q = G A (w' + r_y)\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[Q' = -q, \qquad E I r_y'' = Q\]</div>
+<p>with the natural (free-end) conditions <span class="math notranslate nohighlight">\(Q(0) = 0\)</span>, <span class="math notranslate nohighlight">\(r_y'(0) = 0\)</span>, <span class="math notranslate nohighlight">\(Q(L) = P\)</span>, <span class="math notranslate nohighlight">\(r_y'(L) = 0\)</span>. Integrating from the free end <span class="math notranslate nohighlight">\(x = 0\)</span>, <span class="math notranslate nohighlight">\(Q = -\int_0^x q \, dx\)</span> and <span class="math notranslate nohighlight">\(E I r_y' = \int_0^x Q \, dx = -M(x)\)</span>, with</p>
+<div class="math notranslate nohighlight">
+\[M(x) = \frac{P x^2 (L - x)}{L^2}\]</div>
+<p>The conditions at <span class="math notranslate nohighlight">\(x = L\)</span> are then satisfied automatically, because the loads are balanced. Integrating once more, <span class="math notranslate nohighlight">\(w' = Q/(G A) - r_y\)</span>, and</p>
+<div class="math notranslate nohighlight">
+\[w(x) = \frac{P}{E I L^2} \left( \frac{L x^4}{12} - \frac{x^5}{20} \right) - \frac{M(x)}{G A} + c_0 + c_1 x\]</div>
+<p>where <span class="math notranslate nohighlight">\(c_0\)</span> and <span class="math notranslate nohighlight">\(c_1\)</span>, a rigid-body motion, are fixed by the reference support: <span class="math notranslate nohighlight">\(c_0 = c_1 = 0\)</span> for the clamp at <span class="math notranslate nohighlight">\(x = 0\)</span> (<span class="math notranslate nohighlight">\(w = r_y = 0\)</span>, and <span class="math notranslate nohighlight">\(Q(0) =
+0\)</span> gives <span class="math notranslate nohighlight">\(w'(0) = 0\)</span>); <span class="math notranslate nohighlight">\(c_0 = 0\)</span>, <span class="math notranslate nohighlight">\(c_1 = -P L^2/(30 E I)\)</span> for the pin-roller <span class="math notranslate nohighlight">\(w(0) = w(L) = 0\)</span>. The first term is the Euler-Bernoulli solution of <span class="math notranslate nohighlight">\(E I
+w'''' = q\)</span> with the free-end conditions <span class="math notranslate nohighlight">\(w''(0) = w'''(0) = 0\)</span>, the second the shear deflection. The end deflection relative to the clamp is <span class="math notranslate nohighlight">\(w(L) = P
+L^3/(30 E I)\)</span>, and the bending moment is largest at <span class="math notranslate nohighlight">\(x = 2L/3\)</span>, <span class="math notranslate nohighlight">\(M = 4 P
+L/27\)</span>.</p>
+<p><strong>Bar.</strong> A free-free bar of axial stiffness <span class="math notranslate nohighlight">\(E A\)</span> under an axial force <span class="math notranslate nohighlight">\(P\)</span> at <span class="math notranslate nohighlight">\(x = L\)</span>: <span class="math notranslate nohighlight">\(\ddot{u} = P/(m L)\)</span>, the inertia load <span class="math notranslate nohighlight">\(n = -P/L\)</span>, and <span class="math notranslate nohighlight">\((E A u')' =
+-n\)</span> with <span class="math notranslate nohighlight">\(E A u'(0) = 0\)</span> gives the axial force <span class="math notranslate nohighlight">\(N(x) = E A u' = P x/L\)</span>, with <span class="math notranslate nohighlight">\(N(L) = P\)</span> automatically, and, relative to <span class="math notranslate nohighlight">\(u(0) = 0\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[u(x) = \frac{P x^2}{2 E A L}\]</div>
+<p>SymPy checks these expressions below, independently of the derivation above: Newton-Euler from the acceleration field, the integration of the Timoshenko equations, the free-end conditions at <span class="math notranslate nohighlight">\(x = L\)</span>, the Euler-Bernoulli limit and the bar.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>x, s, L, P, m, EI, GA, EA = sp.symbols('x s L P m EI GA EA', positive=True)
+wc, th = sp.symbols('wc_dd theta_dd')
+# Newton-Euler: resultant and moment about the centre of mass of m*acc = loads
+acc = wc + th*(x - L/2)
+sol = sp.solve([sp.integrate(m*acc, (x, 0, L)) - P,
+                sp.integrate(m*acc*(x - L/2), (x, 0, L)) - P*L/2], [wc, th])
+print('Newton-Euler:', sol)
+q = sp.expand(-m*acc.subs(sol))
+print('q(x) =', sp.factor(q))
+
+# Timoshenko: Q' = -q, Q(0) = 0; EI ry'' = Q, ry'(0) = 0
+Q = -sp.integrate(q.subs(x, s), (s, 0, x))
+dry = sp.integrate(Q.subs(x, s), (s, 0, x))/EI
+Mx = sp.factor(-EI*dry)
+print('M(x) =', Mx)
+print("free end x = L: Q(L) - P =", sp.simplify(Q.subs(x, L) - P),
+      ", ry'(L) =", sp.simplify(dry.subs(x, L)))
+c0, c1 = sp.symbols('c0 c1')
+ry = sp.integrate(dry.subs(x, s), (s, 0, x)) - c1  # ry(0) = -c1
+w = sp.integrate((Q/GA - ry).subs(x, s), (s, 0, x)) + c0
+# residuals of the two equations and difference to the expression of w above
+w_cf = P/(EI*L**2)*(L*x**4/12 - x**5/20) - Mx/GA + c0 + c1*x
+print("(GA (w' + ry))' + q =", sp.simplify(sp.diff(GA*(sp.diff(w, x) + ry), x) + q),
+      ", EI ry'' - GA (w' + ry) =", sp.simplify(EI*sp.diff(ry, x, 2) - GA*(sp.diff(w, x) + ry)),
+      ', w - w(closed form) =', sp.simplify(w - w_cf))
+# Euler-Bernoulli limit: EI w(4) = q, w2(0) = w3(0) = 0 (derivatives)
+w_eb = P/(EI*L**2)*(L*x**4/12 - x**5/20)
+print("Euler-Bernoulli: EI w'''' - q =", sp.simplify(EI*sp.diff(w_eb, x, 4) - q),
+      ", w''(0) =", sp.diff(w_eb, x, 2).subs(x, 0), ", w'''(0) =", sp.diff(w_eb, x, 3).subs(x, 0))
+# reference supports
+w_clamp = w.subs({c0: 0, c1: 0})
+c1_pr = sp.solve(w.subs({c0: 0}).subs(x, L), c1)[0]
+print('clamp: w(L) =', sp.simplify(w_clamp.subs(x, L)),
+      '; pin-roller: c1 =', sp.simplify(c1_pr))
+xm = sp.solve(sp.diff(Mx, x), x)
+print('maximum moment at x =', xm, ', M =', [sp.simplify(Mx.subs(x, v)) for v in xm])
+
+# bar: (EA u')' = -n, n = -m*P/(m*L), EA u'(0) = 0
+n = -m*P/(m*L)
+Nx = -sp.integrate(n.subs(x, s), (s, 0, x))
+u_bar = sp.integrate((Nx/EA).subs(x, s), (s, 0, x))
+print('bar: N(x) =', Nx, ', u(x) =', u_bar)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Newton-Euler: {theta_dd: 6*P/(L**2*m), wc_dd: P/(L*m)}
+q(x) = -2*P*(-L + 3*x)/L**2
+M(x) = -P*x**2*(-L + x)/L**2
+free end x = L: Q(L) - P = 0 , ry&#39;(L) = 0
+(GA (w&#39; + ry))&#39; + q = 0 , EI ry&#39;&#39; - GA (w&#39; + ry) = 0 , w - w(closed form) = 0
+Euler-Bernoulli: EI w&#39;&#39;&#39;&#39; - q = 0 , w&#39;&#39;(0) = 0 , w&#39;&#39;&#39;(0) = 0
+clamp: w(L) = L**3*P/(30*EI) ; pin-roller: c1 = -L**2*P/(30*EI)
+maximum moment at x = [2*L/3] , M = [4*L*P/27]
+bar: N(x) = P*x/L , u(x) = P*x**2/(2*EA*L)
+</pre></div></div>
+</div>
+<p><strong>Finite element model.</strong> The beam of case 3, <span class="math notranslate nohighlight">\(L = 2\)</span> m, 10 <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements, with <span class="math notranslate nohighlight">\(P = 100\)</span> N at <span class="math notranslate nohighlight">\(x = L\)</span> along <span class="math notranslate nohighlight">\(+z\)</span>. Two choices make the model and the closed form describe the same beam: the shear correction factor <span class="math notranslate nohighlight">\(5/6\)</span> is put in <code class="docutils literal notranslate"><span class="pre">prop.G</span></code> (<span class="math notranslate nohighlight">\(G A\)</span> above is <code class="docutils literal notranslate"><span class="pre">prop.G*prop.A</span></code>); and the rotary inertia of the bending in the plane <span class="math notranslate nohighlight">\(xz\)</span>, <code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code>, is set to zero, as in the closed form (the rotary inertia about <span class="math notranslate nohighlight">\(x\)</span>, <code class="docutils literal notranslate"><span class="pre">intrhoy2</span></code>, is kept, so that
+<span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{M} \boldsymbol{\Phi}\)</span> stays non-singular).</p>
+<p>With the consistent mass matrix, the nodal deflections of <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> match the closed form to round-off, independently of the mesh; the bending moment is recovered as in case 3. With the lumped mass matrix (<code class="docutils literal notranslate"><span class="pre">mtype=1</span></code>), the inertia load is lumped at the nodes and the deflection converges with the mesh: the relative error, measured with 10, 20 and 40 elements, is <span class="math notranslate nohighlight">\(0.75/n^2\)</span> to <span class="math notranslate nohighlight">\(0.80/n^2\)</span> for the clamp and <span class="math notranslate nohighlight">\(1.10/n^2\)</span> for the pin-roller.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>L4, P4 = 2., 100.
+prop4 = beam_prop(rotary_xz=False)
+prop4.G = 5/6*prop4.E/2.6
+m4, EI4, GA4 = prop4.intrho, prop4.E*prop4.Iyy, prop4.G*prop4.A
+w_np = sp.lambdify((x, L, P, EI, GA, c0, c1), w_cf)
+M_np = sp.lambdify((x, L, P), Mx)
+
+
+def closed_form(xs, choice):
+    cc1 = 0. if choice == 'clamp' else -P4*L4**2/(30*EI4)
+    return w_np(xs, L4, P4, EI4, GA4, 0., cc1), M_np(xs, L4, P4)
+
+
+res4 = {}
+xs4, KC04, M4, beams4 = beam_model(L4, 10, prop4, mtype=0)
+fext4 = np.zeros(KC04.shape[0])
+fext4[DOF*10 + 2] = P4
+for choice in ('clamp', 'pin-roller'):
+    out = run_inertia_relief(KC04, M4, fext4, reference_dofs(len(xs4), choice))
+    res4[choice] = out
+    wcf, Mcf = closed_form(xs4, choice)
+    S = beam_end_forces(beams4, prop4, out['u'], M4, -(out['Phi'] @ out['acc']))
+    Mfe = np.append(S[:, 4], -S[-1, 10])
+    err_w = abs(out['u'][2::DOF] - wcf).max()/abs(wcf).max()
+    err_M = abs(Mfe - Mcf).max()/abs(Mcf).max()
+    print('reference support: %s' % choice)
+    print('  accelerations of the reference dofs:', np.array2string(out['acc'], precision=5))
+    print('  Phi^T F_tot = %.1e, reactions = %.1e'
+          % (abs(out['Phi'].T @ out['ftot']).max(), abs(out['R'][reference_dofs(len(xs4), choice)]).max()))
+    print('  %6s %14s %14s %12s %12s' % ('x [m]', 'w FE [mm]', 'w closed [mm]', 'M FE [N m]', 'M closed'))
+    for xi, wf, wc_, mf, mc in zip(xs4, out['u'][2::DOF], wcf, Mfe, Mcf):
+        print('  %6.2f %14.8f %14.8f %12.6f %12.6f' % (xi, 1e3*wf, 1e3*wc_, mf, mc))
+    print('  relative error: w %.1e, M %.1e' % (err_w, err_M))
+    if choice == 'clamp':
+        # Newton-Euler at the first node: w'' = -2P/(mL), ry'' = -6P/(mL^2)
+        ne = [('w_dd(0) [m/s2]', out['acc'][2], -2*P4/(m4*L4)),
+              ('ry_dd(0) [rad/s2]', out['acc'][4], -6*P4/(m4*L4**2))]
+    else:
+        ne = [('w_dd(0) [m/s2]', out['acc'][2], -2*P4/(m4*L4)),
+              ('w_dd(L) [m/s2]', out['acc'][5], 4*P4/(m4*L4))]
+    print('  %-18s %12s %12s %10s' % ('', 'pyfe3d', 'Newton-Euler', 'rel. diff.'))
+    for lab, v, ref in ne:
+        print('  %-18s %12.6f %12.6f %10.1e' % (lab, v, ref, abs(v/ref - 1)))
+print('\nshear deflection max |M/(G A)| / max |w_clamp| = %.1e'
+      % (abs(closed_form(xs4, 'clamp')[1]).max()/GA4/abs(closed_form(xs4, 'clamp')[0]).max()))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+reference support: clamp
+  accelerations of the reference dofs: [  0.        0.      -12.73885   0.      -19.10828  -0.     ]
+  Phi^T F_tot = 4.4e-14, reactions = 4.0e-12
+   x [m]      w FE [mm]  w closed [mm]   M FE [N m]     M closed
+    0.00     0.00000000     0.00000000    -0.000000     0.000000
+    0.20     0.00011650     0.00011650     1.800000     1.800000
+    0.40     0.00205044     0.00205044     6.400000     6.400000
+    0.60     0.00993394     0.00993394    12.600000    12.600000
+    0.80     0.02936198     0.02936198    19.200000    19.200000
+    1.00     0.06629524     0.06629524    25.000000    25.000000
+    1.20     0.12596297     0.12596297    28.800000    28.800000
+    1.40     0.21176587     0.21176587    29.400000    29.400000
+    1.60     0.32417890     0.32417890    25.600000    25.600000
+    1.80     0.45965417     0.45965417    16.200000    16.200000
+    2.00     0.60952381     0.60952381    -0.000000    -0.000000
+  relative error: w 1.1e-13, M 1.4e-13
+                           pyfe3d Newton-Euler rel. diff.
+  w_dd(0) [m/s2]       -12.738854   -12.738854    1.0e-14
+  ry_dd(0) [rad/s2]    -19.108280   -19.108280    4.5e-14
+reference support: pin-roller
+  accelerations of the reference dofs: [  0.        0.      -12.73885   0.        0.       25.47771]
+  Phi^T F_tot = 2.4e-14, reactions = 4.9e-13
+   x [m]      w FE [mm]  w closed [mm]   M FE [N m]     M closed
+    0.00     0.00000000     0.00000000    -0.000000     0.000000
+    0.20    -0.06083589    -0.06083589     1.800000     1.800000
+    0.40    -0.11985432    -0.11985432     6.400000     6.400000
+    0.60    -0.17292320    -0.17292320    12.600000    12.600000
+    0.80    -0.21444754    -0.21444754    19.200000    19.200000
+    1.00    -0.23846667    -0.23846667    25.000000    25.000000
+    1.20    -0.23975131    -0.23975131    28.800000    28.800000
+    1.40    -0.21490080    -0.21490080    29.400000    29.400000
+    1.60    -0.16344015    -0.16344015    25.600000    25.600000
+    1.80    -0.08891726    -0.08891726    16.200000    16.200000
+    2.00     0.00000000    -0.00000000     0.000000    -0.000000
+  relative error: w 3.1e-14, M 4.2e-14
+                           pyfe3d Newton-Euler rel. diff.
+  w_dd(0) [m/s2]       -12.738854   -12.738854    5.3e-14
+  w_dd(L) [m/s2]        25.477707    25.477707    4.0e-14
+
+shear deflection max |M/(G A)| / max |w_clamp| = 7.2e-04
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>print('lumped mass matrix (mtype=1), relative error of the deflection')
+print('%5s %14s %14s' % ('n', 'clamp n^2 err', 'pin-roller n^2 err'))
+for nel in (10, 20, 40):
+    xs_, KC0_, M_, beams_ = beam_model(L4, nel, prop4, mtype=1)
+    f_ = np.zeros(KC0_.shape[0])
+    f_[DOF*nel + 2] = P4
+    errs = []
+    for choice in ('clamp', 'pin-roller'):
+        out = run_inertia_relief(KC0_, M_, f_, reference_dofs(len(xs_), choice))
+        wcf = closed_form(xs_, choice)[0]
+        errs.append(abs(out['u'][2::DOF] - wcf).max()/abs(wcf).max())
+    print('%5d %14.3f %14.3f' % (nel, nel**2*errs[0], nel**2*errs[1]))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+lumped mass matrix (mtype=1), relative error of the deflection
+    n  clamp n^2 err pin-roller n^2 err
+   10          0.752          1.101
+   20          0.791          1.096
+   40          0.798          1.098
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xf = np.linspace(0, L4, 201)
+fig, axes = plt.subplots(1, 2, figsize=(10, 3.8))
+for choice, mk in [('clamp', 'o'), ('pin-roller', 's')]:
+    wcf_f, Mcf_f = closed_form(xf, choice)
+    axes[0].plot(xf, 1e3*wcf_f, 'k-', lw=1)
+    axes[0].plot(xs4, 1e3*res4[choice]['u'][2::DOF], mk, label='BeamC, %s' % choice)
+axes[1].plot(xf, closed_form(xf, 'clamp')[1], 'k-', lw=1, label='closed form')
+S = beam_end_forces(beams4, prop4, res4['clamp']['u'], M4,
+                    -(res4['clamp']['Phi'] @ res4['clamp']['acc']))
+axes[1].plot(xs4, np.append(S[:, 4], -S[-1, 10]), 'o', label='BeamC')
+axes[0].set_ylabel('$w$ relative to the reference support [mm]')
+axes[1].set_ylabel('bending moment $M$ [N m]')
+for ax in axes:
+    ax.set_xlabel('$x$ [m]')
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+plt.tight_layout()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tut-inertia-relief_24_0.png" src="../_images/notebooks_tut-inertia-relief_24_0.png" />
+</div>
+</div>
+<p>The bar: the same <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> model under an axial force <span class="math notranslate nohighlight">\(P = 100\)</span> N at <span class="math notranslate nohighlight">\(x = L\)</span>, with the clamp at <span class="math notranslate nohighlight">\(x = 0\)</span> as reference support. The nodal displacements match <span class="math notranslate nohighlight">\(u = P x^2/(2 E A L)\)</span> to round-off. The axial force of each element, constant since <span class="math notranslate nohighlight">\(u\)</span> is interpolated linearly, <span class="math notranslate nohighlight">\(E A (u_2 - u_1)/L_e\)</span>, equals <span class="math notranslate nohighlight">\(N\)</span> at the element midpoint, because the secant slope of a quadratic is its slope at the midpoint; the end forces recovered as in case 3 give <span class="math notranslate nohighlight">\(N\)</span> at
+the nodes.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fext5 = np.zeros(KC04.shape[0])
+fext5[DOF*10] = P4
+out = run_inertia_relief(KC04, M4, fext5, reference_dofs(len(xs4), 'clamp'))
+EA4 = prop4.E*prop4.A
+ucf = P4*xs4**2/(2*EA4*L4)
+Ne = EA4*np.diff(out['u'][0::DOF])/(L4/10)
+xmid = (xs4[1:] + xs4[:-1])/2
+S = beam_end_forces(beams4, prop4, out['u'], M4, -(out['Phi'] @ out['acc']))
+print('u_dd = %.6f m/s2, P/(m L) = %.6f m/s2' % (out['acc'][0], P4/(m4*L4)))
+print('%6s %14s %14s %10s %10s' % ('x [m]', 'u FE [um]', 'u closed [um]', 'N_e [N]', 'P x_m/L'))
+for i, xi in enumerate(xs4):
+    row = '%6.2f %14.8f %14.8f' % (xi, 1e6*out['u'][DOF*i], 1e6*ucf[i])
+    if i &lt; 10:
+        row += ' %10.4f %10.4f' % (Ne[i], P4*xmid[i]/L4)
+    print(row)
+print('relative difference: u_dd %.1e, u %.1e, N_e %.1e, N at the nodes (end forces) %.1e'
+      % (abs(out['acc'][0]/(P4/(m4*L4)) - 1),
+         abs(out['u'][0::DOF] - ucf).max()/ucf.max(),
+         abs(Ne/(P4*xmid/L4) - 1).max(), abs(S[:, 6]/(P4*xs4[1:]/L4) - 1).max()))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+u_dd = 6.369427 m/s2, P/(m L) = 6.369427 m/s2
+ x [m]      u FE [um]  u closed [um]    N_e [N]    P x_m/L
+  0.00     0.00000000     0.00000000     5.0000     5.0000
+  0.20     0.00476190     0.00476190    15.0000    15.0000
+  0.40     0.01904762     0.01904762    25.0000    25.0000
+  0.60     0.04285714     0.04285714    35.0000    35.0000
+  0.80     0.07619048     0.07619048    45.0000    45.0000
+  1.00     0.11904762     0.11904762    55.0000    55.0000
+  1.20     0.17142857     0.17142857    65.0000    65.0000
+  1.40     0.23333333     0.23333333    75.0000    75.0000
+  1.60     0.30476190     0.30476190    85.0000    85.0000
+  1.80     0.38571429     0.38571429    95.0000    95.0000
+  2.00     0.47619048     0.47619048
+relative difference: u_dd 1.1e-16, u 2.2e-16, N_e 2.9e-15, N at the nodes (end forces) 1.4e-15
+</pre></div></div>
+</div>
+</section>
+<section id="Summary">
+<h2>Summary<a class="headerlink" href="#Summary" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>The inertia-relief procedure, built from <code class="docutils literal notranslate"><span class="pre">KC0</span></code> and <code class="docutils literal notranslate"><span class="pre">M</span></code> with the partition <code class="docutils literal notranslate"><span class="pre">bu</span></code>/<code class="docutils literal notranslate"><span class="pre">bk</span></code> of pyfe3d, reproduces the closed form of the three-node example, its rigid-body acceleration <span class="math notranslate nohighlight">\((F_1 + F_2 + F_3)/(m_1 + m_2 + m_3)\)</span> and its displacements, to round-off; with balanced loads, the fictitious support alone gives the same solution and no reaction, with unbalanced loads a reaction equal to minus the resultant.</p></li>
+<li><p>In every case, the loads with the d’Alembert forces satisfy <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{F}_{tot} = \boldsymbol{0}\)</span> and the reference support carries no reaction.</p></li>
+<li><p>For a balanced load set (case 3), the rigid-body accelerations vanish and inertia relief is the fictitious-support solution of the singular static problem.</p></li>
+<li><p>The displacements depend on the reference support, by a rigid-body motion; the spring forces, bending moments and axial forces do not (cases 1, 2 and 3).</p></li>
+<li><p>Against the closed forms of the free-free beam and bar (case 4), <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> with the consistent mass matrix is exact at the nodes; with the lumped mass matrix the deflection converges as <span class="math notranslate nohighlight">\(1/n^2\)</span>.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tut-nafems-cap-axisymmetric.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tut-inertia-relief-aircraft-ha144a.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#The-procedure-in-pyfe3d-notation">The procedure in pyfe3d notation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Case-1:-three-nodes-joined-by-two-springs">Case 1: three nodes joined by two springs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Case-2:-a-chain-of-springs-and-point-masses">Case 2: a chain of springs and point masses</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Case-3:-a-free-free-beam-under-a-balanced-load-set">Case 3: a free-free beam under a balanced load set</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Case-4:-free-free-beam-and-bar-under-an-end-force,-closed-form">Case 4: free-free beam and bar under an end force, closed form</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Summary">Summary</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/notebooks/tut-inertia-relief.nblink.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

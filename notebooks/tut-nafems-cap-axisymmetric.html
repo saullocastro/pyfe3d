@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations &#8212; pyfe3d 0.12.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/tut-nafems-cap-axisymmetric';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial: static analysis with inertia relief" href="tut-inertia-relief.html" />
+    <link rel="prev" title="Tutorial: shells pressed down by a prescribed displacement, Riks’ method" href="tut-prescribed-displacement-dome-riks.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#" aria-current="page">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Tutorial:-NAFEMS-spherical-cap-restricted-to-axisymmetric-deformations">
+<h1>Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations<a class="headerlink" href="#Tutorial:-NAFEMS-spherical-cap-restricted-to-axisymmetric-deformations" title="Link to this heading">#</a></h1>
+<p>The clamped spherical cap under a central point load of the tutorial <a class="reference internal" href="tut-prescribed-displacement-dome-riks.html"><span class="doc">Shells pressed down by a prescribed displacement, Riks’ method</span></a> is an axisymmetric benchmark. The 3D quarter model of that tutorial, with the co-rotational kinematics, leaves the axisymmetric path just after the limit load through a <span class="math notranslate nohighlight">\(\cos 2\varphi\)</span> mode, with a snap-back of the prescribed crown deflection, which an axisymmetric reference cannot have. Here the same
+co-rotational shell elements are restricted to the axisymmetric deformations with a linear map <span class="math notranslate nohighlight">\(\boldsymbol{u} = \boldsymbol{T} \boldsymbol{q}\)</span> from three degrees-of-freedom per ring to the nodal ones, built from the public API, and the path is compared with the axisymmetric references.</p>
+<p>References:</p>
+<ul class="simple">
+<li><p>Lyons, P. and Holsgrove, S., <em>Finite Element Benchmarks for 2D Beams and Axisymmetric Shells Involving Geometric Non-Linearity</em>, NAFEMS, 2005 (no DOI), the benchmark, tabulated in the open verification model COMSOL, <em>Spherical Cap with Central Point Load</em>, COMSOL Multiphysics 6.4, Application Library, Structural Mechanics Module, Verification Examples,
+<a class="reference external" href="https://doc.comsol.com/6.4/doc/com.comsol.help.models.sme.spherical_cap_with_central_point_load/models.sme.spherical_cap_with_central_point_load.pdf">doc.comsol.com</a>: the problem on p. 2, a 2D axisymmetric model (Model Wizard, p. 9), the parameters and nondimensional variables on p. 9, the reference and COMSOL shell results in Tables 3 and 4, p. 7, and the COMSOL shell with 16 elements in Fig. 3, p. 5, whose annotations give the crown load at the crown displacements -4.7, -5.2 and -5.8 m
+(Results, pp. 21-22). The shell of COMSOL has the mid-surface radius <span class="math notranslate nohighlight">\(a + t_h/2\)</span>: its arc has the radius <span class="math notranslate nohighlight">\(a + t_h\)</span> with a layer of thickness <span class="math notranslate nohighlight">\(t_h\)</span> inwards (Geometry 1, p. 10), and the shell is offset to put its top surface on that arc (Thickness and Offset 1, pp. 13-14).</p></li>
+<li><p>Riks, E., An incremental approach to the solution of snapping and buckling problems, <em>International Journal of Solids and Structures</em>, 15(7), 529-551, 1979, <a class="reference external" href="https://doi.org/10.1016/0020-7683(79)90081-7">doi:10.1016/0020-7683(79)90081-7</a>, the arc-length method.</p></li>
+<li><p>Felippa, C. A. and Haugen, B., A unified formulation of small-strain corotational finite elements: I. Theory, <em>Computer Methods in Applied Mechanics and Engineering</em>, 194(21-24), 2285-2335, 2005, <a class="reference external" href="https://doi.org/10.1016/j.cma.2004.07.035">doi:10.1016/j.cma.2004.07.035</a>, the co-rotational formulation of <code class="docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>, whose nodal rotations are total rotation vectors.</p></li>
+</ul>
+<p>The model is built by the functions <code class="docutils literal notranslate"><span class="pre">polar_cap</span></code>, <code class="docutils literal notranslate"><span class="pre">axisymmetric_T</span></code>, <code class="docutils literal notranslate"><span class="pre">Restricted</span></code> and <code class="docutils literal notranslate"><span class="pre">run_cap_axisymmetric</span></code> of <code class="docutils literal notranslate"><span class="pre">tests/test_dome_prescribed_displacement.py</span></code>, which also runs the main comparisons of this notebook as tests. The cells below run in about three minutes.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>%matplotlib inline
+import os
+import sys
+import time
+from types import SimpleNamespace
+sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join('..', 'tests'))
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.sparse.linalg import spsolve
+
+import pyfe3d
+from pyfe3d import DOF
+from pyfe3d.corotational import CorotationalModel, expso3
+from test_dome_prescribed_displacement import (CAP, FIG3_SHELL_COMSOL16,
+    TABLE_SHELL_REF, TABLE_SHELL_COMSOL16, polar_cap, axisymmetric_T,
+    Restricted, run_cap_axisymmetric, run_cap_corotational,
+    prescribed_path_corotational, limit_points, load_factor, branches,
+    _symmetry)
+
+print('pyfe3d', pyfe3d.__version__)
+a, th, alpha = CAP['a'], CAP['th'], CAP['alpha']
+T_START = time.time()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+pyfe3d 0.12.0
+</pre></div></div>
+</div>
+</section>
+<section id="The-benchmark">
+<h1>The benchmark<a class="headerlink" href="#The-benchmark" title="Link to this heading">#</a></h1>
+<p>Radius <span class="math notranslate nohighlight">\(a = 10\)</span> m, thickness <span class="math notranslate nohighlight">\(t_h = 0.20384\)</span> m, half-angle <span class="math notranslate nohighlight">\(\pi/4\)</span>, edge clamped (p. 2); <span class="math notranslate nohighlight">\(E = 210\)</span> GPa, <span class="math notranslate nohighlight">\(\nu = 0.3\)</span> (p. 9). The results use the nondimensional load and crown deflection (p. 9)</p>
+<div class="math notranslate nohighlight">
+\[F_n = \frac{F a}{2 \pi E t_h^3}, \qquad \frac{w}{t_h}\]</div>
+<p>with <span class="math notranslate nohighlight">\(F\)</span> the point load on the whole cap and <span class="math notranslate nohighlight">\(w\)</span> the downward deflection of the crown. The crown deflection is prescribed, without any applied load, up to <span class="math notranslate nohighlight">\(w/t_h = 30\)</span>, and the reaction is traced with Riks’ method, as in the dome tutorial. The values compared below are the three points of Fig. 3 of COMSOL (16 shell elements, <code class="docutils literal notranslate"><span class="pre">FIG3_SHELL_COMSOL16</span></code>): <span class="math notranslate nohighlight">\(F_n = 1.806\)</span> at <span class="math notranslate nohighlight">\(w/t_h = 23.06\)</span>, near the maximum of the curve of Fig. 4 (p. 6), 1.717 at 25.51, after it, and 2.787
+at 28.45, on the stiffening branch of the inverted cap.</p>
+</section>
+<section id="The-polar-mesh">
+<h1>The polar mesh<a class="headerlink" href="#The-polar-mesh" title="Link to this heading">#</a></h1>
+<p>The cap is meshed with <code class="docutils literal notranslate"><span class="pre">nr</span></code> rings at the polar angles <span class="math notranslate nohighlight">\(\beta_i = i \alpha / n_r\)</span> and sectors of angle <span class="math notranslate nohighlight">\(\Delta\varphi\)</span>: the first ring is joined to the crown by <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> triangles and the other rings by <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> quadrilaterals. Each quadrilateral, with its nodes at two polar angles and two azimuths of the sphere, is an isosceles trapezoid, hence flat, and the mesh is invariant under the rotations by <span class="math notranslate nohighlight">\(\Delta\varphi\)</span> about the axis. A quarter with 16 rings and 8 sectors, one
+sector shaded:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>nr, nsec, dphi = 16, 8, np.pi/16
+x, prop, elements, ring, azimuth = polar_cap(nr, nsec, dphi, a)
+xyz = x.reshape(-1, 3)
+T = axisymmetric_T(ring, azimuth, nr)
+print('quarter, %d rings x %d sectors: %d Tria3R, %d Quad4R, %d nodes, %d dofs'
+      % (nr, nsec, nsec, len(elements) - nsec, len(xyz), x.size//3*DOF))
+print('T: %d x %d, the crown deflection and (u_r, u_z, theta) of rings 1 to %d'
+      % (T.shape + (nr - 1,)))
+fig, ax = plt.subplots(figsize=(5, 5))
+for e in elements:
+    nodes = [e.n1, e.n2, e.n3] + ([e.n4] if hasattr(e, 'n4') else [])
+    P = xyz[nodes + nodes[:1], :2]
+    first = np.all(azimuth[nodes[1:]] &lt;= dphi + 1e-12)
+    if first:
+        ax.fill(P[:, 0], P[:, 1], color='C1', alpha=0.5)
+    ax.plot(P[:, 0], P[:, 1], 'k-', lw=0.5)
+ax.set_aspect('equal')
+ax.set_xlabel('X [m]')
+ax.set_ylabel('Y [m]')
+ax.set_title('polar mesh, top view')
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+quarter, 16 rings x 8 sectors: 8 Tria3R, 120 Quad4R, 145 nodes, 870 dofs
+T: 870 x 46, the crown deflection and (u_r, u_z, theta) of rings 1 to 15
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tut-nafems-cap-axisymmetric_3_1.png" src="../_images/notebooks_tut-nafems-cap-axisymmetric_3_1.png" />
+</div>
+</div>
+</section>
+<section id="The-restriction-to-axisymmetric-deformations">
+<h1>The restriction to axisymmetric deformations<a class="headerlink" href="#The-restriction-to-axisymmetric-deformations" title="Link to this heading">#</a></h1>
+<p>A torsionless axisymmetric deformation moves each point within its meridian plane. A node at the azimuth <span class="math notranslate nohighlight">\(\varphi\)</span>, with the radial and hoop directions <span class="math notranslate nohighlight">\(\boldsymbol{e}_r = (\cos\varphi, \sin\varphi, 0)\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{e}_\varphi = (-\sin\varphi, \cos\varphi, 0)\)</span>, has the displacement <span class="math notranslate nohighlight">\(u_r \boldsymbol{e}_r + u_z \boldsymbol{e}_z\)</span> and its director rotates by an angle <span class="math notranslate nohighlight">\(\theta\)</span> about <span class="math notranslate nohighlight">\(\boldsymbol{e}_\varphi\)</span>, the same <span class="math notranslate nohighlight">\(u_r\)</span>, <span class="math notranslate nohighlight">\(u_z\)</span> and <span class="math notranslate nohighlight">\(\theta\)</span>
+for all the nodes of a ring:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{pmatrix} u_x \\ u_y \\ u_z \\ \psi_x \\ \psi_y \\ \psi_z \end{pmatrix}
+=
+\begin{bmatrix}
+\cos\varphi &amp; 0 &amp; 0 \\
+\sin\varphi &amp; 0 &amp; 0 \\
+0 &amp; 1 &amp; 0 \\
+0 &amp; 0 &amp; -\sin\varphi \\
+0 &amp; 0 &amp; \cos\varphi \\
+0 &amp; 0 &amp; 0
+\end{bmatrix}
+\begin{pmatrix} u_r \\ u_z \\ \theta \end{pmatrix}\end{split}\]</div>
+<p>These blocks, assembled for all the nodes, are the columns of <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span> (<code class="docutils literal notranslate"><span class="pre">axisymmetric_T</span></code>). At the crown only <span class="math notranslate nohighlight">\(u_z\)</span> is kept, the prescribed deflection, with <span class="math notranslate nohighlight">\(u_r = \theta = 0\)</span>; the last ring is clamped and has no column.</p>
+<p><strong>Why the map is exact for finite rotations.</strong> The rotational dofs of <code class="docutils literal notranslate"><span class="pre">CorotationalModel</span></code> are total rotation vectors <span class="math notranslate nohighlight">\(\boldsymbol{\psi}\)</span>, with the nodal rotation matrix <span class="math notranslate nohighlight">\(\boldsymbol{R} = \exp(\mathrm{Spin}(\boldsymbol{\psi}))\)</span> (module notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>). A rotation by <span class="math notranslate nohighlight">\(\theta\)</span> about a fixed axis <span class="math notranslate nohighlight">\(\boldsymbol{e}_\varphi\)</span> has the rotation vector <span class="math notranslate nohighlight">\(\theta \boldsymbol{e}_\varphi\)</span> exactly, for any <span class="math notranslate nohighlight">\(|\theta| &lt; 2\pi\)</span>, so the map is linear in
+<span class="math notranslate nohighlight">\(\theta\)</span> without approximation. The drilling component, along the shell normal, is zero: the normal lies in the meridian plane, to which <span class="math notranslate nohighlight">\(\boldsymbol{e}_\varphi\)</span> is normal, before and after the rotation. Because the map is linear, the restricted model has the internal force <span class="math notranslate nohighlight">\(\boldsymbol{T}^T \boldsymbol{f}_{int}(\boldsymbol{T}\boldsymbol{q})\)</span> and the tangent stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{T}^T \boldsymbol{K}_T(\boldsymbol{T}\boldsymbol{q}) \boldsymbol{T}\)</span>, the exact
+gradient and Hessian of the strain energy on the subspace; the class <code class="docutils literal notranslate"><span class="pre">Restricted</span></code> gives them to <code class="docutils literal notranslate"><span class="pre">Analysis</span></code> with the interface of a model.</p>
+<p>The rows of <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span> of one node, and a check of the rotation: the normal of the sphere at that node, rotated with <code class="docutils literal notranslate"><span class="pre">expso3</span></code> by <span class="math notranslate nohighlight">\(\theta \boldsymbol{e}_\varphi\)</span>, <span class="math notranslate nohighlight">\(\theta = 1.2\)</span> rad, is the normal at the polar angle <span class="math notranslate nohighlight">\(\beta + \theta\)</span> of the same meridian.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>k = np.flatnonzero((ring == 5) &amp; np.isclose(azimuth, 3*dphi))[0]
+cols = T[DOF*k:DOF*(k + 1)].nonzero()[1]
+print('node %d, ring %d, phi = %.4f rad; columns %s of T, rows u_x .. psi_z:'
+      % (k, ring[k], azimuth[k], np.unique(cols)))
+print(T[DOF*k:DOF*(k + 1)][:, np.unique(cols)].toarray().round(4))
+phi = azimuth[k]
+e_phi = np.array([-np.sin(phi), np.cos(phi), 0.])
+n0 = xyz[k]/np.linalg.norm(xyz[k])
+beta = np.arccos(n0[2])
+theta = 1.2
+n1 = expso3(theta*e_phi) @ n0
+n_exact = np.array([np.sin(beta + theta)*np.cos(phi),
+                    np.sin(beta + theta)*np.sin(phi), np.cos(beta + theta)])
+print('rotated normal %s, expected %s, difference %.1e; component along '
+      'e_phi %.1e' % (n1.round(6), n_exact.round(6),
+                      np.abs(n1 - n_exact).max(), n1 @ e_phi))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+node 40, ring 5, phi = 0.5890 rad; columns [13 14 15] of T, rows u_x .. psi_z:
+[[ 0.8315  0.      0.    ]
+ [ 0.5556  0.      0.    ]
+ [ 0.      1.      0.    ]
+ [ 0.      0.     -0.5556]
+ [ 0.      0.      0.8315]
+ [ 0.      0.      0.    ]]
+rotated normal [0.824945 0.551211 0.125031], expected [0.824945 0.551211 0.125031], difference 4.7e-16; component along e_phi 5.4e-17
+</pre></div></div>
+</div>
+<section id="Check-against-the-unrestricted-model">
+<h2>Check against the unrestricted model<a class="headerlink" href="#Check-against-the-unrestricted-model" title="Link to this heading">#</a></h2>
+<p>The polar mesh is invariant under the rotations by <span class="math notranslate nohighlight">\(\Delta\varphi\)</span>, so the axisymmetric path is also a solution of the unrestricted model with the same mesh. A quarter with 16 rings and 4 sectors of 22.5 degrees, unrestricted, with the symmetry conditions on the planes <span class="math notranslate nohighlight">\(X = 0\)</span> and <span class="math notranslate nohighlight">\(Y = 0\)</span>, is traced up to <span class="math notranslate nohighlight">\(w/t_h = 20\)</span>, where the meridian has rotated by about 60 degrees, and compared with one sector of the same mesh restricted by <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span>
+(<code class="docutils literal notranslate"><span class="pre">tests/test_dome_prescribed_displacement.py::test_cap_axisymmetric_map_exact</span></code>).</p>
+<p>The loads of the restricted sector are interpolated at the deflections of the unrestricted path, and their largest difference is given relative to the largest load.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>nr, nsec, dphi = 16, 4, np.pi/8
+x, prop, elements, ring, azimuth = polar_cap(nr, nsec, dphi, a)
+N = x.size//3*DOF
+bk = np.zeros(N, dtype=bool)
+for i in np.flatnonzero(ring == nr):
+    bk[DOF*i:DOF*(i + 1)] = True
+_symmetry(bk, x[0::3], x[1::3])
+bk[2] = True  # NOTE crown deflection, node 0
+# NOTE what prescribed_path_corotational uses of a model
+model = SimpleNamespace(x=x, N=N, elements=elements, prop=prop)
+t0 = time.time()
+w, F, F_lin, an, cr = prescribed_path_corotational(model, ~bk, 2, 20*th)
+t_full = time.time() - t0
+w, Fn = w/th, load_factor(F)
+t0 = time.time()
+w_ax, Fn_ax, an_ax = run_cap_axisymmetric(nr, a, w_max=20., dphi=dphi,
+                                          inc=0.02)
+t_ax = time.time() - t0
+diff = np.abs(np.interp(w, w_ax, Fn_ax) - Fn).max()/Fn.max()
+print('unrestricted quarter: %d free dofs, %.1f s; restricted sector: %d '
+      'free dofs, %.1f s' % ((~bk).sum(), t_full, 3*(nr - 1), t_ax))
+print('largest load difference %.1e of the largest load, F_n = %.4f at '
+      'w/th = %.1f' % (diff, Fn[-1], w[-1]))
+print('last load factor: unrestricted %.3f, restricted %.3f'
+      % (an.increments[-1], an_ax.increments[-1]))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+unrestricted quarter: 360 free dofs, 3.9 s; restricted sector: 45 free dofs, 1.3 s
+largest load difference 4.6e-07 of the largest load, F_n = 1.8289 at w/th = 20.0
+last load factor: unrestricted 1.000, restricted 1.000
+</pre></div></div>
+</div>
+<p>The difference is of the order of the convergence tolerance of the solver: the restriction by <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span> changes nothing along the axisymmetric path, including the large rotations.</p>
+</section>
+<section id="Sector-angle-and-cost">
+<h2>Sector angle and cost<a class="headerlink" href="#Sector-angle-and-cost" title="Link to this heading">#</a></h2>
+<p>Since every sector deforms identically, one sector carries the whole axisymmetric solution, and the reaction of the cap is that of the sector times <span class="math notranslate nohighlight">\(2\pi/\Delta\varphi\)</span>. A quarter of <span class="math notranslate nohighlight">\(n_s\)</span> sectors restricted by <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span> gives the same path at <span class="math notranslate nohighlight">\(n_s\)</span> times the cost; measured separately on 2026-10-31 with 32 rings: 8 sectors of 11.25 degrees, 15.8 s, and one sector of 11.25 degrees, 1.9 s, both with the limit load 1.8771 at <span class="math notranslate nohighlight">\(w/t_h = 22.87\)</span>. A single sector is
+used below.</p>
+<p>The sector angle sets the facet error of the hoop direction: the chord of a sector is shorter than its arc by <span class="math notranslate nohighlight">\(\Delta\varphi^2/24\)</span>, and the change of the rotation vectors between the two sides of the sector gives the hoop curvature as a finite difference. Its effect on the limit load, with 64 rings and <span class="math notranslate nohighlight">\(R = a + t_h/2\)</span>, and the aspect ratios (meridian length over hoop width) of the elements at the crown and at the edge:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>R = a + th/2
+L = R*alpha/64
+print('%8s %10s %8s %16s %16s %8s' % ('dphi', 'limit F_n', 'w/th',
+      'aspect, ring 1-2', 'aspect, edge', 'time'))
+lim_dphi = {}
+for deg in [0.5, 1., 4., 16.]:
+    t0 = time.time()
+    w, Fn, an = run_cap_axisymmetric(64, R, dphi=np.radians(deg), inc=0.02)
+    dt = time.time() - t0
+    (F_max, w_max), _ = limit_points(w, Fn, 24.5)
+    lim_dphi[deg] = F_max
+    width = lambda b: 2*R*np.sin(b)*np.sin(np.radians(deg)/2)
+    print('%6.1f deg %10.4f %8.2f %16.1f %16.2f %6.1f s' % (
+        deg, F_max, w_max, L/width(1.5*alpha/64), L/width(alpha), dt))
+for deg in [0.5, 4., 16.]:
+    print('limit load with %4.1f deg relative to 1 deg: %+.1e'
+          % (deg, lim_dphi[deg]/lim_dphi[1.] - 1))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+    dphi  limit F_n     w/th aspect, ring 1-2     aspect, edge     time
+   0.5 deg     1.8348    23.21             76.4             1.99    3.4 s
+   1.0 deg     1.8350    23.21             38.2             0.99    3.3 s
+   4.0 deg     1.8371    23.21              9.6             0.25    3.4 s
+  16.0 deg     1.8543    23.16              2.4             0.06    3.4 s
+limit load with  0.5 deg relative to 1 deg: -1.4e-04
+limit load with  4.0 deg relative to 1 deg: +1.1e-03
+limit load with 16.0 deg relative to 1 deg: +1.1e-02
+</pre></div></div>
+</div>
+<p>The limit load grows by 0.1 % from 1 to 4 degrees and by 1.0 % from 1 to 16 degrees, roughly as <span class="math notranslate nohighlight">\(\Delta\varphi^2\)</span>. With 1 degree the elements next to the crown are long and narrow, aspect ratio 38, but their deformation is the axisymmetric one imposed by <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span>, and halving the sector angle to 0.5 degree changes the limit load by less than <span class="math notranslate nohighlight">\(2 \times 10^{-4}\)</span>: <span class="math notranslate nohighlight">\(\Delta\varphi = 1\)</span> degree is used below.</p>
+</section>
+</section>
+<section id="The-path,-the-mesh-and-the-radius">
+<h1>The path, the mesh and the radius<a class="headerlink" href="#The-path,-the-mesh-and-the-radius" title="Link to this heading">#</a></h1>
+<p>The path up to <span class="math notranslate nohighlight">\(w/t_h = 30\)</span>, with Riks’ method of arc length 0.01, for 32 to 256 rings and the two radii of the mid-surface: <span class="math notranslate nohighlight">\(a\)</span>, the radius of the benchmark, and <span class="math notranslate nohighlight">\(a + t_h/2\)</span>, the geometry of the COMSOL shell. In addition, the transverse shear stiffness is multiplied by 1000, the Kirchhoff limit, for 128 rings and <span class="math notranslate nohighlight">\(R = a + t_h/2\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>runs = {}
+cases = ([('a + th/2', nr, 1.) for nr in (32, 64, 128, 256)]
+         + [('a', nr, 1.) for nr in (64, 128, 256)]
+         + [('a + th/2', 128, 1000.)])
+print('%-9s %5s %6s | %16s | %16s | %4s | %7s %7s | %8s | %5s' % (
+      'R', 'rings', 'shear', 'limit F_n, w/th', 'minimum after', 'mono',
+      'F(23.06)', 'F(25.51)', 'w(2.787)', 't [s]'))
+for label, nr, shear in cases:
+    R = a + th/2 if label == 'a + th/2' else a
+    t0 = time.time()
+    w, Fn, an = run_cap_axisymmetric(nr, R, shear_factor=shear)
+    dt = time.time() - t0
+    (F_max, w_max), (F_min, w_min) = limit_points(w, Fn, 24.5)
+    stiff = w &gt; w_min
+    w_3 = np.interp(FIG3_SHELL_COMSOL16[2, 0], Fn[stiff], w[stiff])
+    F_C = np.interp(FIG3_SHELL_COMSOL16[:2, 1], w, Fn)
+    mono = bool(np.all(np.diff(w) &gt; 0))
+    runs[label, nr, shear] = dict(w=w, F=Fn, lim=(F_max, w_max),
+                                  min=(F_min, w_min), w_3=w_3, F_C=F_C,
+                                  mono=mono, last=an.increments[-1])
+    print('%-9s %5d %6g | %7.4f at %5.2f | %7.4f at %5.2f | %4s | %7.4f %7.4f |'
+          ' %8.3f | %5.1f' % (label, nr, shear, F_max, w_max, F_min, w_min,
+                              mono, *F_C, w_3, dt))
+print('COMSOL, 16 shell elements, Fig. 3: %.3f at %.2f, %.3f at %.2f, %.3f '
+      'at %.2f' % tuple(FIG3_SHELL_COMSOL16.ravel()))
+print('last load factor of all the runs:',
+      sorted(set(r['last'] for r in runs.values())))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+R         rings  shear |  limit F_n, w/th |    minimum after | mono | F(23.06) F(25.51) | w(2.787) | t [s]
+a + th/2     32      1 |  1.8579 at 23.06 |  1.7342 at 25.73 | True |  1.8578  1.7379 |   28.518 |   4.0
+a + th/2     64      1 |  1.8350 at 23.21 |  1.7332 at 25.75 | True |  1.8348  1.7363 |   28.613 |   6.2
+a + th/2    128      1 |  1.8293 at 23.30 |  1.7329 at 25.83 | True |  1.8284  1.7366 |   28.687 |  11.0
+a + th/2    256      1 |  1.8278 at 23.33 |  1.7324 at 25.84 | True |  1.8265  1.7375 |   28.740 |  20.8
+a            64      1 |  1.8387 at 22.91 |  1.7403 at 25.46 | True |  1.8383  1.7410 |   28.318 |   6.4
+a           128      1 |  1.8331 at 23.00 |  1.7399 at 25.54 | True |  1.8329  1.7399 |   28.391 |  10.9
+a           256      1 |  1.8316 at 23.04 |  1.7395 at 25.55 | True |  1.8316  1.7396 |   28.444 |  20.8
+a + th/2    128   1000 |  1.8690 at 22.86 |  1.7098 at 25.73 | True |  1.8676  1.7136 |   28.397 |  10.7
+COMSOL, 16 shell elements, Fig. 3: 1.806 at 23.06, 1.717 at 25.51, 2.787 at 28.45
+last load factor of all the runs: [1.0]
+</pre></div></div>
+</div>
+<p>The limit load with <span class="math notranslate nohighlight">\(R = a + t_h/2\)</span> against the mesh, and the Kirchhoff limit with 128 rings, compared with the three points of Fig. 3 of COMSOL (16 shell elements, <code class="docutils literal notranslate"><span class="pre">FIG3_SHELL_COMSOL16</span></code>):</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>rings = (64, 128, 256)
+F_max = np.array([runs['a + th/2', nr, 1.]['lim'][0] for nr in rings])
+d = -np.diff(F_max)
+print('limit F_n with %d, %d and %d rings: %.4f, %.4f, %.4f' % (rings + tuple(F_max)))
+print('differences %.4f and %.4f, ratio %.1f' % (d[0], d[1], d[0]/d[1]))
+print('256 rings: %.4f, %+.1f %% on %.3f, COMSOL, 16 shell elements, Fig. 3'
+      % (F_max[-1], 100*(F_max[-1]/FIG3_SHELL_COMSOL16[0, 0] - 1),
+         FIG3_SHELL_COMSOL16[0, 0]))
+k = runs['a + th/2', 128, 1000.]
+print('Kirchhoff limit, 128 rings: limit F_n %.4f, %+.1f %% on the 128 rings '
+      'with transverse shear' % (k['lim'][0],
+      100*(k['lim'][0]/runs['a + th/2', 128, 1.]['lim'][0] - 1)))
+print('%-36s %10s %10s %10s' % ('Kirchhoff limit, 128 rings', 'pyfe3d',
+                                'COMSOL 16', 'rel. diff.'))
+for name, v, ref in [('minimum F_n after the limit', k['min'][0],
+                      FIG3_SHELL_COMSOL16[1, 0]),
+                     ('w/th at F_n = %.3f' % FIG3_SHELL_COMSOL16[2, 0], k['w_3'],
+                      FIG3_SHELL_COMSOL16[2, 1])]:
+    print('%-36s %10.4f %10.4f %+9.1f %%' % (name, v, ref, 100*(v/ref - 1)))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+limit F_n with 64, 128 and 256 rings: 1.8350, 1.8293, 1.8278
+differences 0.0058 and 0.0014, ratio 4.0
+256 rings: 1.8278, +1.2 % on 1.806, COMSOL, 16 shell elements, Fig. 3
+Kirchhoff limit, 128 rings: limit F_n 1.8690, +2.2 % on the 128 rings with transverse shear
+Kirchhoff limit, 128 rings               pyfe3d  COMSOL 16 rel. diff.
+minimum F_n after the limit              1.7098     1.7170      -0.4 %
+w/th at F_n = 2.787                     28.3965    28.4540      -0.2 %
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p><strong>No snap-back.</strong> On every mesh the crown deflection grows monotonically up to <span class="math notranslate nohighlight">\(w/t_h = 30\)</span>: restricted to the axisymmetric deformations, the path has the limit load, the softening after it and the stiffening of the inverted cap, with a single branch, as the axisymmetric references.</p></li>
+<li><p><strong>Convergence of the limit load.</strong> With <span class="math notranslate nohighlight">\(R = a + t_h/2\)</span>: 1.858, 1.835, 1.829 and 1.828 with 32, 64, 128 and 256 rings, the differences falling by about 4 at each refinement, second order. With <span class="math notranslate nohighlight">\(R = a\)</span> the limit load is 0.2 % higher, 1.832 with 256 rings: the radius matters little here. The minimum after the limit converges faster, to 1.732 (<span class="math notranslate nohighlight">\(a + t_h/2\)</span>) and 1.740 (<span class="math notranslate nohighlight">\(a\)</span>).</p></li>
+<li><p><strong>Kirchhoff limit.</strong> With the transverse shear stiffness times 1000 and 128 rings the limit load is 2.2 % higher than with the actual stiffness, while the minimum after it and the deflection at the load 2.787 agree with COMSOL within 0.5 %, see the table above.</p></li>
+<li><p><strong>The deflections drift with the mesh.</strong> The deflection at the limit load grows from 23.06 to 23.33 with <span class="math notranslate nohighlight">\(R = a + t_h/2\)</span>, and at the load 2.787 from 28.52 to 28.74, without converging, while in the Kirchhoff limit they converge (measured separately on 2026-10-31 with 64, 128 and 256 rings: the limit at <span class="math notranslate nohighlight">\(w/t_h\)</span> = 22.83, 22.85 and 22.85, and <span class="math notranslate nohighlight">\(w/t_h\)</span> = 28.38, 28.40 and 28.40 at the load 2.787). The next section explains why.</p></li>
+</ul>
+<section id="The-point-load-on-a-shear-deformable-shell">
+<h2>The point load on a shear-deformable shell<a class="headerlink" href="#The-point-load-on-a-shear-deformable-shell" title="Link to this heading">#</a></h2>
+<p>Near the load, the transverse shear force is <span class="math notranslate nohighlight">\(Q = F/(2\pi r)\)</span>, from the vertical equilibrium of a disc of radius <span class="math notranslate nohighlight">\(r\)</span>, and with the shear stiffness <span class="math notranslate nohighlight">\(\kappa G t_h\)</span> the shear deflection grows as <span class="math notranslate nohighlight">\(F \ln(1/r)/(2\pi\kappa G t_h)\)</span>: the deflection under a point load of a shell with transverse shear is singular, and a mesh reaches the singularity down to its crown element. Halving the crown element adds (derived here)</p>
+<div class="math notranslate nohighlight">
+\[\Delta\left(\frac{w}{t_h}\right) = F_n \, \frac{t_h}{a} \,
+\frac{2 (1 + \nu)}{\kappa} \ln 2 = 0.0441 \, F_n, \qquad \kappa = 5/6\]</div>
+<p>The linear crown compliance of the restricted model, <span class="math notranslate nohighlight">\((w/t_h)/F_n\)</span>, shows it:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def compliance(nr, shear):
+    x, prop, elements, ring, azimuth = polar_cap(nr, 1, np.radians(1.),
+                                                 a + th/2, shear)
+    cr = CorotationalModel(x, x.size//3*DOF)
+    for elem in elements:
+        cr.add(elem, prop, kinematics='corotational')
+    K = Restricted(cr, axisymmetric_T(ring, azimuth, nr)).KC0.tocsc()
+    q = np.zeros(K.shape[0])
+    q[0] = -th
+    q[1:] = spsolve(K[1:, 1:], -K[1:, :1] @ q[:1])
+    return 1/load_factor(-(K @ q)[0]*2*np.pi/np.radians(1.))
+
+kappa, nu = 5/6, CAP['nu']
+dC = th/a*2*(1 + nu)/kappa*np.log(2)
+meshes = [16, 32, 64, 128, 256, 512]
+C = {s: np.array([compliance(nr, s) for nr in meshes]) for s in (1., 1000.)}
+print('derived increment per halving: %.4f' % dC)
+print('%6s %14s %10s %14s %10s' % ('rings', 'shear: C', 'increment',
+                                   'x1000: C', 'increment'))
+for i, nr in enumerate(meshes):
+    inc = ['%10.4f' % np.diff(C[s])[i - 1] if i else '%10s' % '-'
+           for s in (1., 1000.)]
+    print('%6d %14.4f %s %14.4f %s' % (nr, C[1.][i], inc[0], C[1000.][i],
+                                       inc[1]))
+print('last increment with the actual shear stiffness relative to the '
+      'derived one: %+.1f %%' % (100*(np.diff(C[1.])[-1]/dC - 1)))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+derived increment per halving: 0.0441
+ rings       shear: C  increment       x1000: C  increment
+    16         2.6126          -         2.4665          -
+    32         2.7663     0.1537         2.5764     0.1100
+    64         2.8419     0.0756         2.6081     0.0316
+   128         2.8948     0.0529         2.6169     0.0088
+   256         2.9413     0.0465         2.6194     0.0025
+   512         2.9861     0.0448         2.6201     0.0007
+last increment with the actual shear stiffness relative to the derived one: +1.5 %
+</pre></div></div>
+</div>
+<p>With the actual shear stiffness the compliance keeps growing by an amount that tends to the derived 0.0441 per halving; in the Kirchhoff limit it converges. The crown deflection of the shear-deformable shell is therefore not a converged quantity: the loads converge, but a path is shifted along <span class="math notranslate nohighlight">\(w\)</span> by an amount that depends on the crown element, its size and its formulation. The comparisons below take this into account.</p>
+</section>
+</section>
+<section id="Comparison-with-COMSOL-and-with-an-independent-axisymmetric-shell">
+<h1>Comparison with COMSOL and with an independent axisymmetric shell<a class="headerlink" href="#Comparison-with-COMSOL-and-with-an-independent-axisymmetric-shell" title="Link to this heading">#</a></h1>
+<p>As an independent check, written for this comparison and not part of pyfe3d, a geometrically exact axisymmetric shell was coded separately (derived here): Reissner kinematics of the meridian, with the stretching <span class="math notranslate nohighlight">\(\varepsilon_s\)</span>, the hoop strain <span class="math notranslate nohighlight">\(r/r_0 - 1\)</span>, the meridional and hoop curvatures and the transverse shear strain of a meridian of rotating sections, small strains, two-node elements with one-point integration, 160 elements refined towards the crown with
+<span class="math notranslate nohighlight">\(\beta = \alpha \xi^{1.5}\)</span>, the same nondimensional variables, traced by pseudo-arc-length continuation. Its results, run on 2026-10-30:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><span class="math notranslate nohighlight">\(R\)</span></p></th>
+<th class="head"><p>transverse shear</p></th>
+<th class="head"><p>limit <span class="math notranslate nohighlight">\(F_n\)</span>, <span class="math notranslate nohighlight">\(w/t_h\)</span></p></th>
+<th class="head"><p>minimum after, <span class="math notranslate nohighlight">\(w/t_h\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(w/t_h\)</span> at <span class="math notranslate nohighlight">\(F_n = 2.787\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(a\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\kappa G t_h\)</span></p></td>
+<td><p>1.8345, 23.38</p></td>
+<td><p>1.7398, 25.84</p></td>
+<td><p>28.99</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(a + t_h/2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\kappa G t_h\)</span></p></td>
+<td><p>1.8308, 23.61</p></td>
+<td><p>1.7327, 26.12</p></td>
+<td><p>29.29</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(a\)</span></p></td>
+<td><p>times 1000</p></td>
+<td><p>1.8735, 22.61</p></td>
+<td><p>1.7168, 25.44</p></td>
+<td><p>28.11</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(a + t_h/2\)</span></p></td>
+<td><p>times 1000</p></td>
+<td><p>1.8696, 22.85</p></td>
+<td><p>1.7095, 25.71</p></td>
+<td><p>28.41</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The same grading of the rings, 160 rings with <code class="docutils literal notranslate"><span class="pre">grading=1.5</span></code>, in the restricted pyfe3d model:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>AXI = {1.: (1.8308, 23.61, 1.7327, 26.12, 29.29),
+       1000.: (1.8696, 22.85, 1.7095, 25.71, 28.41)}
+print('%-7s %-22s %10s %14s %10s' % ('shear', 'quantity', 'pyfe3d',
+                                     'axisym. shell', 'rel. diff.'))
+for shear in (1., 1000.):
+    w, Fn, an = run_cap_axisymmetric(160, a + th/2, shear_factor=shear,
+                                     grading=1.5)
+    (F_max, w_max), (F_min, w_min) = limit_points(w, Fn, 24.5)
+    stiff = w &gt; w_min
+    w_3 = np.interp(FIG3_SHELL_COMSOL16[2, 0], Fn[stiff], w[stiff])
+    runs['graded', 160, shear] = dict(w=w, F=Fn)
+    names = ['limit F_n', 'w/th at the limit', 'minimum F_n',
+             'w/th at the minimum', 'w/th at F_n = 2.787']
+    for name, v, ref in zip(names, (F_max, w_max, F_min, w_min, w_3),
+                            AXI[shear]):
+        print('x%-6g %-22s %10.4f %14.4f %+9.2f %%' % (shear, name, v, ref,
+                                                      100*(v/ref - 1)))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+shear   quantity                   pyfe3d  axisym. shell rel. diff.
+x1      limit F_n                  1.8301         1.8308     -0.04 %
+x1      w/th at the limit         23.3951        23.6100     -0.91 %
+x1      minimum F_n                1.7328         1.7327     +0.01 %
+x1      w/th at the minimum       25.8530        26.1200     -1.02 %
+x1      w/th at F_n = 2.787       28.8504        29.2900     -1.50 %
+x1000   limit F_n                  1.8697         1.8696     +0.01 %
+x1000   w/th at the limit         22.9216        22.8500     +0.31 %
+x1000   minimum F_n                1.7103         1.7095     +0.05 %
+x1000   w/th at the minimum       25.6523        25.7100     -0.22 %
+x1000   w/th at F_n = 2.787       28.4058        28.4100     -0.01 %
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p>In the Kirchhoff limit the restricted pyfe3d model and the independent axisymmetric shell coincide: limit loads 1.8697 at <span class="math notranslate nohighlight">\(w/t_h = 22.92\)</span> against 1.8696 at 22.85, minima 1.7103 at 25.65 against 1.7095 at 25.71 (sampled points of the pyfe3d path, interpolated extrema of the independent shell), and the deflection at the load 2.787, 28.41 in both.</p></li>
+<li><p>With the transverse shear the loads still agree within 0.05 %, 1.8301 and 1.7328 against 1.8308 and 1.7327, but the pyfe3d path lies 0.2 to 0.45 to the left in <span class="math notranslate nohighlight">\(w/t_h\)</span>, at the same crown grading: the two crown elements, a <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> fan and a two-node axisymmetric element, resolve the singular shear deflection differently. The difference vanishes in the Kirchhoff limit, so it is the shear singularity, not the large rotations.</p></li>
+</ul>
+<p>Against COMSOL’s shell with 16 elements, Fig. 3: at <span class="math notranslate nohighlight">\(w/t_h = 23.06\)</span> the load with transverse shear is 1.827 (256 rings), 1.1 % above 1.806, and in the Kirchhoff limit 1.868, 3.4 % above; at 25.51 the load is 1.738 with shear, 1.2 % above 1.717, and 1.714 in the Kirchhoff limit, 0.2 % below. The deflections of COMSOL at the loads of Table 4 on the rising branch, 2.445 to 21.64, are within 0.5 % of those of the restricted model with transverse shear and 256 rings (next cell). The COMSOL
+values are those of a 16-element mesh, whose element order is not stated in the model document; its limit load is not converged to better than the 1 % found here.</p>
+<p>The comparison with COMSOL’s shell with 16 elements, for 256 rings and <span class="math notranslate nohighlight">\(R = a + t_h/2\)</span>, the deflections on the rising branch at the loads of Table 4 and the three points of Fig. 3:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>p = runs['a + th/2', 256, 1.]
+i_lim = np.argmax(np.where(p['w'] &lt; 24.5, p['F'], -1))
+w_C16 = np.interp(TABLE_SHELL_COMSOL16[:5, 0], p['F'][:i_lim + 1],
+                  p['w'][:i_lim + 1])
+rows = [('w/th at F_n = %.3f, Table 4' % F, wp, wc)
+        for (F, wc), wp in zip(TABLE_SHELL_COMSOL16[:5], w_C16)]
+rows += [('limit F_n; Fig. 3 at w/th = %.2f' % FIG3_SHELL_COMSOL16[0, 1],
+          p['lim'][0], FIG3_SHELL_COMSOL16[0, 0]),
+         ('F_n at w/th = %.2f, Fig. 3' % FIG3_SHELL_COMSOL16[1, 1],
+          p['F_C'][1], FIG3_SHELL_COMSOL16[1, 0]),
+         ('w/th at F_n = %.3f, Fig. 3' % FIG3_SHELL_COMSOL16[2, 0],
+          p['w_3'], FIG3_SHELL_COMSOL16[2, 1])]
+print('%-36s %10s %10s %10s' % ('quantity', 'pyfe3d', 'COMSOL 16',
+                                'rel. diff.'))
+for name, v, ref in rows:
+    print('%-36s %10.4f %10.4f %+9.1f %%' % (name, v, ref, 100*(v/ref - 1)))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+quantity                                 pyfe3d  COMSOL 16 rel. diff.
+w/th at F_n = 0.332, Table 4             2.4478     2.4450      +0.1 %
+w/th at F_n = 0.580, Table 4             6.7827     6.8000      -0.3 %
+w/th at F_n = 0.994, Table 4            13.7845    13.8000      -0.1 %
+w/th at F_n = 1.502, Table 4            18.9458    18.9450      +0.0 %
+w/th at F_n = 1.757, Table 4            21.5229    21.6400      -0.5 %
+limit F_n; Fig. 3 at w/th = 23.06        1.8278     1.8060      +1.2 %
+F_n at w/th = 25.51, Fig. 3              1.7375     1.7170      +1.2 %
+w/th at F_n = 2.787, Fig. 3             28.7402    28.4540      +1.0 %
+</pre></div></div>
+</div>
+</section>
+<section id="The-unrestricted-quarter-model">
+<h1>The unrestricted quarter model<a class="headerlink" href="#The-unrestricted-quarter-model" title="Link to this heading">#</a></h1>
+<p>For comparison, the quarter model of the dome tutorial (<code class="docutils literal notranslate"><span class="pre">run_cap_corotational</span></code>), unrestricted, with its mesh of three blocks of 8x8 <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> and <span class="math notranslate nohighlight">\(R = a\)</span>, traced with the same kinematics. Its limit load is that of a coarse mesh, 1.956 with 8x8 cells, decreasing to 1.895 and 1.873 with 12x12 and 16x16 cells (dome tutorial); just after the limit load the deflection turns back, where the path leaves the axisymmetric deformations.</p>
+<p><strong>Observation, not investigated further.</strong> The non-axisymmetric modes that the unrestricted models reach depend on the mesh. On the Cartesian quarter mesh above, an eigenvalue of the tangent stiffness matrix whose mode is a <span class="math notranslate nohighlight">\(\cos 2\varphi\)</span> harmonic crosses zero just after the limit load, at <span class="math notranslate nohighlight">\(w/t_h = 24.6\)</span> with 12x12 cells, and the path follows it. On the unrestricted polar quarter with 32 rings and 8 sectors, Riks’ method stays on the axisymmetric path, because the mesh is exactly
+invariant under the rotations by <span class="math notranslate nohighlight">\(\Delta\varphi\)</span>, although the tangent stiffness matrix has negative eigenvalues along it: a <span class="math notranslate nohighlight">\(\cos 4\varphi\)</span> mode between <span class="math notranslate nohighlight">\(w/t_h = 19.6\)</span> and 20.9 and a <span class="math notranslate nohighlight">\(\cos 6\varphi\)</span> mode between 23.0 and 25.4 (measured on 2026-10-31). Which harmonic is critical, and where, is therefore not settled by these meshes; the axisymmetric path itself is not affected.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>t0 = time.time()
+wq, Fq, slope, anq, modelq, dofw = run_cap_corotational(8, a)
+first, last = branches(wq)
+i = np.argmax(Fq[first])
+Fq_max, wq_max = Fq[first][i], wq[first][i]
+print('unrestricted quarter, 8x8 cells per block: %d increments, %.0f s; '
+      'limit load %.4f at w/th = %.2f; w/th decreases after %.2f and '
+      'increases again from %.2f' % (len(wq), time.time() - t0, Fq_max,
+                                     wq_max, wq[first][-1], wq[last][0]))
+
+fig, ax = plt.subplots(figsize=(8, 5.5))
+ax.plot(wq, Fq, '-', color='0.6', lw=1.2,
+        label='unrestricted quarter, 8x8 cells per block, R = a')
+for (key, style, lab) in [
+        (('a + th/2', 32, 1.), 'C0:', 'restricted, 32 rings, R = a + th/2'),
+        (('a + th/2', 256, 1.), 'C0-', 'restricted, 256 rings, R = a + th/2'),
+        (('a', 256, 1.), 'C2--', 'restricted, 256 rings, R = a'),
+        (('a + th/2', 128, 1000.), 'C3-',
+         'restricted, 128 rings, R = a + th/2, Kirchhoff limit')]:
+    ax.plot(runs[key]['w'], runs[key]['F'], style, lw=1.4, label=lab)
+ax.plot(FIG3_SHELL_COMSOL16[:, 1], FIG3_SHELL_COMSOL16[:, 0], 'ko', ms=7,
+        label='COMSOL, 16 shell elements, Fig. 3')
+ax.plot(TABLE_SHELL_COMSOL16[:, 1], TABLE_SHELL_COMSOL16[:, 0], 'k^',
+        mfc='none', ms=7, label='COMSOL, 16 shell elements, Table 4')
+ax.plot(TABLE_SHELL_REF[:, 1], TABLE_SHELL_REF[:, 0], 'ks', mfc='none',
+        ms=7, label='reference shell, Table 3')
+ax.set_xlim(0, 30)
+ax.set_ylim(0, 4.2)
+ax.set_xlabel('$w/t_h$')
+ax.set_ylabel('$F_n = F a/(2 \\pi E t_h^3)$')
+ax.grid(alpha=0.3)
+ax.legend(loc='upper left', fontsize=8)
+plt.show()
+
+fig, ax = plt.subplots(figsize=(8, 4))
+ax.plot(wq, Fq, '-', color='0.6', lw=1.2, label='unrestricted quarter, 8x8')
+for key, style, lab in [
+        (('a + th/2', 256, 1.), 'C0-', 'restricted, 256 rings, R = a + th/2'),
+        (('a', 256, 1.), 'C2--', 'restricted, 256 rings, R = a'),
+        (('a + th/2', 128, 1000.), 'C3-', 'Kirchhoff limit, 128 rings')]:
+    ax.plot(runs[key]['w'], runs[key]['F'], style, lw=1.4, label=lab)
+ax.plot(FIG3_SHELL_COMSOL16[:2, 1], FIG3_SHELL_COMSOL16[:2, 0], 'ko', ms=7,
+        label='COMSOL, Fig. 3')
+ax.set_xlim(20, 27.5)
+ax.set_ylim(1.6, 2.0)
+ax.set_xlabel('$w/t_h$')
+ax.set_ylabel('$F_n$')
+ax.set_title('around the limit load')
+ax.grid(alpha=0.3)
+ax.legend(fontsize=8)
+plt.show()
+print('total run time of the notebook: %.0f s' % (time.time() - T_START))
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+unrestricted quarter, 8x8 cells per block: 222 increments, 44 s; limit load 1.9555 at w/th = 23.50; w/th decreases after 23.93 and increases again from 26.03
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tut-nafems-cap-axisymmetric_21_1.png" src="../_images/notebooks_tut-nafems-cap-axisymmetric_21_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tut-nafems-cap-axisymmetric_21_2.png" src="../_images/notebooks_tut-nafems-cap-axisymmetric_21_2.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+total run time of the notebook: 180 s
+</pre></div></div>
+</div>
+<section id="Summary">
+<h2>Summary<a class="headerlink" href="#Summary" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>model</p></th>
+<th class="head"><p>limit <span class="math notranslate nohighlight">\(F_n\)</span>, <span class="math notranslate nohighlight">\(w/t_h\)</span></p></th>
+<th class="head"><p>minimum after</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(w\)</span> monotonic</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>restricted, 256 rings, <span class="math notranslate nohighlight">\(R = a + t_h/2\)</span></p></td>
+<td><p>1.828, 23.33</p></td>
+<td><p>1.732</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>restricted, 256 rings, <span class="math notranslate nohighlight">\(R = a\)</span></p></td>
+<td><p>1.832, 23.04</p></td>
+<td><p>1.740</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p>restricted, 128 rings, <span class="math notranslate nohighlight">\(R = a + t_h/2\)</span>, Kirchhoff limit</p></td>
+<td><p>1.869, 22.86</p></td>
+<td><p>1.710</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>independent axisymmetric shell, <span class="math notranslate nohighlight">\(R = a + t_h/2\)</span></p></td>
+<td><p>1.831, 23.61</p></td>
+<td><p>1.733</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p>unrestricted quarter, 8x8 / 12x12 / 16x16 cells, <span class="math notranslate nohighlight">\(R = a\)</span></p></td>
+<td><p>1.956 / 1.895 / 1.873</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>no, snap-back</p></td>
+</tr>
+<tr class="row-odd"><td><p>COMSOL, 16 shell elements, Fig. 3</p></td>
+<td><p>1.806 at 23.06</p></td>
+<td><p>1.717 at 25.51</p></td>
+<td><p>yes</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul class="simple">
+<li><p>The linear map <span class="math notranslate nohighlight">\(\boldsymbol{u} = \boldsymbol{T}\boldsymbol{q}\)</span> restricts the co-rotational shell elements to the axisymmetric deformations without approximation, the nodal rotations being total rotation vectors; it is built from the public API, with <code class="docutils literal notranslate"><span class="pre">Analysis</span></code> called on the restricted callables.</p></li>
+<li><p>Restricted, the cap has the single-branch path of the axisymmetric references: no snap-back of the prescribed deflection. The limit load converges at second order to 1.828 with <span class="math notranslate nohighlight">\(R = a + t_h/2\)</span>, 1.2 % above the 1.806 of COMSOL with 16 elements, and agrees within 0.05 % with an independent axisymmetric shell; the Kirchhoff limit agrees with that shell in load and deflection.</p></li>
+<li><p>The crown deflection under the point load of a shell with transverse shear has no converged value; the paths then differ by a shift in <span class="math notranslate nohighlight">\(w\)</span> set by the crown element, while the loads converge.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tut-prescribed-displacement-dome-riks.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tut-inertia-relief.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial: static analysis with inertia relief</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#The-benchmark">The benchmark</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#The-polar-mesh">The polar mesh</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#The-restriction-to-axisymmetric-deformations">The restriction to axisymmetric deformations</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Check-against-the-unrestricted-model">Check against the unrestricted model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Sector-angle-and-cost">Sector angle and cost</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#The-path,-the-mesh-and-the-radius">The path, the mesh and the radius</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#The-point-load-on-a-shear-deformable-shell">The point load on a shear-deformable shell</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Comparison-with-COMSOL-and-with-an-independent-axisymmetric-shell">Comparison with COMSOL and with an independent axisymmetric shell</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#The-unrestricted-quarter-model">The unrestricted quarter model</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/notebooks/tut-nafems-cap-axisymmetric.nblink.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

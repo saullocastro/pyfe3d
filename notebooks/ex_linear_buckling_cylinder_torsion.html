@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Linear buckling analysis of a cylinder under torsion &#8212; pyfe3d 0.12.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/ex_linear_buckling_cylinder_torsion';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Natural frequency analysis of a plate" href="ex_natural_frequency_plate.html" />
+    <link rel="prev" title="Linear buckling analysis of a column" href="ex_linear_buckling_column.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_properties.html">
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../boundary_conditions.html">
+    Boundary conditions and prescribed displacements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#" aria-current="page">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Linear buckling analysis of a cylinder under torsion</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Linear-buckling-analysis-of-a-cylinder-under-torsion">
+<h1>Linear buckling analysis of a cylinder under torsion<a class="headerlink" href="#Linear-buckling-analysis-of-a-cylinder-under-torsion" title="Link to this heading">#</a></h1>
+<p>Two torsional buckling problems of circular cylinders of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> elements:</p>
+<ol class="arabic simple">
+<li><p>the cylinders Z11 and Z33 of Castro et al. (2014), two unsymmetric laminates, with the boundary conditions CC2 of that paper, compared with the pure-torsion intercepts of their Fig. 13;</p></li>
+<li><p>an isotropic cylinder with simply supported edges, compared with the critical shear stress of Batdorf, Stein and Schildcrout (1947).</p></li>
+</ol>
+<p>The membrane prestress is a uniform shear resultant given to each element with <code class="docutils literal notranslate"><span class="pre">update_KG_given_stress</span></code>, and the eigenvalue problem is solved with <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver.linear_buckling</span></code>, see <a class="reference internal" href="../eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>. The laminate of each element is oriented by a material direction along the axis of the cylinder, see <a class="reference internal" href="../conventions.html"><span class="doc">Conventions</span></a>; the element is described in <a class="reference internal" href="../shell_quad4.html"><span class="doc">Quad4: assumed transverse shear strains
+(MITC4)</span></a>. The full references are at the end of the notebook.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>%matplotlib inline
+import time
+
+import numpy as np
+import matplotlib.pyplot as plt
+from numpy import isclose
+from scipy.sparse import coo_matrix
+
+from pyfe3d import DOF, DOUBLE, INT, Quad4, Quad4Data, Quad4Probe
+from pyfe3d.shellprop_utils import laminated_plate, isotropic_plate
+from pyfe3d.solver import linear_buckling
+</pre></div>
+</div>
+</div>
+<section id="The-model">
+<h2>The model<a class="headerlink" href="#The-model" title="Link to this heading">#</a></h2>
+<p>The axis of the cylinder is the global <span class="math notranslate nohighlight">\(z\)</span> axis. The mesh has <code class="docutils literal notranslate"><span class="pre">ntheta</span></code> nearly square elements around the circumference, an odd number of nodes along the length, so that a ring of nodes lies at mid-length, and the last column of nodes is replaced by the first one to close the cylinder. The vector <span class="math notranslate nohighlight">\((0,
+0, 1)\)</span> given to <code class="docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code> sets the element <span class="math notranslate nohighlight">\(x\)</span> axis, and the material direction of the laminate, along the axis of the cylinder; the element normal points outwards. The membrane prestress in the element frame is then <span class="math notranslate nohighlight">\((N_{xx}, N_{yy}, N_{xy}) = (0, 0, N_{xy})\)</span>, the torsion load.</p>
+<p>The boundary conditions are constraints on the radial and circumferential displacements and rotations, whose directions change from node to node. The matrix <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span> below, <span class="math notranslate nohighlight">\(\boldsymbol{u}_{global} = \boldsymbol{T}
+\boldsymbol{u}_{cyl}\)</span>, rotates the nodal dofs to the cylindrical directions <span class="math notranslate nohighlight">\((u_r, u_\theta, u_z, r_r, r_\theta, r_z)\)</span>, and the matrices become <span class="math notranslate nohighlight">\(\boldsymbol{T}^\top \boldsymbol{K} \boldsymbol{T}\)</span>:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def cylindrical_transformation(ncoords):
+    theta = np.arctan2(ncoords[:, 1], ncoords[:, 0])
+    c = np.cos(theta)
+    s = np.sin(theta)
+    one = np.ones_like(c)
+    zero = np.zeros_like(c)
+    # columns: radial, circumferential and axial unit vectors
+    Q = np.array([[c, -s, zero],
+                  [s, c, zero],
+                  [zero, zero, one]])
+    rows, cols, vals = [], [], []
+    base = DOF*np.arange(len(theta))
+    for offset in (0, 3):
+        for i in range(3):
+            for j in range(3):
+                rows.append(base + offset + i)
+                cols.append(base + offset + j)
+                vals.append(Q[i, j])
+    N = DOF*len(theta)
+    return coo_matrix((np.concatenate(vals), (np.concatenate(rows),
+                       np.concatenate(cols))), shape=(N, N)).tocsc()
+</pre></div>
+</div>
+</div>
+<p>The function below builds the cylinder of radius <code class="docutils literal notranslate"><span class="pre">R</span></code> and length <code class="docutils literal notranslate"><span class="pre">L</span></code>, assembles <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span> for the shear resultant <code class="docutils literal notranslate"><span class="pre">Nxy</span></code>, applies the boundary conditions <code class="docutils literal notranslate"><span class="pre">bc</span></code> in cylindrical coordinates and solves <span class="math notranslate nohighlight">\((\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G)
+\boldsymbol{u} = \boldsymbol{0}\)</span>. One node at mid-length is held axially to remove the rigid axial translation. <code class="docutils literal notranslate"><span class="pre">linear_buckling</span></code> equilibrates the diagonal, estimates the shift of the Cayley transformation and verifies that no lower load multiplier was missed:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def cylinder_torsion(prop, R, L, ntheta, Nxy, bc, num_eigvalues=6):
+    data = Quad4Data()
+    probe = Quad4Probe()
+    nlength = int(ntheta*L/(2*np.pi*R))
+    nlength += 1 - nlength % 2
+
+    nids = 1 + np.arange(nlength*(ntheta + 1))
+    nids_mesh = nids.reshape(nlength, ntheta + 1)
+    nids_mesh[:, -1] = nids_mesh[:, 0]
+    nids = np.unique(nids_mesh)
+    nid_pos = dict(zip(nids, np.arange(len(nids))))
+
+    zlin = np.linspace(0, L, nlength)
+    thetalin = np.linspace(0, 2*np.pi, ntheta + 1)[:-1][::-1]
+    zmesh, thetamesh = np.meshgrid(zlin, thetalin)
+    zmesh = zmesh.T
+    thetamesh = thetamesh.T
+    ncoords = np.vstack(((np.cos(thetamesh)*R).flatten(),
+                         (np.sin(thetamesh)*R).flatten(),
+                         zmesh.flatten())).T
+    ncoords_flatten = ncoords.flatten()
+    z = ncoords[:, 2]
+
+    n1s = nids_mesh[:-1, :-1].flatten()
+    n2s = nids_mesh[1:, :-1].flatten()
+    n3s = nids_mesh[1:, 1:].flatten()
+    n4s = nids_mesh[:-1, 1:].flatten()
+    num_elements = len(n1s)
+    N = DOF*nlength*ntheta
+
+    KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+    KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+    KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+    KGr = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=INT)
+    KGc = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=INT)
+    KGv = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+    for k, (n1, n2, n3, n4) in enumerate(zip(n1s, n2s, n3s, n4s)):
+        quad = Quad4(probe)
+        quad.n1, quad.n2, quad.n3, quad.n4 = n1, n2, n3, n4
+        quad.c1 = DOF*nid_pos[n1]
+        quad.c2 = DOF*nid_pos[n2]
+        quad.c3 = DOF*nid_pos[n3]
+        quad.c4 = DOF*nid_pos[n4]
+        quad.init_k_KC0 = k*data.KC0_SPARSE_SIZE
+        quad.init_k_KG = k*data.KG_SPARSE_SIZE
+        quad.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
+        quad.update_probe_xe(ncoords_flatten)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop)
+        quad.update_KG_given_stress(0, 0, Nxy, KGr, KGc, KGv)
+    KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
+    KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
+
+    T = cylindrical_transformation(ncoords)
+    KC0 = (T.T @ KC0 @ T).tocsc()
+    KG = (T.T @ KG @ T).tocsc()
+
+    bk = np.zeros(N, dtype=bool)
+    edges = isclose(z, 0) | isclose(z, L)
+    for i in bc:
+        bk[i::DOF][edges] = True
+    middle = np.where(isclose(z, L/2))[0]
+    bk[2::DOF][middle[0]] = True
+    bu = ~bk
+
+    eigvals, eigvecsu = linear_buckling(KC0[bu, :][:, bu], KG[bu, :][:, bu],
+                                        num_eigvalues=num_eigvalues, tol=1e-9)
+    eigvecs = np.zeros((N, num_eigvalues))
+    eigvecs[bu] = eigvecsu
+    return dict(eigvals=eigvals, eigvecs=eigvecs, num_elements=num_elements,
+                thetamesh=thetamesh, zmesh=zmesh)
+</pre></div>
+</div>
+</div>
+</section>
+<section id="1.-Laminated-cylinders-Z11-and-Z33">
+<h2>1. Laminated cylinders Z11 and Z33<a class="headerlink" href="#1.-Laminated-cylinders-Z11-and-Z33" title="Link to this heading">#</a></h2>
+<p>The geometry, <span class="math notranslate nohighlight">\(R = 250\)</span> mm, <span class="math notranslate nohighlight">\(H = 510\)</span> mm and the ply thickness 0.125 mm, and the stacking sequences, from inwards to outwards, are those of Table 4 of Castro et al. (2014, p. 307), the material Geier1997 that of their Table 3, and the shear correction factor 5/6 that of their Sec. 6, which <code class="docutils literal notranslate"><span class="pre">laminated_plate(...,</span> <span class="pre">shear_correction='constant')</span></code> applies. The element normal points outwards, so the plies are listed from the bottom to the top of the laminate:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>R = 0.250 # m
+L = 0.510 # m
+stacks = {
+    'Z11': [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37],
+    'Z33': [0, 0, 19, -19, 37, -37, 45, -45, 51, -51],
+}
+# Geier1997, Table 3 of Castro et al. (2014)
+E11, E22, nu12 = 123.55e9, 8.708e9, 0.319
+G12, G13, G23 = 5.695e9, 5.695e9, 3.400e9
+plyt = 0.125e-3
+laminaprop = (E11, E22, nu12, G12, G13, G23)
+props = {cyl: laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop,
+                              shear_correction='constant')
+         for cyl, stack in stacks.items()}
+</pre></div>
+</div>
+</div>
+<section id="Boundary-conditions-and-load">
+<h3>Boundary conditions and load<a class="headerlink" href="#Boundary-conditions-and-load" title="Link to this heading">#</a></h3>
+<p>The boundary condition CC2 of Table 1 of Castro et al. (2014, p. 304) is <span class="math notranslate nohighlight">\(v =
+w = w_{,x} = 0\)</span> at both edges, with the axial displacement <span class="math notranslate nohighlight">\(u\)</span> free: the radial and circumferential translations and the rotation about the circumferential direction are held, dofs 0, 1 and 4 in cylindrical coordinates.</p>
+<p>The torque is <span class="math notranslate nohighlight">\(T = -2 \pi R^2 N_{x\theta}\)</span>, Eq. (13) of the paper (p. 305): in their Fig. 1 a positive torque gives a negative shear resultant. The sign matters, because it changes the buckling load of an unsymmetric laminate. A reference <span class="math notranslate nohighlight">\(N_{xy} = -1000/(2 \pi R)\)</span> N/m is applied, and the critical torque is <span class="math notranslate nohighlight">\(T_{cr} = -\lambda_1 N_{xy} 2 \pi R^2\)</span>.</p>
+</section>
+<section id="The-reference-values">
+<h3>The reference values<a class="headerlink" href="#The-reference-values" title="Link to this heading">#</a></h3>
+<p>The paper does not tabulate the torsional buckling load. The references are the intercepts with the zero axial load axis, i.e. pure torsion, of the FSDT-BC2 curves of its Fig. 13 (p. 311, combined torsion and axial compression, CC2), read off the figure to about 0.1 kNm: <span class="math notranslate nohighlight">\(T = +16.8\)</span> kNm for Z11 and <span class="math notranslate nohighlight">\(+9.2\)</span> kNm for Z33 (the negative torques, <span class="math notranslate nohighlight">\(-15.8\)</span> and <span class="math notranslate nohighlight">\(-9.5\)</span> kNm, differ because the laminates are unsymmetric). These curves come from the semi-analytical model of the paper,
+with the first-order shear deformation theory.</p>
+</section>
+<section id="Convergence">
+<h3>Convergence<a class="headerlink" href="#Convergence" title="Link to this heading">#</a></h3>
+<p>The torsional buckling loads come in close pairs, so six load multipliers are requested: with fewer, the eigensolver may miss members of these clusters, which the verification of <code class="docutils literal notranslate"><span class="pre">linear_buckling</span></code> would report as an error:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>T_ref = {'Z11': 16.8e3, 'Z33': 9.2e3}
+Nxy = -1000/(2*np.pi*R)
+CC2 = (0, 1, 4)
+NTHETA_LAMINATES = [80, 120, 160]
+conv_lam = {cyl: [] for cyl in stacks}
+print('%-4s %6s %8s %12s %12s %10s %8s' % ('cyl.', 'ntheta', 'elements',
+      'T_cr (Nm)', 'Fig. 13', 'rel. diff.', 'time'))
+for cyl in stacks:
+    for ntheta in NTHETA_LAMINATES:
+        t0 = time.time()
+        res_lam = cylinder_torsion(props[cyl], R, L, ntheta, Nxy, CC2)
+        Tcr = -res_lam['eigvals'][0]*Nxy*2*np.pi*R**2
+        conv_lam[cyl].append((ntheta, Tcr))
+        print('%-4s %6d %8d %12.1f %12.1f %10.3f %7.0fs'
+              % (cyl, ntheta, res_lam['num_elements'], Tcr, T_ref[cyl],
+                 Tcr/T_ref[cyl] - 1, time.time() - t0))
+    print('load multipliers of the finest mesh:', res_lam['eigvals'])
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+cyl. ntheta elements    T_cr (Nm)      Fig. 13 rel. diff.     time
+Z11      80     1920      18775.3      16800.0      0.118       6s
+Z11     120     4560      17549.9      16800.0      0.045      18s
+Z11     160     8000      17162.8      16800.0      0.022      38s
+load multipliers of the finest mesh: [68.65123648 68.65123648 70.06778722 70.06778722 71.30042041 71.30042041]
+Z33      80     1920      10791.0       9200.0      0.173       6s
+Z33     120     4560       9882.6       9200.0      0.074      19s
+Z33     160     8000       9544.5       9200.0      0.037      39s
+load multipliers of the finest mesh: [38.17802953 38.17802953 38.39505825 38.39505825 39.35266953 39.35266953]
+</pre></div></div>
+</div>
+<p>The element converges from above, approximately as the square of the element size. Extrapolating with <span class="math notranslate nohighlight">\(T_{cr}(n_\theta) = T_\infty + c\, n_\theta^{-2}\)</span>, fitted to the two finest meshes:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>print('%-4s %16s %12s %10s' % ('cyl.', 'T_inf (Nm)', 'Fig. 13', 'rel. diff.'))
+for cyl, values in conv_lam.items():
+    (n1, T1), (n2, T2) = values[-2:]
+    c = (T1 - T2)/(n1**-2. - n2**-2.)
+    T_inf = T2 - c*n2**-2.
+    print('%-4s %16.1f %12.1f %10.3f' % (cyl, T_inf, T_ref[cyl],
+                                         T_inf/T_ref[cyl] - 1))
+
+fig, ax = plt.subplots()
+for cyl, values in conv_lam.items():
+    ntheta, Tcr = np.array(values).T
+    ax.plot(ntheta**-2., Tcr/1e3, 'o-', label=cyl)
+    ax.axhline(T_ref[cyl]/1e3, ls='--', color=ax.lines[-1].get_color(), lw=0.8)
+ax.set_xlim(left=0)
+ax.set_xlabel(r'$n_\theta^{-2}$')
+ax.set_ylabel(r'$T_{cr}$ (kNm)')
+ax.set_title('dashed: intercepts of Fig. 13 of Castro et al. (2014)')
+ax.legend()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+cyl.       T_inf (Nm)      Fig. 13 rel. diff.
+Z11           16665.2      16800.0     -0.008
+Z33            9109.8       9200.0     -0.010
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_ex_linear_buckling_cylinder_torsion_11_1.png" src="../_images/notebooks_ex_linear_buckling_cylinder_torsion_11_1.png" />
+</div>
+</div>
+<p>The extrapolated torques are within about 1 % of the values read off the figure, which is the precision with which the figure can be read.</p>
+</section>
+<section id="Buckling-mode">
+<h3>Buckling mode<a class="headerlink" href="#Buckling-mode" title="Link to this heading">#</a></h3>
+<p>The radial displacement of the first mode of Z33, on the finest mesh, on the unrolled surface: inclined buckles crossing the whole length, the pattern of torsional buckling:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ur = res_lam['eigvecs'][0::DOF, 0].reshape(res_lam['zmesh'].shape)
+fig, ax = plt.subplots(figsize=(9, 3))
+ax.contourf(np.degrees(res_lam['thetamesh']), res_lam['zmesh']*1e3, ur,
+            levels=12, cmap='coolwarm')
+ax.set_xlabel(r'$\theta$ (degrees)')
+ax.set_ylabel('$z$ (mm)')
+ax.set_title('Z33, first buckling mode, $u_r$')
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_ex_linear_buckling_cylinder_torsion_13_0.png" src="../_images/notebooks_ex_linear_buckling_cylinder_torsion_13_0.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="2.-Isotropic-cylinder">
+<h2>2. Isotropic cylinder<a class="headerlink" href="#2.-Isotropic-cylinder" title="Link to this heading">#</a></h2>
+<p>An isotropic cylinder with <span class="math notranslate nohighlight">\(R = 250\)</span> mm, <span class="math notranslate nohighlight">\(L = 4 R\)</span>, <span class="math notranslate nohighlight">\(t = 4\)</span> mm, <span class="math notranslate nohighlight">\(E = 70\)</span> GPa and <span class="math notranslate nohighlight">\(\nu = 0.3\)</span>. Its simply supported edges, those of Batdorf et al. (1947, p. 8), are <span class="math notranslate nohighlight">\(w = w_{,xx} = v = 0\)</span> with <span class="math notranslate nohighlight">\(u\)</span> unrestrained: only the radial and circumferential translations are held, dofs 0 and 1 in cylindrical coordinates. The critical shear stress of Batdorf, Stein and Schildcrout (1947, p. 3) is</p>
+<div class="math notranslate nohighlight">
+\[\tau_{cr} = k_s \frac{\pi^2 D}{L^2 t}, \qquad
+k_s = 0.85 Z^{3/4}, \qquad
+Z = \frac{L^2}{R t} \sqrt{1 - \nu^2}\]</div>
+<p>the straight-line approximation of their Galerkin solution, valid for <span class="math notranslate nohighlight">\(100 &lt;
+Z &lt; 10 R^2/t^2\)</span> (p. 4); with the correlation factor set to one it is Eq. (25) of NASA SP-8007 (1968, Sec. 4.2.4, p. 11). The critical shear resultant is <span class="math notranslate nohighlight">\(N_{xy,cr} = \tau_{cr} t\)</span>; with the reference <span class="math notranslate nohighlight">\(N_{xy} = -1\)</span> N/m the load multiplier is <span class="math notranslate nohighlight">\(N_{xy,cr}\)</span> in N/m:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>Ei, nui = 70.e9, 0.3
+Ri = 0.250
+Li = 4*Ri
+ti = 0.004
+Di = Ei*ti**3/(12*(1 - nui**2))
+Z = Li**2/(Ri*ti)*np.sqrt(1 - nui**2)
+k_s = 0.85*Z**0.75
+Nxy_ref = k_s*np.pi**2*Di/Li**2
+print('Z = %.1f (validity: 100 &lt; Z &lt; %.0f), k_s = %.2f, N_xy,cr = %.1f N/m'
+      % (Z, 10*Ri**2/ti**2, k_s, Nxy_ref))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Z = 953.9 (validity: 100 &lt; Z &lt; 39062), k_s = 145.90, N_xy,cr = 590764.7 N/m
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>prop_iso = isotropic_plate(thickness=ti, E=Ei, nu=nui)
+NTHETA_ISOTROPIC = [64, 96, 128]
+print('%6s %8s %14s %14s %10s %8s' % ('ntheta', 'elements', 'N_xy,cr (N/m)',
+      'Batdorf', 'rel. diff.', 'time'))
+for ntheta in NTHETA_ISOTROPIC:
+    t0 = time.time()
+    res_iso = cylinder_torsion(prop_iso, Ri, Li, ntheta, -1., (0, 1),
+                               num_eigvalues=4)
+    Ncr = res_iso['eigvals'][0]
+    print('%6d %8d %14.1f %14.1f %10.3f %7.0fs'
+          % (ntheta, res_iso['num_elements'], Ncr, Nxy_ref, Ncr/Nxy_ref - 1,
+             time.time() - t0))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+ntheta elements  N_xy,cr (N/m)        Batdorf rel. diff.     time
+    64     2560       613634.3       590764.7      0.039      10s
+    96     5760       595504.0       590764.7      0.008      34s
+   128    10240       589342.8       590764.7     -0.002      73s
+</pre></div></div>
+</div>
+<p>Here <span class="math notranslate nohighlight">\(Z = 954\)</span>, and the element converges to slightly below the formula. The formula is a straight-line fit of Batdorf’s Galerkin solution of a Donnell-type equation: Table 1, p. 20, of the same report gives <span class="math notranslate nohighlight">\(k_s = 153.0\)</span> at <span class="math notranslate nohighlight">\(Z = 1000\)</span> in the second approximation, 1.2 % above the 151.2 of the straight line, so a difference of the order of 1 % is within the accuracy of the formula itself.</p>
+</section>
+<section id="References">
+<h2>References<a class="headerlink" href="#References" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Batdorf, S. B., Stein, M. and Schildcrout, M., Critical stress of thin-walled cylinders in torsion, NACA TN 1344, 1947.</p></li>
+<li><p>Castro, S. G. P., Mittelstedt, C., Monteiro, F. A. C., Arbelo, M. A., Ziegmann, G. and Degenhardt, R., Linear buckling predictions of unstiffened laminated composite cylinders and cones under various loading and boundary conditions using semi-analytical models, Composite Structures, 118, 303-315, 2014. <a class="reference external" href="https://doi.org/10.1016/j.compstruct.2014.07.037">https://doi.org/10.1016/j.compstruct.2014.07.037</a></p></li>
+<li><p>NASA SP-8007, Buckling of thin-walled circular cylinders, 1965, revised</p>
+<ol class="arabic simple" start="1968">
+<li></li>
+</ol>
+</li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="ex_linear_buckling_column.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Linear buckling analysis of a column</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="ex_natural_frequency_plate.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Natural frequency analysis of a plate</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#The-model">The model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Laminated-cylinders-Z11-and-Z33">1. Laminated cylinders Z11 and Z33</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Boundary-conditions-and-load">Boundary conditions and load</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#The-reference-values">The reference values</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Convergence">Convergence</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Buckling-mode">Buckling mode</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Isotropic-cylinder">2. Isotropic cylinder</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#References">References</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/notebooks/ex_linear_buckling_cylinder_torsion.nblink.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

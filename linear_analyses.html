@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Linear static analyses &#8212; pyfe3d 0.12.0 documentation</title>
+    <title>Linear static analyses &#8212; pyfe3d 0.12.1 documentation</title>
   
   
   
@@ -26,19 +26,19 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
+    <script src="_static/documentation_options.js?v=c5b435e8"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -49,7 +49,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Inertia relief" href="inertia_relief.html" />
-    <link rel="prev" title="Cross-sectional analysis of beams" href="cross_sectional_analysis.html" />
+    <link rel="prev" title="Boundary conditions and prescribed displacements" href="boundary_conditions.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -101,7 +101,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
   
 </a></div>
     
@@ -165,7 +165,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
-    Shell and beam properties
+    Shell properties
   </a>
 </li>
 
@@ -178,8 +178,92 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
     Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
   </a>
 </li>
 
@@ -206,6 +290,34 @@
 
 
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
   </a>
@@ -213,64 +325,162 @@
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_static.html">
     Linear static analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_beam_frame.html">
     Linear static analysis of beams and frames
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_column.html">
     Linear buckling analysis of a column
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_plate.html">
     Natural frequency analysis of a plate
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/ex_nonlinear_static.html">
     Non-linear static analysis with pyfe3d.solver
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
   </a>
 </li>
 
@@ -328,14 +538,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -355,7 +565,7 @@
   
 
   
-    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -369,7 +579,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -415,7 +625,84 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
-    Shell and beam properties
+    Shell properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_formulation.html">
+    Shell elements: kinematics and formulation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4.html">
+    Quad4: assumed transverse shear strains (MITC4)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_quad4r.html">
+    Quad4R: one-point integration and hourglass control
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3dsg.html">
+    Tria3DSG: the discrete shear gap triangle
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_tria3r.html">
+    Tria3R: discrete shear gap with the Allman membrane
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_drilling.html">
+    Drilling rotations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_mass.html">
+    Mass matrices of the shells
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_theory.html">
+    Beam theory and the beam elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="beam_properties.html">
+    Beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="truss_spring.html">
+    Truss and spring elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="corotational_formulation.html">
+    Co-rotational formulation for large rotations
   </a>
 </li>
 
@@ -423,6 +710,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
     Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="boundary_conditions.html">
+    Boundary conditions and prescribed displacements
   </a>
 </li>
 
@@ -449,6 +743,34 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="newton_raphson_method.html">
+    The Newton-Raphson method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="arc_length_methods.html">
+    Arc-length methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="convergence_criteria.html">
+    Convergence criteria
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration_dependent_loads.html">
+    Load- and configuration-dependent loads
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
   </a>
@@ -456,64 +778,162 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_static.html">
+  <a class="nav-link nav-internal" href="eigenvalue_solvers.html">
+    Eigenvalue solvers and their verification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_static.html">
     Linear static analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_beam_frame.html">
     Linear static analysis of beams and frames
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_column.html">
     Linear buckling analysis of a column
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_plate.html">
     Natural frequency analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+  <a class="nav-link nav-internal" href="notebooks/ex_nonlinear_static.html">
     Non-linear static analysis with pyfe3d.solver
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-GA.html">
+    Tutorial: Ply tailoring using GA for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.html">
+    Tutorial: Ply tailoring using SLSQP for a simply-supported plate under normal load
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-opt-topology.html">
+    Tutorial: topology optimisation using pyfe3d
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-timoshenko-beam-benchmarks.html">
+    Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-shell-lumped-mass.html">
+    Tutorial: lumped mass matrices of the shells with an offset
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-macneal-harder.html">
+    Benchmark: MacNeal-Harder standard problems for the shell elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-bench-shell-obstacle-course.html">
+    Benchmark: shell obstacle course
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nonlinear-benchmarks.html">
+    Tutorial: geometrically non-linear benchmarks with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-corotational-large-rotations.html">
+    Tutorial: large rotations with the co-rotational kinematics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-cantilever.html">
+    Tutorial: prescribed displacement at the tip of a cantilever
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-prescribed-displacement-dome-riks.html">
+    Tutorial: shells pressed down by a prescribed displacement, Riks’ method
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-nafems-cap-axisymmetric.html">
+    Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief.html">
+    Tutorial: static analysis with inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="notebooks/tut-inertia-relief-aircraft-ha144a.html">
+    Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A
   </a>
 </li>
 
@@ -559,14 +979,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -623,7 +1043,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Linear static analyses</span></li>
@@ -645,92 +1065,143 @@
                   
   <section id="linear-static-analyses">
 <h1>Linear static analyses<a class="headerlink" href="#linear-static-analyses" title="Link to this heading">#</a></h1>
-<p>A linear static analysis solves <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{f}\)</span> for the
-dofs whose displacements are unknown, with the matrix <code class="docutils literal notranslate"><span class="pre">KC0</span></code> assembled as
-in <a class="reference internal" href="overview.html"><span class="doc">Overview and workflow</span></a>. This page gives the partition of the dofs, with zero or
-prescribed displacements, the reactions, and the solvers.</p>
-<section id="partition-of-the-dofs">
-<h2>Partition of the dofs<a class="headerlink" href="#partition-of-the-dofs" title="Link to this heading">#</a></h2>
-<p>At each dof either the load or the displacement is known. The Boolean array
-<code class="docutils literal notranslate"><span class="pre">bu</span></code> marks the free dofs, <span class="math notranslate nohighlight">\(u\)</span>, whose displacements are unknown, and its
-complement <code class="docutils literal notranslate"><span class="pre">bk</span> <span class="pre">=</span> <span class="pre">~bu</span></code> the known ones, <span class="math notranslate nohighlight">\(k\)</span>, with the prescribed
-displacements <code class="docutils literal notranslate"><span class="pre">uk[bk]</span></code>, <span class="math notranslate nohighlight">\(\boldsymbol{u}_k\)</span>, zero at a fixed support. Bathe (2014,
-Sec. 4.2.2, Eqs. (4.42) to (4.45)) writes the same partition with other
-subscripts. Without reordering the dofs, the system reads</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{bmatrix} \boldsymbol{K}_{{C0}_{uu}} &amp; \boldsymbol{K}_{{C0}_{uk}} \\
-                \boldsymbol{K}_{{C0}_{ku}} &amp; \boldsymbol{K}_{{C0}_{kk}} \end{bmatrix}
-\begin{Bmatrix} \boldsymbol{u}_u \\ \boldsymbol{u}_k \end{Bmatrix}
-=
-\begin{Bmatrix} \boldsymbol{f}_u \\ \boldsymbol{f}_k + \boldsymbol{R}_k \end{Bmatrix}\end{split}\]</div>
-<p>with <span class="math notranslate nohighlight">\(\boldsymbol{f}_k\)</span> the loads applied at the known dofs and <span class="math notranslate nohighlight">\(\boldsymbol{R}_k\)</span> the
-unknown reactions. The first row gives the system of the free dofs, where
-the prescribed displacements act as the forces <span class="math notranslate nohighlight">\(-\boldsymbol{K}_{{C0}_{uk}}
-\boldsymbol{u}_k\)</span>, and the second row the reactions:</p>
-<div class="math notranslate nohighlight">
-\[\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u = \boldsymbol{f}_u - \boldsymbol{K}_{{C0}_{uk}} \boldsymbol{u}_k,
+<p>A linear static analysis assumes small displacements and rotations, a
+linear elastic material and loads that do not change with the
+deformation. The equilibrium is then a single linear system, solved in one
+step, which is also the first iteration of every non-linear analysis. This
+page derives the system, describes how pyfe3d solves it and checks its
+matrix, and treats the case of a load that depends on the configuration of
+a structure that otherwise remains linear.</p>
+<section id="the-linear-static-system">
+<h2>The linear static system<a class="headerlink" href="#the-linear-static-system" title="Link to this heading">#</a></h2>
+<p>The total potential energy of an elastic body under dead loads, <span class="math notranslate nohighlight">\(V = U -
+W_{ext}\)</span>, is stationary at equilibrium, <span class="math notranslate nohighlight">\(\delta V = \delta U - \delta
+W_{ext} = 0\)</span>. With the linear strains of the elements, <span class="math notranslate nohighlight">\(\boldsymbol{\varepsilon}
+= \boldsymbol{B}_L \boldsymbol{u}\)</span>, the stresses <span class="math notranslate nohighlight">\(\boldsymbol{\sigma} = \boldsymbol{C}
+\boldsymbol{\varepsilon}\)</span> and the displacement field interpolated from the nodal
+dofs <span class="math notranslate nohighlight">\(\boldsymbol{u}\)</span>, the first variation must vanish for every
+<span class="math notranslate nohighlight">\(\delta \boldsymbol{u}\)</span>, which gives</p>
+<div class="math notranslate nohighlight" id="equation-ls-system">
+<span class="eqno">(1)<a class="headerlink" href="#equation-ls-system" title="Link to this equation">#</a></span>\[\boldsymbol{R} = \boldsymbol{F}_{int} - \boldsymbol{F}_{ext} = \boldsymbol{K}_{C0} \boldsymbol{u} - \boldsymbol{F}_{ext} = \boldsymbol{0},
 \qquad
-\boldsymbol{R}_k = \boldsymbol{K}_{{C0}_{ku}} \boldsymbol{u}_u + \boldsymbol{K}_{{C0}_{kk}} \boldsymbol{u}_k
-- \boldsymbol{f}_k\]</div>
-<p>which, with SciPy:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">KC0uu</span> <span class="o">=</span> <span class="n">KC0</span><span class="p">[</span><span class="n">bu</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">bu</span><span class="p">]</span>
-<span class="n">KC0uk</span> <span class="o">=</span> <span class="n">KC0</span><span class="p">[</span><span class="n">bu</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">bk</span><span class="p">]</span>
-<span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
-<span class="n">u</span><span class="p">[</span><span class="n">bk</span><span class="p">]</span> <span class="o">=</span> <span class="n">uk</span><span class="p">[</span><span class="n">bk</span><span class="p">]</span>
-<span class="n">u</span><span class="p">[</span><span class="n">bu</span><span class="p">]</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="n">f</span><span class="p">[</span><span class="n">bu</span><span class="p">]</span> <span class="o">-</span> <span class="n">KC0uk</span> <span class="o">@</span> <span class="n">uk</span><span class="p">[</span><span class="n">bk</span><span class="p">])</span>
-<span class="n">Rk</span> <span class="o">=</span> <span class="n">KC0</span><span class="p">[</span><span class="n">bk</span><span class="p">,</span> <span class="p">:]</span> <span class="o">@</span> <span class="n">u</span> <span class="o">-</span> <span class="n">f</span><span class="p">[</span><span class="n">bk</span><span class="p">]</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">KC0[bk,</span> <span class="pre">:]</span> <span class="pre">&#64;</span> <span class="pre">u</span></code> is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{ku}} \boldsymbol{u}_u + \boldsymbol{K}_{{C0}_{kk}}
-\boldsymbol{u}_k\)</span>, the internal forces at the known dofs, which <code class="docutils literal notranslate"><span class="pre">update_fint</span></code> of
-the elements also gives, <span class="math notranslate nohighlight">\(\boldsymbol{F}_{{int}_k} - \boldsymbol{f}_k\)</span>, see step 7 of
-<a class="reference internal" href="overview.html"><span class="doc">Overview and workflow</span></a>. For fixed supports, <code class="docutils literal notranslate"><span class="pre">uk</span></code> is zero and the system is
-<span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u = \boldsymbol{f}_u\)</span>. The same partition gives the
-matrices of the eigenvalue analyses, see <a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>.</p>
+\boldsymbol{K}_{C0} = \int_{\Omega} \boldsymbol{B}_L^\top \boldsymbol{C} \boldsymbol{B}_L \, d\Omega\]</div>
+<p>with <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> the linear constitutive stiffness matrix, <code class="docutils literal notranslate"><span class="pre">KC0</span></code>,
+assembled with the <code class="docutils literal notranslate"><span class="pre">update_KC0</span></code> methods of the elements, see
+<a class="reference internal" href="overview.html"><span class="doc">Overview and workflow</span></a>, and <span class="math notranslate nohighlight">\(\boldsymbol{F}_{ext}\)</span> the external force vector, assembled
+by the user. The residual <span class="math notranslate nohighlight">\(\boldsymbol{R}\)</span> keeps the sign convention of the
+non-linear analyses, <span class="math notranslate nohighlight">\(\boldsymbol{R} = \boldsymbol{F}_{int} - \boldsymbol{F}_{ext}\)</span>, whose
+Jacobian is the tangent stiffness matrix, here <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, see
+<a class="reference internal" href="nonlinear_analyses.html"><span class="doc">Non-linear static analyses</span></a>. The linear internal force vector of the
+elements, <code class="docutils literal notranslate"><span class="pre">update_fint(...,</span> <span class="pre">nonlinear=0)</span></code>, is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}
+\boldsymbol{u}\)</span>.</p>
+<p><span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> of an unsupported structure is symmetric and positive
+semi-definite, with the rigid-body modes in its null space. The supports
+are imposed by the partition of <a class="reference internal" href="boundary_conditions.html"><span class="doc">Boundary conditions and prescribed displacements</span></a>, which gives the
+system of the free dofs, Eq. <a class="reference internal" href="boundary_conditions.html#equation-bc-free">(2)</a>,</p>
+<div class="math notranslate nohighlight" id="equation-ls-free">
+<span class="eqno">(2)<a class="headerlink" href="#equation-ls-free" title="Link to this equation">#</a></span>\[\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u = \boldsymbol{F}_{{ext}_u} - \boldsymbol{K}_{{C0}_{uk}} \bar{\boldsymbol{u}}_k\]</div>
+<p>whose matrix is positive definite when the supports suppress every
+rigid-body mode (Bathe 2014, Sec. 8.2.5, pp. 726-727), and the reactions,
+Eq. <a class="reference internal" href="boundary_conditions.html#equation-bc-reactions">(3)</a>. A structure that has no supports is solved with
+inertia relief, see <a class="reference internal" href="inertia_relief.html"><span class="doc">Inertia relief</span></a>.</p>
+<p>Constant terms that are not proportional to the displacements of the
+analysis belong to the matrix: e.g. the geometric stiffness matrix of a
+known preload, <code class="docutils literal notranslate"><span class="pre">KC0uu</span> <span class="pre">+</span> <span class="pre">KG0uu</span></code>, see <a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>, or the
+aerodynamic stiffness matrix of the piston theory of <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> and
+<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>; a follower load affine in the displacements,
+<span class="math notranslate nohighlight">\(\boldsymbol{F}(\boldsymbol{u}) = \boldsymbol{F}_0 - \boldsymbol{K}_F \boldsymbol{u}\)</span>, gives the unsymmetric
+system <span class="math notranslate nohighlight">\((\boldsymbol{K}_{C0} + \boldsymbol{K}_F) \boldsymbol{u} = \boldsymbol{F}_0\)</span>, see
+<a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a> and <a class="reference internal" href="configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent loads</span></a>.</p>
 </section>
 <section id="solvers">
 <h2>Solvers<a class="headerlink" href="#solvers" title="Link to this heading">#</a></h2>
+<p>Three functions solve the system <a class="reference internal" href="#equation-ls-free">(2)</a>:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="solver_static.html#pyfe3d.solver.static.solve" title="pyfe3d.solver.static.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">solve()</span></code></a> solves a sparse system with an LU factorization and
-raises an error for a singular matrix, where
-<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.spsolve()</span></code> returns NaN values.</p></li>
-<li><p><a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a> solves <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">&#64;</span> <span class="pre">u</span> <span class="pre">=</span> <span class="pre">fext</span></code> of the free dofs, checks
-that a symmetric <code class="docutils literal notranslate"><span class="pre">K</span></code> is positive definite and returns <code class="docutils literal notranslate"><span class="pre">[1.]</span></code> and
-<code class="docutils literal notranslate"><span class="pre">[u]</span></code>, the outputs of <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="solver_static.html#pyfe3d.solver.static.solve" title="pyfe3d.solver.static.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">solve()</span></code></a> solves a sparse system with the LU factorization of
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.splu()</span></code>, symmetric or not, with a real or
+complex right-hand side, and raises a <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code>
+for a null row or column, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>, or for an
+exactly singular matrix, where <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.spsolve()</span></code> would
+return NaN values;</p></li>
+<li><p><a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a> solves <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">&#64;</span> <span class="pre">u</span> <span class="pre">=</span> <span class="pre">fext</span></code> of the free dofs, after
+checking that a symmetric <code class="docutils literal notranslate"><span class="pre">K</span></code> is positive definite, and returns
+<code class="docutils literal notranslate"><span class="pre">[1.]</span></code> and <code class="docutils literal notranslate"><span class="pre">[u]</span></code>, the outputs of <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a>;</p></li>
 <li><p><a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">NLgeom=False</span></code> solves the same system
-from the callables of a model, see <a class="reference internal" href="nonlinear_analyses.html"><span class="doc">Non-linear static analyses</span></a>, in a single
-increment. With <code class="docutils literal notranslate"><span class="pre">Analysis(...,</span> <span class="pre">bu=bu,</span> <span class="pre">uk=uk)</span></code>, the callables work with
-all the <code class="docutils literal notranslate"><span class="pre">N</span></code> dofs, the system of the free dofs above is formed by
-<a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs.linear_fext" title="pyfe3d.solver.analysis.FreeDofs.linear_fext"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FreeDofs.linear_fext()</span></code></a>, and <code class="docutils literal notranslate"><span class="pre">cs[0]</span></code> has size <code class="docutils literal notranslate"><span class="pre">N</span></code>, with
-<code class="docutils literal notranslate"><span class="pre">uk[bk]</span></code> at the known dofs; the reactions are <code class="docutils literal notranslate"><span class="pre">calc_fint(u)</span> <span class="pre">-</span>
-<span class="pre">calc_fext()</span></code> at the known dofs. A configuration-dependent load is
-corrected by iterations, see <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a>.</p></li>
+from the callables of a model, <code class="docutils literal notranslate"><span class="pre">calc_kC()</span></code> and <code class="docutils literal notranslate"><span class="pre">calc_fext()</span></code>, see
+<a class="reference internal" href="nonlinear_analyses.html"><span class="doc">Non-linear static analyses</span></a>; with <code class="docutils literal notranslate"><span class="pre">Analysis(...,</span> <span class="pre">bu=bu,</span> <span class="pre">uk=uk)</span></code> the
+callables work with all the <code class="docutils literal notranslate"><span class="pre">N</span></code> dofs, the right-hand side of
+<a class="reference internal" href="#equation-ls-free">(2)</a> is formed by <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs.linear_fext" title="pyfe3d.solver.analysis.FreeDofs.linear_fext"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FreeDofs.linear_fext()</span></code></a>, and <code class="docutils literal notranslate"><span class="pre">cs[0]</span></code>
+has size <code class="docutils literal notranslate"><span class="pre">N</span></code>, with <code class="docutils literal notranslate"><span class="pre">uk[bk]</span></code> at the known dofs.</p></li>
 </ul>
-<p>The worked example
-<a class="reference internal" href="tut-prescribed-displacement-cantilever.html"><span class="doc">Tutorial: prescribed displacement at the tip of a cantilever</span></a> solves a cantilever with a
-prescribed tip deflection both ways, and <a class="reference internal" href="ex_linear_static.html"><span class="doc">Linear static analysis of a plate</span></a> a plate
-under a point load.</p>
+<p>The check of positive definiteness costs nothing: a symmetric matrix is
+factorized once with a symmetric permutation and without row interchanges,
+<span class="math notranslate nohighlight">\(\boldsymbol{\Pi} \boldsymbol{K} \boldsymbol{\Pi}^\top = \boldsymbol{L} \boldsymbol{D} \boldsymbol{L}^\top\)</span>,
+whose number of negative pivots in <span class="math notranslate nohighlight">\(\boldsymbol{D}\)</span> is the number of negative
+eigenvalues of <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> by Sylvester’s law of inertia, see
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.is_positive_definite" title="pyfe3d.solver.eigen.is_positive_definite"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_positive_definite()</span></code></a>. When all the pivots are positive, the same
+factorization, then that of Cholesky up to the scaling of the rows, gives
+the solution, see <code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.static._solve_linear_static()</span></code>. A
+negative or a zero pivot raises a <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> naming
+the likely causes: insufficient boundary conditions, a mechanism, distorted
+elements, e.g. re-entrant quadrilaterals, or a preload beyond the buckling
+load included in the matrix. An unsymmetric matrix is solved with
+<a class="reference internal" href="solver_static.html#pyfe3d.solver.static.solve" title="pyfe3d.solver.static.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">solve()</span></code></a> without this check.</p>
+<p>The factorization is the cost of the analysis; the reactions,
+Eq. <a class="reference internal" href="boundary_conditions.html#equation-bc-reactions">(3)</a>, and the element forces of the post-processing,
+<code class="docutils literal notranslate"><span class="pre">update_probe_ue</span></code> and <code class="docutils literal notranslate"><span class="pre">update_fint</span></code> of the elements, are products by
+the assembled matrices or loops over the elements.</p>
 </section>
-<section id="errors-of-the-supports">
-<h2>Errors of the supports<a class="headerlink" href="#errors-of-the-supports" title="Link to this heading">#</a></h2>
-<p>The solvers of <a class="reference internal" href="solver.html#module-pyfe3d.solver" title="pyfe3d.solver"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code></a> do not remove null rows and columns: a
-dof left without stiffness, e.g. an unattached node, an unstiffened
-drilling rotation or a missing boundary condition, raises a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> naming the dofs, see
-<a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>. Insufficient boundary conditions, a
-mechanism or re-entrant elements leave <span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{uu}}\)</span> not positive
-definite, which <a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a>, <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> and the
-linear <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a> report with a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> naming the likely causes, see
-<a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>. A structure that has no supports, e.g. in
-flight, is solved with <a class="reference internal" href="solver_inertia_relief.html#pyfe3d.solver.inertia_relief.apply_inertia_relief" title="pyfe3d.solver.inertia_relief.apply_inertia_relief"><code class="xref py py-func docutils literal notranslate"><span class="pre">apply_inertia_relief()</span></code></a>, whose reference support is
-a set of prescribed null displacements, see <a class="reference internal" href="inertia_relief.html"><span class="doc">Inertia relief</span></a>.</p>
+<section id="loads-that-depend-on-the-configuration">
+<h2>Loads that depend on the configuration<a class="headerlink" href="#loads-that-depend-on-the-configuration" title="Link to this heading">#</a></h2>
+<p>A load whose direction or magnitude follows the deformation, e.g. a
+pressure normal to the deformed surface, makes the equilibrium of a
+structure that is otherwise linear, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} \boldsymbol{u} =
+\boldsymbol{F}_{ext}(\boldsymbol{u})\)</span>, a non-linear system. When <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code>
+declares the keyword argument <code class="docutils literal notranslate"><span class="pre">c</span></code>, see
+<a class="reference internal" href="configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent loads</span></a>, <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a> with
+<code class="docutils literal notranslate"><span class="pre">NLgeom=False</span></code> solves it with the load correction iterations</p>
+<div class="math notranslate nohighlight" id="equation-ls-load-correction">
+<span class="eqno">(3)<a class="headerlink" href="#equation-ls-load-correction" title="Link to this equation">#</a></span>\[\boldsymbol{u}_{j+1} = \boldsymbol{u}_j + \boldsymbol{K}_{C0}^{-1} \left( \boldsymbol{F}_{ext}(\boldsymbol{u}_j)
+- \boldsymbol{K}_{C0} \boldsymbol{u}_j \right), \qquad
+\boldsymbol{u}_0 = \boldsymbol{K}_{C0}^{-1} \boldsymbol{F}_{ext}\]</div>
+<p>which start from the solution of the reference load <code class="docutils literal notranslate"><span class="pre">calc_fext()</span></code> and
+reuse one factorization of <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, until the convergence
+criterion of the non-linear solvers is satisfied, see
+<a class="reference internal" href="convergence_criteria.html"><span class="doc">Convergence criteria</span></a>, or <code class="docutils literal notranslate"><span class="pre">maxNumIter</span></code> iterations are done; a
+warning is printed and the last iterate returned when they do not
+converge. This is a fixed-point iteration without the load stiffness in
+the iteration matrix. For a load affine in the displacements,
+<span class="math notranslate nohighlight">\(\boldsymbol{F}_{ext}(\boldsymbol{u}) = \boldsymbol{F}_0 - \boldsymbol{K}_F \boldsymbol{u}\)</span>, its limit is the
+solution of <span class="math notranslate nohighlight">\((\boldsymbol{K}_{C0} + \boldsymbol{K}_F) \boldsymbol{u} = \boldsymbol{F}_0\)</span>, and the
+error is multiplied at each iteration by <span class="math notranslate nohighlight">\(-\boldsymbol{K}_{C0}^{-1} \boldsymbol{K}_F\)</span>,
+whose spectral radius is <span class="math notranslate nohighlight">\(1/\min|\lambda|\)</span> over the load multipliers of
+<span class="math notranslate nohighlight">\((\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_F) \boldsymbol{u} = \boldsymbol{0}\)</span>, negative and complex
+ones included: the iterations converge, linearly, below the load of the
+smallest <span class="math notranslate nohighlight">\(|\lambda|\)</span> and diverge beyond it, see <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a>.
+For an affine load whose <span class="math notranslate nohighlight">\(\boldsymbol{K}_F\)</span> is known, solving the unsymmetric
+system with <a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a> avoids the iterations; with geometric
+non-linearity, the load stiffness enters the tangent stiffness matrix
+instead, see <a class="reference internal" href="configuration_dependent_loads.html"><span class="doc">Load- and configuration-dependent loads</span></a>.</p>
+</section>
+<section id="verification">
+<h2>Verification<a class="headerlink" href="#verification" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tests/test_solver_static.py</span></code> checks <a class="reference internal" href="solver_static.html#pyfe3d.solver.static.solve" title="pyfe3d.solver.static.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">solve()</span></code></a> and
+<a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a> against exact solutions of small systems and the
+deflection of a Ritz plate against the Navier solution of Timoshenko and
+Woinowsky-Krieger (1959), Art. 29;
+<code class="docutils literal notranslate"><span class="pre">tests/test_prescribed_displacement_linear.py</span></code> checks a cantilever with a
+prescribed tip deflection, and <code class="docutils literal notranslate"><span class="pre">tests/test_solver_analysis.py</span></code> and
+<code class="docutils literal notranslate"><span class="pre">tests/test_solver_follower_loads.py</span></code> the linear analysis of
+<a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a> with prescribed displacements and with a
+configuration-dependent load.</p>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Bathe, K. J., Finite Element Procedures, 2nd ed., K. J. Bathe,
 Watertown, MA, 2014.</p></li>
+<li><p>Timoshenko, S. and Woinowsky-Krieger, S., Theory of Plates and Shells,
+2nd ed., McGraw-Hill, 1959.</p></li>
 </ul>
 </section>
 </section>
@@ -746,12 +1217,12 @@ Watertown, MA, 2014.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="cross_sectional_analysis.html"
+       href="boundary_conditions.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Cross-sectional analysis of beams</p>
+        <p class="prev-next-title">Boundary conditions and prescribed displacements</p>
       </div>
     </a>
     <a class="right-next"
@@ -770,7 +1241,7 @@ Watertown, MA, 2014.</p></li>
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -782,9 +1253,10 @@ Watertown, MA, 2014.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#partition-of-the-dofs">Partition of the dofs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-linear-static-system">The linear static system</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solvers">Solvers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#errors-of-the-supports">Errors of the supports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loads-that-depend-on-the-configuration">Loads that depend on the configuration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#verification">Verification</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
   </nav></div>
@@ -811,8 +1283,8 @@ Watertown, MA, 2014.</p></li>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -845,7 +1317,7 @@ Watertown, MA, 2014.</p></li>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
 </p></div>
       
     </div>
