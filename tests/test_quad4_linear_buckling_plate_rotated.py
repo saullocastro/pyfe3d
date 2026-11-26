@@ -150,7 +150,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
             
             # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
             #      estimates the Cayley shift and verifies that no lower load
-            #      multiplier was missed, which a hardcoded shift does not
+            #      multiplier was missed
             eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
 
             load_mult = eigvals[0]
