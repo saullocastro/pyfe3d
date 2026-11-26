@@ -19,6 +19,43 @@ the free ones:
 - the piston-theory aerodynamic load of Quad4R, a configuration-dependent
   load with an unsymmetric load stiffness, converges quadratically with the
   unsymmetric tangent stiffness matrix.
+
+Notes
+-----
+Crisfield's criterion ([1]_, Sec. 9.5.4, Eq. 9.48) measures the residual
+`\boldsymbol{R} = \boldsymbol{F}_{int} - \boldsymbol{F}_{ext}` with a norm
+scaled by the diagonal of the linear stiffness matrix, over the free
+degrees-of-freedom:
+
+.. math::
+
+    \zeta = \frac{\|\boldsymbol{R}\|_{\boldsymbol{d}}}{\max\left(
+    \|\boldsymbol{F}_{ext}\|_{\boldsymbol{d}},
+    \|\boldsymbol{F}_{int}\|_{\boldsymbol{d}}\right)}, \qquad
+    \|v\|_{\boldsymbol{d}} = \sqrt{\sum_{j} \frac{v_j^2}{|d_j|}}, \qquad
+    d_j = K_{{C0}_{jj}}
+
+computed here by ``crisfield_weights`` and ``crisfield_zeta`` at the load
+factor 1. Each term `v_j^2/|d_j|` has the units of energy, whether the
+degree-of-freedom `j` is a translation or a rotation, such that `\zeta` does
+not depend on the units of each degree-of-freedom, whereas the Euclidean
+norm of the relative criterion adds the squares of forces and of moments.
+The components of the residual at the constrained degrees-of-freedom are
+the support reactions, not an imbalance, hence the norms over the free ones
+only.
+
+The tangent stiffness matrix `\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL} +
+\boldsymbol{K}_G` of ``calc_kC`` and ``calc_kG`` is the exact Jacobian of
+the internal force vector of ``update_fint(..., nonlinear=1)``, such that
+the Newton-Raphson iterations converge quadratically, `\zeta_{i+1} \sim
+\zeta_i^2` ([1]_, Sec. 1.2.2, p. 9). The tests check it as
+``z1 < max(10*z0**1.8, 1e-11)`` for every pair of consecutive `\zeta` with
+``z0 < 1e-2``, i.e. in the asymptotic range and until round-off.
+
+References
+----------
+.. [1] Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+   Structures, Volume 1: Essentials, John Wiley & Sons, Chichester, 1991.
 """
 import sys
 sys.path.append('..')
@@ -160,7 +197,17 @@ def rotation_scaling(N, s):
     ('beam', 'BeamC')])
 def test_newton_raphson_reproduces_the_hand_written_loop(kind, name):
     r"""A single increment at the full load, as the hand-written loop, gives
-    the same solution, with the quadratic convergence of `\zeta`"""
+    the same solution, with the quadratic convergence of `\zeta`
+
+    Notes
+    -----
+    Both solve the same residual from the undeformed state with the same
+    tangent stiffness matrix, `\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL} +
+    \boldsymbol{K}_G`, the exact Jacobian of the internal force vector, such
+    that `\zeta_{i+1} \sim \zeta_i^2` near the solution, see the module
+    documentation: the decay is checked as
+    ``z1 < max(10*z0**1.8, 1e-11)`` when ``z0 < 1e-2``.
+    """
     elements, data, prop, x, N, bu, fext, deflection = (
         plate(name) if kind == 'plate' else beam(name))
     u_linear, u_ref, residuals = solve_by_hand(elements, data, prop, x, N,
@@ -190,10 +237,27 @@ def test_newton_raphson_reproduces_the_hand_written_loop(kind, name):
     pytest.param('plate', 'Quad4R', marks=pytest.mark.slow),
     ('beam', 'BeamC')])
 def test_crisfield_criterion_units_invariance(kind, name):
-    r"""Measuring the rotations in other units, `\theta' = s \theta`, i.e.
-    the moments `M' = M/s` and the stiffnesses `K' = S^{-1} K S^{-1}`, does
-    not change Crisfield's `\zeta`, hence neither the number of iterations
-    nor the increments, whereas it changes the relative criterion"""
+    r"""Measuring the rotations in other units, `\theta' = s \theta`, does
+    not change Crisfield's `\zeta`, the number of calls of ``calc_fint``,
+    the increments and the deflection, whereas it changes the number of
+    calls of ``calc_fint`` of the relative criterion
+
+    With the rotations in micro-units, ``s = 1e-6``, the relative criterion
+    converges, in the four increments of Crisfield's criterion, with 18
+    instead of 20 calls of ``calc_fint`` for the plate and 20 instead of 19
+    for the beam: the margin of the last assertion is 2 and 1 calls.
+
+    Notes
+    -----
+    With `\theta' = s \theta` the moments become `M' = M/s` and the
+    stiffnesses `K' = S^{-1} K S^{-1}`, with `S` of ``rotation_scaling``:
+    a component of the residual at a rotation becomes `R_j/s` and its
+    diagonal stiffness `d_j/s^2`, such that every term `R_j^2/|d_j|` of the
+    scaled norms, hence `\zeta`, is unchanged. The Euclidean norm of the
+    residual mixes forces and moments: with the rotations in micro-units
+    the moments dominate it, and the relative criterion, with its round-off
+    floor, needs another number of iterations.
+    """
     elements, data, prop, x, N, bu, fext, deflection = (
         plate(name) if kind == 'plate' else beam(name))
     results = {}
@@ -221,25 +285,27 @@ def test_crisfield_criterion_units_invariance(kind, name):
         #     e.g. 4e-13 differing by 1.8e-13 on macOS with Python 3.9
         np.testing.assert_allclose(zetas, zetas0, rtol=1.e-5, atol=1.e-11)
         assert np.isclose(w, w0, rtol=1.e-7)
-    # NOTE the Euclidean norm of the residual mixes forces and moments: with
-    #      the rotations in micro-units the moments dominate it, and the
-    #      relative criterion needs another number of iterations. With the
-    #      round-off floor of the criteria it converges, in the four
-    #      increments of Crisfield's criterion, with 18 instead of 20 calls of
-    #      calc_fint for the plate and 20 instead of 19 for the beam: the
-    #      margin of the assertion below is 2 and 1 calls
+    # NOTE relative criterion: another number of calls of calc_fint with the
+    #      rotations in micro-units, with a margin of 2 and 1 calls
     calls = [results['relative', s][1] for s in SCALES]
     assert results['relative', 1.][0][-1] == 1.
     assert calls[-1] != calls[0], calls
 
 
 def test_crisfield_criterion_free_dofs_only():
-    r"""The residual at the constrained degrees-of-freedom is the support
-    reaction: included in the norms it keeps `\zeta` of the order of one,
-    over the free degrees-of-freedom it is below the tolerance. The same
-    model with the constrained rows and columns zeroed instead of ``bu``
-    raises an error naming the constrained degrees-of-freedom, whose null
-    rows and columns are not removed by the solvers"""
+    r"""At the converged solution, `\zeta` over the free degrees-of-freedom
+    is below the tolerance, ``1e-9``, and `\zeta` with the constrained ones
+    included in the norms is above 0.1. The same model with the constrained
+    rows and columns zeroed instead of ``bu`` raises an error naming the
+    constrained degrees-of-freedom, whose null rows and columns are not
+    removed by the solvers
+
+    Notes
+    -----
+    The residual at the constrained degrees-of-freedom is the support
+    reaction, not an imbalance: included in the norms it keeps `\zeta` of
+    the order of one.
+    """
     elements, data, prop, x, N, bu, fext, deflection = plate('Quad4R')
     model = Model(elements, data, prop, x, N, fext)
     an = model.analysis(bu, initialInc=1., relTOL=1.e-9)
@@ -304,7 +370,18 @@ def point_loaded_plate():
 def test_prescribed_displacement_and_reaction(NL_method):
     r"""Displacement control: the central deflection of the load-controlled
     analysis, prescribed with ``uk``, gives the same displacement field and
-    a reaction equal to the load"""
+    a reaction equal to the load, and reactions per unit of prescribed
+    deflection that grow along the increments
+
+    Notes
+    -----
+    With the central deflection prescribed and no external load, the
+    internal force at the prescribed degree-of-freedom is the reaction. The
+    configuration with the deflection ``w_c`` being the equilibrium
+    configuration of the load-controlled analysis under the load ``P``, the
+    reaction equals ``P``. The reaction grows faster than the deflection
+    because of the membrane stiffening of the plate with immovable edges.
+    """
     model, bu, dof, P = point_loaded_plate()
     an = model.analysis(bu, initialInc=0.2, relTOL=1.e-10)
     increments, cs = an.static(NLgeom=True, silent=True)
@@ -329,8 +406,7 @@ def test_prescribed_displacement_and_reaction(NL_method):
     reaction = model.internal_forces(u_disp)[dof]
     print('reaction %.8e, load %.8e' % (reaction, P))
     assert np.isclose(reaction, P, rtol=1.e-6)
-    # NOTE the reaction grows faster than the deflection: membrane
-    #      stiffening
+    # NOTE the reaction grows faster than the deflection
     reactions = [model.internal_forces(u)[dof]/lbd
                  for lbd, u in zip(increments_d, cs_d)]
     assert np.all(np.diff(reactions) > 0)
@@ -358,13 +434,35 @@ def piston_theory_plate():
 
 @pytest.mark.slow
 def test_piston_theory_load_unsymmetric_tangent():
-    r"""The aerodynamic load is configuration-dependent, `\boldsymbol{F}_a(\boldsymbol{u}) =
+    r"""With the piston-theory aerodynamic load in ``calc_fint`` and its
+    unsymmetric load stiffness in ``calc_kC``, Newton-Raphson converges
+    quadratically, the residual of the full model vanishes, the deflection
+    differs from that without the aerodynamic load, and the linear static
+    analysis with ``calc_fext(c=...)`` gives the solution of
+    `(\boldsymbol{K}_{C0} - \beta \boldsymbol{K}_{A_\beta}) \boldsymbol{u} = \boldsymbol{F}`
+
+    Notes
+    -----
+    The aerodynamic load is configuration-dependent, `\boldsymbol{F}_a(\boldsymbol{u}) =
     \lambda \beta \boldsymbol{K}_{A_\beta} \boldsymbol{u}` with the load factor `\lambda`: it
     enters ``calc_fint`` with ``inc`` and its load stiffness `-\lambda \beta
-    \boldsymbol{K}_{A_\beta}`, unsymmetric, enters ``calc_kC``. Newton-Raphson
-    converges quadratically, the residual of the full model vanishes, and
-    the linear static analysis with ``calc_fext(c=...)`` gives the solution
-    of `(\boldsymbol{K}_{C0} - \beta \boldsymbol{K}_{A_\beta}) \boldsymbol{u} = \boldsymbol{F}`"""
+    \boldsymbol{K}_{A_\beta}`, unsymmetric, enters ``calc_kC``, such that the
+    tangent stiffness matrix is the exact Jacobian of the residual
+
+    .. math::
+
+        \boldsymbol{R}(\boldsymbol{u}, \lambda) = \boldsymbol{F}_{int}(\boldsymbol{u})
+        - \lambda \beta \boldsymbol{K}_{A_\beta} \boldsymbol{u}
+        - \lambda \boldsymbol{F}
+
+    and `\zeta_{i+1} \sim \zeta_i^2` near the solution, checked as
+    ``z1 < max(10*z0**1.8, 1e-11)`` when ``z0 < 1e-2``. In the geometrically
+    linear analysis `\boldsymbol{F}_{int} = \boldsymbol{K}_{C0} \boldsymbol{u}`
+    and the load correction iterations of the linear static analysis solve
+    `\boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{F} + \beta
+    \boldsymbol{K}_{A_\beta} \boldsymbol{u}`, the reference of the last
+    assertion.
+    """
     model, bu, BKA, deflection = piston_theory_plate()
     from pyfe3d.solver import is_symmetric
     assert not is_symmetric((model.KC0 - BKA)[bu, :][:, bu])

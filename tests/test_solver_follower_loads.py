@@ -109,14 +109,14 @@ def test_accepts_kwarg():
             pass
     assert callbacks.accepts_kwarg(f, 'inc')
     assert not callbacks.accepts_kwarg(f, 'c_cte')
-    # **kwargs does not count, such that old callables are never surprised
+    # **kwargs does not count: the argument is passed only when named
     assert not callbacks.accepts_kwarg(g, 'inc')
     assert callbacks.accepts_kwarg(A().m, 'inc')
     assert not callbacks.accepts_kwarg(len, 'inc')
 
 
 def test_callables_without_inc_are_called_as_before():
-    """Callables without ``inc`` are called as before, giving the solution
+    """Callables without ``inc`` are called without it, giving the solution
     of the linear system with Newton-Raphson and with Riks' method"""
     calls = []
     def calc_fint(c, silent=True):
@@ -187,10 +187,18 @@ def test_newton_raphson_quadratic_with_follower_load():
 
 
 def test_riks_quadratic_only_with_configuration_load_vector():
-    r"""The bordered system of Riks is the Newton-Raphson method of the
+    r"""Riks' method converges quadratically with the follower load, the
+    measured order of the first step being larger than 1.7, when
+    ``calc_fext`` accepts ``c``; with the constant reference vector the
+    first step needs more iterations
+
+    Notes
+    -----
+    The bordered system of Riks is the Newton-Raphson method of the
     augmented system only when -dR/dlbd = q0 + Q c, i.e. with ``calc_fext``
     accepting ``c``; with the constant reference vector the corrections
-    converge linearly"""
+    converge linearly.
+    """
     worst = {}
     for with_c in (True, False):
         pb = make_problem(with_c=with_c)
@@ -262,7 +270,7 @@ def test_analysis_linear_static_with_configuration_dependent_load():
     increments, cs = an.static(NLgeom=False, silent=True)
     ref = np.linalg.solve(pb.K0 - pb.Q, pb.F0)
     assert np.allclose(cs[0], ref, rtol=1e-9)
-    # without c the load is the reference one, as before
+    # without c the load is the reference one
     pb_old = linear_follower_problem(with_c=False)
     increments, cs = pb_old.analysis().static(NLgeom=False, silent=True)
     assert np.allclose(cs[0], np.linalg.solve(pb.K0, pb.F0))

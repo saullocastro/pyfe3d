@@ -18,9 +18,7 @@ null loads.
 At the default ``relTOL = 1e-9`` the arc-length solvers pass the null load
 between the limit points only with the round-off floor of the convergence
 criteria, see :mod:`pyfe3d.solver.convergence`: without it, they stop near
-the load factor 0.03, the residual of the large self-equilibrated axial
-forces being then larger than ``relTOL`` times the references of the
-criteria.
+the load factor 0.03.
 
 Notes
 -----
@@ -43,6 +41,11 @@ thrust, the symmetric path is their Eq. (23), `B_1^3 - B_1(\lambda_1^2 - 1)
 (23), at `B_1 = -\sqrt{(\lambda_1^2 - 1)/3}`, is at `\lambda_1 -
 \sqrt{4(\lambda_1^2 - 1)^3/27}`. With `\lambda_1^2 < 5.5` the arch buckles
 at the limit point, their Eq. (29).
+
+Without the round-off floor of the convergence criteria the solvers stop
+near the null load between the limit points, the residual of the large
+self-equilibrated axial forces being then larger than ``relTOL`` times the
+references of the criteria.
 
 References
 ----------

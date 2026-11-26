@@ -244,10 +244,17 @@ def test_displacement_control_relative_criterion(method, convergence):
 
 
 def test_displacement_control_without_lbd_does_not_converge(monkeypatch):
-    r"""The reason for ``lbd``: without it, the reference vector and the
+    r"""Without ``lbd`` in ``calc_fext``, and with the round-off floor of the
+    convergence criteria disabled, no increment of the prescribed
+    displacement converges
+
+    Notes
+    -----
+    The reason for ``lbd``: without it, the reference vector and the
     reduced internal force vector vanish at equilibrium, and the relative
     criterion cannot be satisfied; only the round-off floor of the
-    convergence criteria, disabled here, would accept the residual"""
+    convergence criteria, disabled here, would accept the residual.
+    """
     from pyfe3d.solver import convergence
     monkeypatch.setattr(convergence, 'ROUNDOFF_FACTOR', 0.)
     pb = SpringsProblem(d1=0.8, with_lbd=False)
@@ -285,8 +292,15 @@ def orders(errors, floor=1e-12):
 
 
 def test_riks_quadratic_with_load_factor_dependent_load_vector():
-    r"""The bordered system of Riks is Newton-Raphson applied to the
-    augmented system with the exact `\partial \boldsymbol{R}/\partial \lambda`"""
+    r"""Riks' method converges quadratically under the prescribed
+    displacement, the measured order of the first step being larger than
+    1.7
+
+    Notes
+    -----
+    The bordered system of Riks is Newton-Raphson applied to the
+    augmented system with the exact `\partial \boldsymbol{R}/\partial \lambda`.
+    """
     pb = SpringsProblem(k=(10., 15., 20.), a=(200., 400., 600.), d1=1.)
     an = pb.analysis(NL_method='arc_length_riks', initialInc=0.5,
                      relTOL=1e-13, maxNumIter=60)

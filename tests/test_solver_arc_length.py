@@ -222,6 +222,11 @@ def test_arc_length_snap_back(method, convergence, relTOL):
 def test_arc_length_no_doubling_back(method, convergence, relTOL):
     """Long steps through the limit point at 10 times the limit load
 
+    The apex deflection increases along the whole path, which reaches the
+    load factor 1.0 at the solution of the dense Newton-Raphson reference.
+
+    Notes
+    -----
     The previous converged point is at the distance of the arc length from
     the last one, and the iterations of the second step may converge to it,
     which would trace the path backwards, the load factor decreasing below
@@ -423,13 +428,21 @@ def sharp_peak(cp=0.05*(1 - 1e-12)):
 
 
 def test_arc_length_riks_at_a_sharp_peak(capsys):
-    r"""Riks' linearized constraint has no solution when the tangent
+    r"""At a sharp peak, where the stiffness changes sign from 1 to -1, the
+    step of Riks' method is repeated with a shorter arc length, with a
+    warning, and the analysis stops at the peak when the arc length becomes
+    smaller than ``minInc``; the first iterate of the second step is below
+    the displacement of the peak
+
+    Notes
+    -----
+    Riks' linearized constraint has no solution when the tangent
     `\Delta \boldsymbol{c}_q` of the iterate is orthogonal to the increment, here
     when the stiffness changes sign from 1 to -1: the step is repeated with a
     shorter arc length. The predictor of the next step is orthogonal to the
     last increment, and the sign of the predictor is then positive, along
-    `\Delta \boldsymbol{c}_q = \{-1\}`; the analysis stops at the peak when the arc
-    length becomes smaller than ``minInc``"""
+    `\Delta \boldsymbol{c}_q = \{-1\}`.
+    """
     p = sharp_peak()
     p.analysis(NL_method='arc_length_riks', initialInc=0.1, minInc=1e-3)
     p.an.static(NLgeom=True, silent=False)
