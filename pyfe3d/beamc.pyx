@@ -826,6 +826,27 @@ cdef class BeamC:
             y_2, z_2, ..., x_M, y_M, z_M`. Dimension length, 1-D array of size
             ``3*M``.
 
+        Notes
+        -----
+        With `\boldsymbol{x}_1` and `\boldsymbol{x}_2` the positions of the
+        two nodes and `\boldsymbol{v}_{xy}` the vector ``(vxyi, vxyj, vxyk)``,
+        `\boldsymbol{e}_x = (\boldsymbol{x}_2 - \boldsymbol{x}_1) /
+        \|\boldsymbol{x}_2 - \boldsymbol{x}_1\|` and
+
+        .. math::
+
+            \boldsymbol{e}_z = \frac{\boldsymbol{e}_x \times
+            \boldsymbol{v}_{xy}}{\|\boldsymbol{e}_x \times
+            \boldsymbol{v}_{xy}\|}, \qquad
+            \boldsymbol{e}_y = \boldsymbol{e}_z \times \boldsymbol{e}_x
+
+        and `\boldsymbol{T}_{3\times 3} = [\boldsymbol{e}_x, \boldsymbol{e}_y,
+        \boldsymbol{e}_z]`. The axis `\boldsymbol{e}_y` is thus the component
+        of `\boldsymbol{v}_{xy}` normal to `\boldsymbol{e}_x`, normalized.
+        The norm `\|\boldsymbol{e}_x \times \boldsymbol{v}_{xy}\|` vanishes
+        when `\boldsymbol{v}_{xy}` is parallel to the element axis, and the
+        division then gives the ``nan`` entries.
+
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk, tmp
         cdef double x1i, x1j, x1k, x2i, x2j, x2k
@@ -898,6 +919,14 @@ cdef class BeamC:
             u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`. Translations of
             dimension length and rotations, 1-D array of size ``6*M``.
 
+        Notes
+        -----
+        For each node, `\{u, v, w\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+        \{u, v, w\}^\top` and `\{r_x, r_y, r_z\}_e^\top =
+        \boldsymbol{T}_{3\times 3}^\top \{r_x, r_y, r_z\}^\top`, with
+        `\boldsymbol{T}_{3\times 3}` of :meth:`.update_rotation_matrix`,
+        whose columns are the element axes in global coordinates.
+
         """
         cdef int i, j
         cdef int c[2]
@@ -958,6 +987,14 @@ cdef class BeamC:
             y_2, z_2, ..., x_M, y_M, z_M`. Dimension length, 1-D array of size
             ``3*M``.
 
+        Notes
+        -----
+        For each node, `\{x, y, z\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+        \{x, y, z\}^\top`, with `\boldsymbol{T}_{3\times 3}` of
+        :meth:`.update_rotation_matrix`, whose columns are the element axes in
+        global coordinates. The element coordinates are thus measured from
+        the origin of the global system along the element axes.
+
         """
         cdef int i, j
         cdef int c[2]
@@ -1000,6 +1037,17 @@ cdef class BeamC:
         The distance between the two nodes, computed from the coordinates
         ``probe.xe`` in the element coordinate system, is stored in the
         attribute ``length``. Called by :meth:`.update_probe_xe`.
+
+        Notes
+        -----
+        With the element coordinates `(x_i, y_i, z_i)` of nodes 1 and 2,
+
+        .. math::
+
+            L = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2 + (z_2 - z_1)^2}
+
+        which, the transformation to element coordinates being a rotation,
+        is the distance between the two nodes in global coordinates.
 
         """
         cdef double x1, x2, y1, y2, z1, z2

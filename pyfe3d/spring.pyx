@@ -271,6 +271,26 @@ cdef class Spring:
             used. A vector parallel to the element x-axis gives a null `z` axis
             and a rotation matrix with ``nan`` entries.
 
+        Notes
+        -----
+        With `\boldsymbol{x}` the vector ``(xi, xj, xk)`` and
+        `\boldsymbol{v}_{xy}` the vector ``(vxyi, vxyj, vxyk)``,
+        `\boldsymbol{e}_x = \boldsymbol{x} / \|\boldsymbol{x}\|` and
+
+        .. math::
+
+            \boldsymbol{e}_z = \frac{\boldsymbol{e}_x \times
+            \boldsymbol{v}_{xy}}{\|\boldsymbol{e}_x \times
+            \boldsymbol{v}_{xy}\|}, \qquad
+            \boldsymbol{e}_y = \boldsymbol{e}_z \times \boldsymbol{e}_x
+
+        and `\boldsymbol{T}_{3\times 3} = [\boldsymbol{e}_x, \boldsymbol{e}_y,
+        \boldsymbol{e}_z]`. The axis `\boldsymbol{e}_y` is thus the component
+        of `\boldsymbol{v}_{xy}` normal to `\boldsymbol{e}_x`, normalized.
+        The norm `\|\boldsymbol{e}_x \times \boldsymbol{v}_{xy}\|` vanishes
+        when `\boldsymbol{v}_{xy}` is parallel to `\boldsymbol{x}`, and the
+        division then gives the ``nan`` entries.
+
         """
         cdef double yi, yj, yk, zi, zj, zk, tmp
 
@@ -331,6 +351,14 @@ cdef class Spring:
             {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
             u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`. Translations of
             dimension length and rotations, 1-D array of size ``6*M``.
+
+        Notes
+        -----
+        For each node, `\{u, v, w\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+        \{u, v, w\}^\top` and `\{r_x, r_y, r_z\}_e^\top =
+        \boldsymbol{T}_{3\times 3}^\top \{r_x, r_y, r_z\}^\top`, with
+        `\boldsymbol{T}_{3\times 3}` of :meth:`.update_rotation_matrix`,
+        whose columns are the element axes in global coordinates.
 
         """
         cdef int i, j
