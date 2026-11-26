@@ -1931,11 +1931,9 @@ cdef class ShellProp:
             return
 
         if self._ts_element_frame:
-            # NOTE the compliance S = inv(Ats) in the element frame is a
-            #      trigonometric polynomial with harmonics of 2*theta up to the
-            #      5th, which is evaluated exactly from its Fourier coefficients,
-            #      with cos(2*theta) = m11**2 - m21**2 and
-            #      sin(2*theta) = 2*m11*m21
+            # NOTE the compliance S = inv(Ats) in the element frame from its
+            #      Fourier coefficients, with cos(2*theta) = m11**2 - m21**2
+            #      and sin(2*theta) = 2*m11*m21
             c2 = m11*m11 - m21*m21
             s2 = 2*m11*m21
             for i in range(3):
@@ -2461,11 +2459,8 @@ cdef class ShellProp:
             self._ts_ready = True
 
             # NOTE Fourier coefficients of the compliance S(theta) = inv(Ats)
-            #      in the element frame. Since f^(k) is a polynomial of degree
-            #      4 in cos(theta), sin(theta), and inv(Cs) of degree 2, S is a
-            #      polynomial of degree 10 with period 180 degrees, i.e. a
-            #      trigonometric polynomial with harmonics of 2*theta up to the
-            #      5th. With M = 16 samples its Fourier coefficients are exact
+            #      in the element frame, from M = 16 samples, see the Notes
+            #      of calc_Ats_element
             M = 16
             for i in range(33):
                 self._ts_fourier[i] = 0.
@@ -3899,8 +3894,7 @@ cdef class GradABD:
         ``[2, 2]`` of ``gradAtsij``, which do not depend on the lamination
         parameters, are not updated. All six rows of ``gradAij``, ``gradBij``
         and ``gradDij`` are updated, including row 5 (``A66``, ``B66``,
-        ``D66``), whose derivatives with respect to `\xi_{A3}`, `\xi_{B3}`
-        and `\xi_{D3}` are `-h u_3`, `-h^2/4 \, u_3` and `-h^3/12 \, u_3`.
+        ``D66``).
 
         Parameters
         ----------
@@ -3936,7 +3930,10 @@ cdef class GradABD:
         \xi_{Ats}\}`, and
         at constant thickness the derivatives with respect to the lamination
         parameters are the columns of `U` multiplied by `h`, `h^2/4` and
-        `h^3/12`, respectively, and those of `U_{ts}` by `h`.
+        `h^3/12`, respectively, and those of `U_{ts}` by `h`; e.g. the
+        derivatives of `A_{66}`, `B_{66}` and `D_{66}` with respect to
+        `\xi_{A3}`, `\xi_{B3}` and `\xi_{D3}` are `-h u_3`, `-h^2/4 \, u_3`
+        and `-h^3/12 \, u_3`.
 
         """
         cdef int i, j

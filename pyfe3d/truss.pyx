@@ -13,9 +13,6 @@ Truss - Linear truss 3D element with analytical integration (:mod:`pyfe3d.truss`
 
 .. currentmodule:: pyfe3d.truss
 
-.. note:: The :class:`.BeamC` element is recommended because of the better
-          physical representation.
-
 .. note:: The :class:`.Truss` element does not support linear buckling
           analysis.
 
@@ -117,9 +114,6 @@ cdef class Truss:
         ______   --> u  ->>- rx
         1    2
 
-
-    .. note:: The :class:`.BeamC` is recommended because of the better
-              physical representation.
 
     The constructor stores ``p`` in ``probe``, sets ``eid``, ``pid``,
     ``n1``, ``n2``, ``c1`` and ``c2`` to ``-1``, and sets the ``init_k_*``

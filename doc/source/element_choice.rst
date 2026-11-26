@@ -242,8 +242,9 @@ Beams, truss and spring
         :doc:`cross_sectional_analysis`.
     * - :class:`.Truss`
       - Axial and torsional stiffness only, linear analyses and mass matrix,
-        without geometric stiffness matrix, hence no linear buckling. The
-        documentation of :mod:`.truss` recommends :class:`.BeamC` instead.
+        without geometric stiffness matrix, hence no linear buckling.
+        :class:`.BeamC` is recommended instead, because of its better
+        physical representation.
     * - :class:`.Spring`
       - Six constant stiffnesses, ``kxe, kye, kze, krxe, krye, krze``,
         between the same dofs of two nodes, in the element coordinate

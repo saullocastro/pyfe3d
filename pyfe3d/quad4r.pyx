@@ -2003,13 +2003,10 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            # NOTE Brockman's hourglass control of u and v, derived for
-            #      isotropic plates, applied to laminates with the membrane
-            #      moduli E1eq and E2eq, and with the area in place of his
-            #      1/(1 + 1/A) of Eq. (16), see the section "Hourglass
-            #      control of the membrane" of the module documentation: the
-            #      term enters as K_ij = A*E^(h)*gamma_i*gamma_j with gamma
-            #      of dimension 1/L**2, so E^(h) must be F*L
+            # NOTE artificial hourglass stiffness of u and v, with the
+            #      membrane moduli E1eq and E2eq and the element area, see
+            #      the section "Hourglass control of the membrane" of the
+            #      module documentation
             Eu = hgfactor_membrane*0.1*E1eq*prop.h*self.area
             Ev = hgfactor_membrane*0.1*E2eq*prop.h*self.area
             # NOTE w, rx and ry have no artificial hourglass stiffness: their
@@ -4582,13 +4579,10 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            # NOTE Brockman's hourglass control of u and v, derived for
-            #      isotropic plates, applied to laminates with the membrane
-            #      moduli E1eq and E2eq, and with the area in place of his
-            #      1/(1 + 1/A) of Eq. (16), see the section "Hourglass
-            #      control of the membrane" of the module documentation: the
-            #      term enters as K_ij = A*E^(h)*gamma_i*gamma_j with gamma
-            #      of dimension 1/L**2, so E^(h) must be F*L
+            # NOTE artificial hourglass stiffness of u and v, with the
+            #      membrane moduli E1eq and E2eq and the element area, see
+            #      the section "Hourglass control of the membrane" of the
+            #      module documentation
             Eu = hgfactor_membrane*0.1*E1eq*prop.h*self.area
             Ev = hgfactor_membrane*0.1*E2eq*prop.h*self.area
             # NOTE w, rx and ry have no artificial hourglass stiffness: their
