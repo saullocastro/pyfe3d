@@ -1422,8 +1422,8 @@ cdef class Tria3DSG:
         # NOTE the drilling term must be integrated with three points and
         #      not one: a single point supplies a single constraint, which
         #      leaves two of the three r_z degrees-of-freedom unconstrained
-        #      and two spurious modes that survive assembly. Measured
-        #      before this was fixed: an assembled patch had 8 zero
+        #      and two spurious modes that survive assembly: with one
+        #      point an assembled patch has 8 zero
         #      eigenvalues instead of 6. Tria3R integrates its drilling
         #      term fully for the same reason. The integrand is quadratic
         #      in the shape functions, so the three-point interior rule

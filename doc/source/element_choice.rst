@@ -252,7 +252,7 @@ Beams, truss and spring
 
 The cross section of the beams and of the truss is given by a
 :class:`.BeamProp`, whose integrals are taken in the element coordinate
-system, see :doc:`shell_properties`. Its orientation is defined by the
+system, see :doc:`beam_properties`. Its orientation is defined by the
 vector ``vxyi, vxyj, vxyk`` of ``update_rotation_matrix``, see
 :doc:`conventions`. The beams have a transverse shear modulus for each
 plane of bending, ``G12`` for the element `xy` plane and ``G13`` for the
