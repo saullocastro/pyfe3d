@@ -21,12 +21,9 @@ contributions in sparse row, column and value arrays, from the positions
 given by its ``init_k_*`` attributes, or add them to a global internal force
 vector.
 
-The :class:`.Quad4` is the recommended quadrilateral plane stress finite
-element.
-
-Another option is the :class:`.Quad4R` with full reduced
-integration, more efficient, but with an hourglass control that creates
-artificial stiffness to compensate the reduced integration.
+The :class:`.Quad4` element is a four-node quadrilateral shell element with
+full integration; :class:`.Quad4R` is the four-node element with reduced
+integration and hourglass control.
 
 The :class:`.Quad4` element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`,
 `r_x`, `r_y`, `r_z`. All DOF are interpolated bi-linearly between the nodes.
@@ -242,7 +239,7 @@ error decreasing as `\ell^2`: +0.81 %, +0.20 % and +2.19 % with ``shear_model
 shear stiffness at every element size, and with the slopes at the
 two-by-two points no spurious mode remains: +0.51 %, +0.13 % and +1.36 %,
 against +0.83 %, +0.21 % and +2.70 % with ``centroid_slopes = 1``, see
-``tests/test_quad4_geometric_hourglass.py`` (measured on 2026-11-01). With
+``tests/test_quad4_geometric_hourglass.py``. With
 ``shear_model = 0`` the elements with `h/\ell \ge 1`, which have the MITC4
 strains, take the slopes at the centroid as well, such that the geometric
 stiffness does not depend on that gate and ``update_KG_given_stress`` does
@@ -250,7 +247,7 @@ not need the thickness.
 
 The slopes at the two-by-two points integrate the geometric stiffness of a
 smooth mode more accurately, and the slopes at the centroid give higher
-buckling loads on coarse meshes. Measured on 2026-11-01, above the exact
+buckling loads on coarse meshes. Above the exact
 solutions, with the default, ``centroid_slopes = 1`` and ``shear_model =
 0``: a simply supported plate with 20 by 6 elements, 5 elements per
 half-wave along the load, +4.31 %, +6.81 % and +4.67 % above the Kirchhoff
@@ -406,9 +403,8 @@ meaningless. The penalty energy is defined per element as:
     U_{r_z} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
 
 where `10^{-6}` is a scaling factor suggested by MSC Nastran's approach (CQUAD4) to make the artificial
-drilling stiffness sufficiently small. AUTODESK NASTRAN's quick reference guide recommends `K6ROT = 100`
-for static analysis. For modal solutions, `K6ROT = 10^4` is suggested. MSC NASTRAN's quick reference guide
-states that `K6ROT > 100` should not be used, thus contradicting AUTODESK NASTRAN. The rotation `r_z` represents
+drilling stiffness sufficiently small. The values of ``K6ROT`` are discussed in the Notes of
+:class:`.Quad4`. The rotation `r_z` represents
 the drilling degree-of-freedom in element's coordinates, whereas `\theta_z` the in-plane rotation strain, defined as:
 
 .. math::
@@ -447,16 +443,8 @@ rotation of the element about its normal, so both models represent all
 rigid-body motions and all constant-strain states exactly. `A_{66}` is
 assumed constant over the element. This term is integrated with the
 two-by-two quadrature. The approach herein presented is very similar to the
-one presented in Eq. 2.20 of Adam et al. [5]_.
-
-**Choosing between them.** The physics-based model is the default because it
-is the one that is correct when the drilling moment is part of the load path,
-when shells are connected to beams or stiffeners that must transmit in-plane
-moments, or when the mesh is too coarse for the unenriched membrane response
-to be trusted. It is markedly more accurate in in-plane bending: on Cook's
-skew membrane with a two-by-two mesh it gives 20.8 against the reference
-23.9, where the penalty gives 11.8. The penalty is cheaper, since it
-leaves the membrane term on the two-by-two quadrature.
+one presented in Eq. 2.20 of Adam et al. [5]_. The penalty leaves the
+membrane term on the two-by-two quadrature.
 
 References
 ----------
@@ -3671,7 +3659,7 @@ cdef class Quad4:
         \boldsymbol{\theta}_a \times (\boldsymbol{\theta}_a \times
         \boldsymbol{r}_a)`, change the strains by terms of order
         `(\tilde{z}/\ell) \epsilon^3`, beyond those kept (derived here).
-        Measured on 2026-11-01 on the twisted beam of
+        On the twisted beam of
         ``tests/test_quad_warp_offsets.py`` with 12 by 2 Quad4 elements, the
         default ``shear_model = 1`` and ``centroid_slopes = 0``, and tip
         loads of 500 along `z` and 1100 along `y`, rotations up to 0.32, the
@@ -3890,8 +3878,7 @@ cdef class Quad4:
         the two-by-two points integrate the geometric stiffness of a smooth
         mode more accurately: a plate with 5 elements per half-wave along the
         load buckles 4.31 % above the Kirchhoff solution with them, 6.81 %
-        with ``centroid_slopes = 1`` and 4.67 % with ``shear_model = 0``
-        (measured on 2026-11-01). See
+        with ``centroid_slopes = 1`` and 4.67 % with ``shear_model = 0``, see
         ``tests/test_quad4_geometric_hourglass.py``. :class:`.Quad4R` takes
         the slopes at the centroid. In the co-rotational frame of
         :class:`pyfe3d.corotational.CorotationalShell` with

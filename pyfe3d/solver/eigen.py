@@ -51,9 +51,9 @@ and natural frequency
 .. math::
     (\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}
 
-The reason this module exists is that neither problem is safe to hand to
-:func:`scipy.sparse.linalg.eigsh` without preparation, and the two traps are
-easy to fall into and silent when they bite:
+Two properties of these problems require a preparation before
+:func:`scipy.sparse.linalg.eigsh` is called, without which it may return
+wrong eigenpairs without a warning:
 
 1. **The matrices are badly scaled.** A shell element mixes translations and
    rotations, so the diagonal of `\boldsymbol{K}_{C0}` spans many orders of magnitude,
@@ -1367,14 +1367,7 @@ def _eig_complex(a, b=None, left=False):
     :func:`scipy.linalg.eig`, through the complex LAPACK drivers
 
     The matrices are converted to complex, such that ``zgeev`` or ``zggev``
-    is used instead of ``dgeev`` or ``dggev``: with Intel MKL 2025.0.0 the
-    real drivers crash the Python process when computing the eigenvectors
-    of some matrices, which cannot be caught, e.g. with SciPy 1.17.1
-    :func:`scipy.linalg.eig` corrupts the heap and the process exits with
-    the code ``0xc0000374`` for the real 48 x 48 matrices of
-    ``test_eig_complex_mkl_crash_regression`` in
-    ``tests/test_solver_linear_buckling.py``. The complex drivers are not
-    affected, at the cost of the complex arithmetic. In the browser,
+    is used instead of ``dgeev`` or ``dggev``. In the browser,
     ``sys.platform == 'emscripten'`` (Pyodide), the real drivers are used.
 
     Parameters
@@ -1392,6 +1385,15 @@ def _eig_complex(a, b=None, left=False):
     w, v : np.ndarray
         Eigenvalues and eigenvectors of :func:`scipy.linalg.eig`, or ``w,
         vl, v`` with the left eigenvectors ``vl`` when ``left=True``.
+
+    Notes
+    -----
+    With Intel MKL 2025.0.0 the real drivers crash the Python process when
+    computing the eigenvectors of some matrices, which cannot be caught,
+    e.g. of the real 48 x 48 matrices of
+    ``test_eig_complex_mkl_crash_regression`` in
+    ``tests/test_solver_linear_buckling.py``. The complex drivers are not
+    affected, at the cost of the complex arithmetic.
 
     """
     if sys.platform != 'emscripten':
@@ -1516,13 +1518,10 @@ def _splu(A):
     r"""SuperLU factorization of ``A`` with partial pivoting, raising a
     ``RuntimeError`` when ``A`` is exactly singular
 
-    :func:`scipy.sparse.linalg.splu` warns only when it converts its input
-    to the CSC format, :class:`scipy.sparse.SparseEfficiencyWarning`, which
-    the conversion here avoids. As everywhere in :mod:`pyfe3d.solver`, no
-    :func:`warnings.catch_warnings` block is used: its exit resets the
-    registry of the warnings already shown, of every module, and the
-    warnings of the caller shown once per location would be shown again
-    after each call.
+    The input is converted to the CSC format before the factorization, such
+    that :func:`scipy.sparse.linalg.splu` does not emit its
+    :class:`scipy.sparse.SparseEfficiencyWarning`. No
+    :func:`warnings.catch_warnings` block is used.
 
     """
     return splu(csc_matrix(A))

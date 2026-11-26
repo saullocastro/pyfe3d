@@ -684,8 +684,7 @@ cdef class BeamC:
     entries, see ``tests/test_beam_sectional_stiffness.py``, and costs
     about 4 to 7 µs more per element and call than the 1.5 to 2 µs of
     ``update_KC0``, ``update_M``, ``update_KG`` and ``update_fint`` with
-    the closed-form expressions (measured on 2026-10-31, Windows, calls
-    from Python).
+    the closed-form expressions, in calls from Python.
 
     The element is therefore exact under nodal loads for any `\boldsymbol{C}`:
     one element gives the tip displacements of a cantilever under any tip

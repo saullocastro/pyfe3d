@@ -154,8 +154,7 @@ round-off that depends on the nodal coordinates `\boldsymbol{X}`, e.g. of
 current positions computed as `\boldsymbol{X} + \boldsymbol{u}`: a
 translation of the origin changes `|\boldsymbol{X}|` but none of the
 quantities the criterion receives, `\boldsymbol{K}_{C0}`, `\boldsymbol{c}`,
-`\boldsymbol{F}_{int}` and `\boldsymbol{F}_{ext}`. Measured on 2026-10-30
-on the cantilever of Sze et al. under an end shear force with 64
+`\boldsymbol{F}_{int}` and `\boldsymbol{F}_{ext}`. On the cantilever of Sze et al. under an end shear force with 64
 co-rotational :class:`.BeamC` elements, positions computed as
 `\boldsymbol{X} + \boldsymbol{u}`: with the root at `X = 0`, 100 and 1000,
 the iterations of the first increment stagnated at `\zeta` of about

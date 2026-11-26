@@ -26,9 +26,7 @@ The :class:`.Quad4R` element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`,
 
 All stiffness terms, besides drilling, are integrated using the reduced
 integration scheme for the :class:`.Quad4R` element, with a single point at
-the centroid, making it very efficient concerning the time needed to
-calculate the internal forces and stiffness matrices, in comparison with the
-:class:`.Quad4` element. The hourglass modes of the bending and of the
+the centroid. The hourglass modes of the bending and of the
 transverse shear, of `w`, `r_x` and `r_y`, are controlled by the physical
 stabilisation of Belytschko and Leviathan (1994), which has no parameter,
 and those of the membrane, of `u` and `v`, by the artificial stiffness of
@@ -43,7 +41,6 @@ default ``0`` is physics-based, any other value gives the fictitious penalty
 of MSC Nastran and Autodesk Nastran controlled by the ``K6ROT`` attribute.
 Unlike :class:`.Quad4` and :class:`.Tria3R`, this element does
 **not** enrich the in-plane displacement field with the drilling rotations.
-Use :class:`.Quad4` to use Allman's enrichment.
 
 The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are read
 from the :class:`pyfe3d.shellprop.ShellProp` object with the shear correction
@@ -192,7 +189,7 @@ length unit, see ``test_hourglass_stiffness_is_independent_of_the_length_unit``.
 Belytschko and Leviathan stabilise the membrane physically too, with the
 nonconstant part of the membrane strains, their Eqs. (3.27) and (B.13),
 which on a flat element is the bilinear membrane integrated with two by two
-points and locks in in-plane bending. Measured on 2026-10-29 with that
+points and locks in in-plane bending. With that
 stabilisation, integrated with two by two points, in place of Brockman's:
 the in-plane tip load of the straight cantilever of MacNeal and Harder
 (1985) [7]_, 6 by 1 elements, gives 0.076, 0.024 and 0.028 times the
@@ -212,8 +209,8 @@ constant-twist patch test: the operator `\gamma^\top w` is `w_{,xy}`, `k`
 for a uniform twist, and would add the fraction `0.6 (1 + \nu)/(1 + 1/A)`
 to its energy, 0.78 for `\nu = 0.3` and `A \gg 1`, an error that
 refinement does not remove where the element areas are large in the unit
-of length of the model. The results of that alternative, measured on
-2026-10-29, against those of the element:
+of length of the model. The results of that alternative, against those
+of the element:
 
 * the one-element-wide torsion strip of MacNeal and Harder (1985) [7]_:
   4.78 times the reference twist, grade F, against 0.941, grade B, the
@@ -325,9 +322,8 @@ energy is defined per element as:
     U_{r_z} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
 
 where `10^{-6}` is a scaling factor suggested by MSC Nastran's approach (CQUAD4) to make the artificial
-drilling stiffness sufficiently small. AUTODESK NASTRAN's quick reference guide recommends `K6ROT = 100`
-for static analysis. For modal solutions, `K6ROT = 10^4` is suggested. MSC NASTRAN's quick reference guide
-states that `K6ROT > 100` should not be used, thus contradicting AUTODESK NASTRAN. The rotation `r_z` represents
+drilling stiffness sufficiently small. The values of ``K6ROT`` are discussed in the Notes of
+:class:`.Quad4R`. The rotation `r_z` represents
 the drilling degree-of-freedom in element's coordinates, whereas `\theta_z` the in-plane rotation strain, defined as:
 
 .. math::
@@ -7332,7 +7328,7 @@ cdef class Quad4R:
         \boldsymbol{\theta}_a \times (\boldsymbol{\theta}_a \times
         \boldsymbol{r}_a)`, change the strains by terms of order
         `(\tilde{z}/\ell) \epsilon^3`, beyond those kept (derived here).
-        Measured on 2026-11-01 on the twisted beam of
+        On the twisted beam of
         ``tests/test_quad_warp_offsets.py`` with 12 by 2 Quad4 elements, the
         default ``shear_model = 1`` and ``centroid_slopes = 0``, and tip
         loads of 500 along `z` and 1100 along `y`, rotations up to 0.32, the
