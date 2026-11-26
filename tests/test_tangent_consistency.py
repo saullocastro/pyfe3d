@@ -1,12 +1,9 @@
 """The tangent stiffness matrix must be the derivative of the internal forces
 
-KT = KC0 + KCNL(u) + KG(u) is the Jacobian of the geometrically nonlinear
-internal force vector given by ``update_fint(..., nonlinear=1)``. If the two
-drift apart, a Newton-Raphson iteration built on them still converges, but
-linearly instead of quadratically.
-
-The main check is a directional Taylor test of the internal forces against
-the tangent, completed by a central finite-difference Jacobian. Every element
+The main check is a directional Taylor test of the geometrically nonlinear
+internal forces given by ``update_fint(..., nonlinear=1)`` against the
+tangent KT = KC0 + KCNL(u) + KG(u), completed by a central finite-difference
+Jacobian. Every element
 is distorted and arbitrarily oriented in space, the shells use an
 unsymmetric laminate with a material direction different from the element
 direction, and the beams use an offset reference axis, so that all the
@@ -14,6 +11,11 @@ coupling terms carry weight.
 
 Notes
 -----
+KT = KC0 + KCNL(u) + KG(u) is the Jacobian of the geometrically nonlinear
+internal force vector given by ``update_fint(..., nonlinear=1)``. If the two
+drift apart, a Newton-Raphson iteration built on them still converges, but
+linearly instead of quadratically.
+
 The relative error of the Taylor test, for a direction ``d`` and a step
 ``h``, ::
 
@@ -49,7 +51,7 @@ BEAMS = {
 }
 ELEMENTS = sorted(SHELLS) + sorted(BEAMS)
 # NOTE the drilling stiffness is computed in update_KC0 and again in
-#      update_probe_finte, the pair that drifted apart in Tria3R, so the
+#      update_probe_finte, a pair that must stay consistent, so the
 #      shells are also checked with the two non-default settings: an explicit
 #      gamma_rz under the physics-based model and the K6ROT penalty
 DRILLING = ['default', 'gamma_rz', 'K6ROT']
@@ -242,8 +244,8 @@ def test_tangent_is_symmetric(name):
 def test_linear_fint_is_KC0_times_u(name, drilling):
     """Without the nonlinear terms, fint is exactly KC0 @ u
 
-    This is the default, and it failed for Tria3R when update_KC0 did not use
-    all the drilling terms that update_probe_finte used.
+    This is the default: update_KC0 must use all the drilling terms that
+    update_probe_finte uses.
     """
     fint, KC0, KCNL, KG, n = make_callables(name, drilling)
     rng = np.random.default_rng(5)
@@ -256,6 +258,12 @@ def test_linear_fint_is_KC0_times_u(name, drilling):
 def test_explicit_gamma_rz(name):
     """``gamma_rz = A66`` is the default spelled out, any other value is read
 
+    Setting ``gamma_rz`` to A66 must reproduce the KC0 and the fint of the
+    default exactly, while a different value must change both. The plate is
+    isotropic.
+
+    Notes
+    -----
     A negative ``gamma_rz``, the default, means A66, so setting it to A66
     must reproduce KC0 and fint exactly, while a different value must change
     both, which is what shows that the attribute is not a no-op.

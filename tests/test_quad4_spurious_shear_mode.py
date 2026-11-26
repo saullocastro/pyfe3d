@@ -171,7 +171,7 @@ def element_K(cls, Data, Probe, ncoords, h, drilling_model=0, legacy=True):
         setattr(el, 'n%d' % (i + 1), i + 1)
         setattr(el, 'c%d' % (i + 1), DOF*i)
     el.init_k_KC0 = 0
-    # NOTE Quad4R and Tria3R do not carry the attribute yet
+    # NOTE set only on the elements that carry the attribute
     try:
         el.drilling_model = drilling_model
     except AttributeError:

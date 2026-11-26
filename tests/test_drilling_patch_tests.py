@@ -158,6 +158,11 @@ def interior_dofs(nids, nid_pos):
 def test_A1_rigid_body_motion():
     r"""A rigid-body motion must store no energy
 
+    Checked for the three translations and the three rotations about the
+    global axes, with both drilling models.
+
+    Notes
+    -----
     The in-plane rigid rotation `u = -\omega_0 y`, `v = +\omega_0 x`, `r_z =
     \omega_0` is the particular constant-strain state with zero strain, and it
     is the one that the drilling enrichment could spoil, because it is the
@@ -198,7 +203,20 @@ def test_A2_constant_strain_patch_test():
     Both states are prescribed at every node of the irregular patch. The
     interior nodes are not supported, so the internal forces there must
     vanish, and the strains recovered anywhere inside any element must equal
-    the prescribed constant values to machine precision.
+    the prescribed constant values to machine precision. For the bending
+    form, Table 2(b) of MacNeal and Harder (1985), the stiffness block and
+    the internal forces of the two drilling models must be the same.
+
+    Notes
+    -----
+    The enrichment acts only on the in-plane translations, so it must leave
+    the whole bending response untouched. That is asserted directly, on the
+    stiffness block and on the internal forces, rather than against zero:
+    the residual of this state is not zero for this element, because the
+    transverse displacement of the prescribed field is quadratic while the
+    element interpolates it bilinearly, which leaves a transverse shear
+    strain inside the element. That is a property of the underlying plate
+    formulation and is unrelated to the drilling degree-of-freedom.
 
     """
     prop = isotropic_plate(thickness=0.001, E=1.e6, nu=0.25)
@@ -240,16 +258,9 @@ def test_A2_constant_strain_patch_test():
                 assert np.isclose(eyy, Ee[1, 1], rtol=1e-10, atol=1e-14)
                 assert np.isclose(gxy, 2*Ee[0, 1], rtol=1e-10, atol=1e-14)
 
-    # (b) bending form, MacNeal and Harder Table 2(b). The enrichment acts
-    #     only on the in-plane translations, so it must leave the whole
-    #     bending response untouched. That is asserted directly, on the
-    #     stiffness block and on the internal forces, rather than against
-    #     zero: the residual of this state is not zero for this element,
-    #     because the transverse displacement of the prescribed field is
-    #     quadratic while the element interpolates it bilinearly, which
-    #     leaves a transverse shear strain inside the element. That is a
-    #     property of the underlying plate formulation and is unrelated to
-    #     the drilling degree-of-freedom
+    # (b) bending form, MacNeal and Harder Table 2(b): the enrichment must
+    #     leave the whole bending response untouched, asserted on the
+    #     stiffness block and on the internal forces, see the Notes
     u = bending_field(ncoords, curv)
     _, KC0_enriched, _, _, _, _ = build(0, prop)
     _, KC0_penalty, _, _, _, _ = build(1, prop)
@@ -269,6 +280,14 @@ def test_A2_constant_strain_patch_test():
 def test_A3_drilling_energy_vanishes_at_constant_strain():
     r"""Neither drilling term adds energy in a constant-strain state
 
+    The drilling contribution, isolated by differencing two values of the
+    parameter that scales it, must carry no energy in the constant-strain
+    state, for both models and several values of the parameter. On a state
+    that does violate `r_z = \theta_z` the energy must be non-zero and must
+    scale linearly with the parameter of each model.
+
+    Notes
+    -----
     Stationarity of the Hughes-Brezzi functional with respect to `r_z` gives
     `r_z = \theta_z` pointwise, so the physics-based term vanishes at the
     exact solution for any value of the regularisation parameter.

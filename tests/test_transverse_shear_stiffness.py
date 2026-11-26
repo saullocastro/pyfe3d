@@ -6,10 +6,9 @@ computed by
 :meth:`pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness` following
 Rohwer (1988) and Vlachoutsis (1992).
 
-There is no element size anywhere in that formula, so `A_{ts}` must not
-depend on the mesh, and an element that uses it correctly must reproduce a
-constant transverse shear state exactly at any element size. These tests
-check both halves: the stiffness against analytical properties and against
+These tests check that `A_{ts}` does not depend on the mesh and that the
+elements reproduce a constant transverse shear state exactly at any element
+size: the stiffness against analytical properties and against
 an independent implementation of Rohwer (1988), Eq. (43), on the laminate
 of cylinder Z22 of Castro et al. (2014); Quad4, Quad4R and Tria3R against
 the exact energy of a constant transverse shear state and the exact tip
@@ -18,6 +17,10 @@ deflection of a strip in cylindrical bending.
 Notes
 -----
 The transverse shear stiffness follows Rohwer [1]_ and Vlachoutsis [2]_.
+There is no element size anywhere in that formula, so `A_{ts}` must not
+depend on the mesh, and an element that uses it correctly must reproduce a
+constant transverse shear state exactly at any element size.
+
 The laminate ``LAMINAPROP``, ``STACK`` and ``PLYT`` is the stacking of
 cylinder Z22, ``[+-49/+-36/0_2]``, and the material Geier1997 of [3]_,
 Tables 3 and 4, p. 307, except ``G23``, which is set equal to ``G12 = G13 =
@@ -233,26 +236,30 @@ def test_quads_reproduce_a_constant_transverse_shear_state():
 def test_tria3r_scales_the_shear_stiffness_with_the_element_size():
     r"""Tria3R with ``shear_model = 0`` does not reproduce the state
 
-    That is the centroid-sampled transverse shear, set explicitly here. Its ``alpha_shear_locking`` stabilisation
-    divides `A_{44}`, `A_{45}` and `A_{55}` by a factor of the longest edge
-    `\ell` and the thickness `h`, so the energy of a constant transverse
-    shear state comes out too small by exactly that factor. The
-    stabilisation is the factor of Lyly, Stenberg
+    That is the centroid-sampled transverse shear, set explicitly here. The
+    energy of a constant transverse shear state must come out too small by
+    exactly the factor of its ``alpha_shear_locking`` stabilisation, the
+    factor of Lyly, Stenberg
     and Vihinen (1993), called Stenberg's method by Bischoff and Bletzinger
-    (2004), in the form of Castro et al. (2019), and
-    in the thin limit the transverse shear energy is asymptotically
-    negligible, which is what justifies it there. It is not negligible when
-    transverse shear carries load, which is measured for a cylinder in
-    ``test_quad4_linear_buckling_cylinder_displ.py``.
+    (2004), in the form of Castro et al. (2019).
 
-    This test pins the factor down so that any future change to the
-    stabilisation is visible. The default Tria3R, the discrete shear gap
+    The default Tria3R, the discrete shear gap
     field of ``shear_model = 1`` with ``alpha_shear_locking = 0``,
     reproduces the state to round-off, ``rtol=1e-12`` as for the
     quadrilaterals, which is checked here as well.
 
     Notes
     -----
+    The ``alpha_shear_locking`` stabilisation
+    divides `A_{44}`, `A_{45}` and `A_{55}` by a factor of the longest edge
+    `\ell` and the thickness `h`, so the energy of a constant transverse
+    shear state comes out too small by exactly that factor. In the thin
+    limit the transverse shear energy is asymptotically
+    negligible, which is what justifies it there. It is not negligible when
+    transverse shear carries load, which is measured for a cylinder in
+    ``test_quad4_linear_buckling_cylinder_displ.py``. This test pins the
+    factor down so that any change to the stabilisation is visible.
+
     The stiffness is divided by `1 + \alpha \ell^2/h^2`, with
     `\ell = L\sqrt{2}` for the right triangle with legs `L`, whose longest
     edge is the diagonal.
@@ -392,6 +399,11 @@ def shear_only_subspace(cls, Data, Probe, n, L, h, triangles=False,
                         legacy=False):
     r"""Smallest `u^\top K u/u^\top u` with only the interior `w` free
 
+    Every rotation and in-plane degree-of-freedom is held at zero. Returns
+    that smallest value and the element length.
+
+    Notes
+    -----
     With every rotation and in-plane degree-of-freedom held at zero the
     curvature `\kappa = \nabla \theta` vanishes identically, so this
     subspace carries no bending or membrane energy and is resisted by
@@ -413,13 +425,7 @@ def shear_only_subspace(cls, Data, Probe, n, L, h, triangles=False,
 def test_shear_only_subspace_is_the_mechanism_the_stabilisation_opens():
     r"""Where the price of ``alpha_shear_locking`` is actually paid
 
-    A Donnell-type geometric stiffness matrix works on
-    `\partial w/\partial x`, which is precisely the subspace isolated by
-    :func:`shear_only_subspace`, so an element that is soft there gives poor
-    thin-shell buckling loads however well it does on plate bending. That is
-    measured for a cylinder in
-    ``test_quad4_linear_buckling_cylinder_displ.py``.
-
+    The smallest stiffness of the subspace of :func:`shear_only_subspace`.
     Quad4 with ``shear_model = 0``, the one-point transverse shear, is the
     reference, and Tria3R with ``shear_model = 0``, the centroid-sampled
     shear set explicitly, is softer by exactly its stabilisation factor. The
@@ -429,6 +435,13 @@ def test_shear_only_subspace_is_the_mechanism_the_stabilisation_opens():
 
     Notes
     -----
+    A Donnell-type geometric stiffness matrix works on
+    `\partial w/\partial x`, which is precisely the subspace isolated by
+    :func:`shear_only_subspace`, so an element that is soft there gives poor
+    thin-shell buckling loads however well it does on plate bending. That is
+    measured for a cylinder in
+    ``test_quad4_linear_buckling_cylinder_displ.py``.
+
     Tria3R divides the stiffness by `1 + 0.7 \ell^2/h^2`, with `\ell` the diagonal
     of a square cell of the patch, its longest edge; ``rtol=0.2`` covers the
     difference between a quadrilateral and two triangles.
@@ -552,12 +565,17 @@ def cylindrical_bending_strip(cls, Data, Probe, L, b, h, nx, ny,
 def test_the_stabilisation_error_is_a_discretisation_error():
     r"""Why the scheme is legitimate despite the factor being large
 
-    The stabilisation inflates the shear part of a load-driven response by
-    ``factor``, so the relative error is `factor \times f_s` with `f_s` the
-    shear fraction. This test measures that product, with `f_s` from the
+    This test measures the product `factor \times f_s` of the stabilisation
+    factor and the shear fraction `f_s`, with `f_s` from the
     exact tip deflection of :func:`cylindrical_bending_strip`, over three
     decades of slenderness and shows it depends on `n` alone, falling as
     `1/n^2`.
+
+    Notes
+    -----
+    The stabilisation inflates the shear part of a load-driven response by
+    ``factor``, so the relative error is `factor \times f_s` with `f_s` the
+    shear fraction.
 
     The product is only the softening of the physical shear. It is not the
     error of Tria3R with ``shear_model = 0``, whose centroid-sampled shear
@@ -566,8 +584,6 @@ def test_the_stabilisation_error_is_a_discretisation_error():
     deflection stalls at -14 per cent from 32x32 to 128x128 squares cut in
     two, see the Notes of :mod:`pyfe3d.tria3r`.
 
-    Notes
-    -----
     For a strip of span `L` cut into `n` elements,
     `factor \sim \alpha (L/n)^2/h^2` while `f_s \sim c (h/L)^2`, so the
     thickness cancels and the product is `\alpha c/n^2`: the ratio of the
@@ -607,19 +623,22 @@ def test_the_stabilisation_error_is_a_discretisation_error():
 def test_small_alpha_makes_tria3r_lock():
     r"""``alpha_shear_locking`` is doing the unlocking, not fine tuning
 
-    In Lyly et al. (1993), Bischoff and Bletzinger (2004) and Castro et al.
-    (2019) the factor is applied on top of an assumed-strain or discrete
-    shear gap field, whose operator already contains the cure of the shear
-    locking, and `\alpha` is near `0.1`. Tria3R with ``shear_model = 0``,
-    set explicitly here, has no such formulation, its transverse shear
-    coming from a single point at the centroid, so reducing `\alpha`
-    towards the literature value makes it lock. Measured here on the
-    constrained strip, whose exact answer is elementary. The default
-    Tria3R, the discrete shear gap field with `\alpha = 0`, is printed for
-    comparison.
+    Reducing `\alpha` towards the literature value, near `0.1`, makes
+    Tria3R with ``shear_model = 0``, set explicitly here, lock. Measured
+    here on the constrained strip, whose exact answer is elementary. The
+    default Tria3R, the discrete shear gap field with `\alpha = 0`, is
+    printed for comparison.
 
     Notes
     -----
+    In Lyly et al. (1993), Bischoff and Bletzinger (2004) and Castro et al.
+    (2019) the factor is applied on top of an assumed-strain or discrete
+    shear gap field, whose operator already contains the cure of the shear
+    locking, and `\alpha` is near `0.1`. Tria3R with ``shear_model = 0``
+    has no such formulation, its transverse shear
+    coming from a single point at the centroid, so reducing `\alpha`
+    towards the literature value makes it lock.
+
     The exact answer is the Timoshenko beam tip deflection of
     :func:`cylindrical_bending_strip`. The default Tria3R, measured 0.999 of
     it, and Quad4 must be within 1 per cent of it.
