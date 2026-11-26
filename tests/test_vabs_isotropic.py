@@ -103,7 +103,7 @@ def circle_k(nu):
 
     Notes
     -----
-    Derivation (scratch script of the author's run, reproduced here): the
+    Derivation: the
     stresses `\sigma_{zz} = -P (l - z) x/I`, `\tau_{xz} = \frac{3 + 2\nu}{8
     (1 + \nu)} \frac{P}{I} (R^2 - x^2 - \frac{1 - 2\nu}{3 + 2\nu} y^2)`,
     `\tau_{yz} = -\frac{1 + 2\nu}{4 (1 + \nu)} \frac{P x y}{I}`, all other

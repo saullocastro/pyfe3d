@@ -259,6 +259,13 @@ def test_spring_arbitrary_orientation():
 def test_spring_rigid_rotation_nodes_apart():
     r"""Rigid rotation of a spring whose nodes are at different positions
 
+    A rigid rotation `\theta` of the two nodes at `p_1` and `p_2` has no
+    energy when the element `x` axis is along the line of the nodes and only
+    ``kxe`` and the rotational stiffnesses are non-zero, and has energy when
+    ``kye`` is non-zero.
+
+    Notes
+    -----
     The nodal coordinates are not used by :class:`.Spring`: a rigid rotation
     `\theta` of the two nodes at `p_1` and `p_2` gives the relative
     translation `\theta \times (p_2 - p_1)`, normal to the line of the

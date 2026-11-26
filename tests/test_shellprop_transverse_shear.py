@@ -150,20 +150,25 @@ def rohwer_stiffness(stack, plyts, laminaprops, offset=0.):
     r"""Improved transverse shear stiffness of Rohwer (1988), Eq. (43)
 
     Written out here independently of pyfe3d, with the notation of Rohwer
-    (1988), Sec. 3.4, pp. 15-17: the shear stresses of Eqs. (35) and (36),
+    (1988), Sec. 3.4, pp. 15-17, Eqs. (34) to (36), (41) and (43), and the
+    3-point Gauss-Legendre rule in each ply.
+
+    Returns ``Ats = [[A44, A45], [A45, A55]]``, 4 <-> yz, 5 <-> xz, and the
+    shear stresses at the top face, which must vanish.
+
+    Notes
+    -----
+    The shear stresses of Eqs. (35) and (36) of Rohwer (1988) are
     ``tau_xz = -int Q1 [A* + z B*, B* + z D*] RFXX R dz`` and ``tau_yz = -int
     Q2 [...] RFYY R dz``, with ``Q1`` and ``Q2`` the first two rows of the
     plane-stress stiffness of the ply in the laminate axes, the compliance
     ``[[A*, B*], [B*^T, D*]] = ABD^-1`` and ``R = {Rx, Ry}`` the shear forces,
-    vanishing at the bottom face; the cylindrical bending states of Eq. (34),
-    ``M_x,x = Rx``, ``M_xy,x = Ry`` for ``tau_xz`` and ``M_y,y = Ry``,
+    vanishing at the bottom face; the cylindrical bending states of Eq. (34)
+    are ``M_x,x = Rx``, ``M_xy,x = Ry`` for ``tau_xz`` and ``M_y,y = Ry``,
     ``M_xy,y = Rx`` for ``tau_yz``, with no membrane force gradients; and Eq.
-    (43), ``H = [sum_k int f^T G^-1 f dz]^-1``, where ``tau = f R``, Eq. (41),
-    with the 3-point Gauss-Legendre rule, exact for the polynomial of degree 4
-    in each ply.
-
-    Returns ``Ats = [[A44, A45], [A45, A55]]``, 4 <-> yz, 5 <-> xz, and the
-    shear stresses at the top face, which must vanish.
+    (43) is ``H = [sum_k int f^T G^-1 f dz]^-1``, where ``tau = f R``, Eq.
+    (41). The 3-point Gauss-Legendre rule is exact for the polynomial of
+    degree 4 in each ply.
     """
     h = sum(plyts)
     z = offset - h/2 + np.concatenate(([0.], np.cumsum(plyts)))

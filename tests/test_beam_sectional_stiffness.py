@@ -135,9 +135,14 @@ def CUS_C():
 def tip_closed_form(C, L, f):
     r"""Tip displacements of a cantilever with the sectional stiffness ``C``
 
-    Derived here. Clamped at `x = 0`, loaded at `x = L` by ``f`` `=
-    \{P_x, P_y, P_z, T, M_y, M_z\}`, work-conjugate to `\{u, v, w, r_x,
-    r_y, r_z\}`. The strain energy `\frac{1}{2} \int_0^L
+    Clamped at `x = 0`, loaded at `x = L` by ``f`` `= \{P_x, P_y, P_z, T,
+    M_y, M_z\}`, work-conjugate to `\{u, v, w, r_x, r_y, r_z\}`. Without
+    couplings, `v(L) = P_y L^3/(3 C_{44}) + P_y L/C_{11}`, Eq. (1.2) of
+    Bathe, Finite Element Procedures, 2014, p. 5.
+
+    Notes
+    -----
+    Derived here. The strain energy `\frac{1}{2} \int_0^L
     \boldsymbol{\epsilon}^\top \boldsymbol{C} \boldsymbol{\epsilon} dx`,
     with `\boldsymbol{\epsilon} = \{u_{,x}, v_{,x} - r_z, w_{,x} + r_y,
     {r_x}_{,x}, -{r_z}_{,x}, {r_y}_{,x}\}`, gives with the virtual work the
@@ -151,8 +156,7 @@ def tip_closed_form(C, L, f):
     `\boldsymbol{S} = \boldsymbol{C}^{-1}`, and, integrating with zero
     displacements at `x = 0`, `r_z = -\int \epsilon_4`, `r_y = \int
     \epsilon_5`, `v = \int (\epsilon_1 + r_z)` and `w = \int (\epsilon_2 -
-    r_y)`. Without couplings, `v(L) = P_y L^3/(3 C_{44}) + P_y L/C_{11}`,
-    Eq. (1.2) of Bathe, Finite Element Procedures, 2014, p. 5.
+    r_y)`.
     """
     S = np.linalg.inv(C)
     Px, Py, Pz, T, My, Mz = f
