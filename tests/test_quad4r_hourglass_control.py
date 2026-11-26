@@ -1085,7 +1085,7 @@ def test_one_element_wide_strip_in_torsion():
     and the transverse shear have the physical stabilisation of Belytschko
     and Leviathan (1994) instead, and the 6x1 strip gives 0.941 times the reference,
     grade B, as the QUAD4 of MacNeal and Harder. Tip twist over 0.03208,
-    measured on 2026-10-29, the torque applied as the corner forces of this
+    the torque applied as the corner forces of this
     test (corner) or as normal forces proportional to the distance from the
     axis (distributed), with the default stabilisation
     (``hgfactor_physical = 1``) or 1/100 of it:
@@ -1129,7 +1129,7 @@ def test_one_element_wide_strip_in_torsion():
     low = strip_twist(hgfactor_physical=0.01)
     print('strip twist / reference: 6x1 %.4f, 12x4 %.4f, 6x1 with 1/100 of '
           'the stabilisation %.4g' % (one/ref, refined/ref, low/ref))
-    # NOTE values pre-determined by strip_twist on 2026-10-29
+    # NOTE values pre-determined by strip_twist
     assert np.isclose(one, 0.03017887108568292, rtol=1e-6)
     assert np.isclose(refined, 0.032672815829645464, rtol=1e-6)
     # NOTE grade B of MacNeal and Harder, p. 14

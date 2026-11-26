@@ -51,7 +51,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
     solution of [3]_, Sec. 10.2.1, p. 277, Eq. (10.46).
 
     The buckling load must not depend on the orientation of the plate. With
-    30x14 elements it is 1.41 % above the reference, measured on 2026-10-29
+    30x14 elements it is 1.41 % above the reference,
     with the default stabilisation of Quad4R, the physical stabilisation of
     the bending and of the transverse shear of Belytschko and Leviathan
     (1994) [4]_, see :mod:`pyfe3d.quad4r`.

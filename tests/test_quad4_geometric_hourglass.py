@@ -72,8 +72,7 @@ two successive meshes from 4x4 to 64x64 is, for 1/100, 4.36, 4.08, 4.02 and
 with ``centroid_slopes = 1``, +0.052 %, and 4.22, 4.05, 4.01 and 4.00 with
 the default, +0.032 %; for 1/1000, 4.21, 4.05, 4.01 and 4.00, +0.034 %,
 4.32, 4.08, 4.02 and 4.00, +0.041 %, and 4.13, 4.03, 4.01 and 4.00,
-+0.021 % (``2x2`` measured with an element that takes the slopes at the
-two-by-two points, the other columns on 2026-11-01).
++0.021 %.
 :func:`test_low_transverse_shear_stiffness` asserts this convergence for the
 three rules: the error is positive on every mesh, the ratio of the errors of
 the 16x16 and 32x32 meshes lies between 3.8 and 4.2, the order 2 of the
@@ -268,8 +267,8 @@ def test_thick_plate_two_by_two_slopes():
     the default, the MITC4 transverse shear with the slopes of `w` at the
     two-by-two points, is +0.91 % above it, and +1.49 % with the slopes at
     the centroid, ``centroid_slopes = 1`` or ``shear_model = 0``, whose
-    elements with `h/\ell \ge 1` have the MITC4 strains as well (measured
-    on 2026-11-01); +0.23 % and +0.37 % with 24 by 24 elements"""
+    elements with `h/\ell \ge 1` have the MITC4 strains as well;
+    +0.23 % and +0.37 % with 24 by 24 elements"""
     h = 0.05
     prop = isotropic_plate(E=E, nu=NU, thickness=h)
     D = E*h**3/(12*(1 - NU**2))

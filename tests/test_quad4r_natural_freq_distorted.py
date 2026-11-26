@@ -41,8 +41,8 @@ def test_nat_freq_plate(plot=False, mode=0):
     converge to about 1 % below the reference, through the boundary layer
     of the Mindlin plate along the edges.
 
-    With 32x40 elements the frequency is 0.10 % below the reference, measured
-    on 2026-10-29 with the physical stabilisation of the bending and of the
+    With 32x40 elements the frequency is 0.10 % below the reference,
+    with the physical stabilisation of the bending and of the
     transverse shear of Belytschko and Leviathan (1994) [3]_ that Quad4R
     uses, see :mod:`pyfe3d.quad4r`.
 

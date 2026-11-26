@@ -691,7 +691,7 @@ def test_torsion_of_a_one_element_wide_strip():
 
     The 6 % between Quad4 with 6x4 elements and 0.03208 is not a mesh error
     that refinement removes: Quad4 and Quad4R converge to the same twist,
-    about 1.067 times 0.03208, measured on 2026-10-29 with the distributed
+    about 1.067 times 0.03208, measured with the distributed
     torque above (ratio to 0.03208):
 
     ========  ======  ======  ======  ======  ======  ======  =======
@@ -714,8 +714,7 @@ def test_torsion_of_a_one_element_wide_strip():
 
     """
     ref = 0.03208
-    # NOTE values pre-determined by strip_twist on 2026-10-29, and on
-    #      2026-10-30 for the default Quad4, 'Quad4, default'
+    # NOTE values pre-determined by strip_twist
     predetermined = {('Quad4, default', 1): 0.030178871085683706,
                      ('Quad4, default', 2): 0.030178995785733735,
                      ('Quad4, default', 4): 0.032516470823351365,

@@ -434,12 +434,12 @@ def test_shear_only_subspace_is_the_mechanism_the_stabilisation_opens():
     difference between a quadrilateral and two triangles.
 
     Quad4R is stiffer than the reference by the factor 1.0131887, the same
-    for the three thicknesses (measured on 2026-10-29): its transverse shear, Belytschko and Leviathan (1994), adds the physical
+    for the three thicknesses: its transverse shear, Belytschko and Leviathan (1994), adds the physical
     stabilisation of the nonconstant part of the assumed shear strains,
     which this subspace, with every rotation held at zero, activates in
     proportion to the one-point shear energy. The default Quad4, the
     assumed shear strains of the MITC4 element with two-by-two points,
-    equals Quad4R on these squares, within 1e-12 (measured on 2026-10-30).
+    equals Quad4R on these squares, within 1e-12.
 
     """
     n = 8
@@ -463,7 +463,7 @@ def test_shear_only_subspace_is_the_mechanism_the_stabilisation_opens():
         print('l/h = %-7.4g Quad4 %.6e  Quad4R/Quad4 %.6f  '
               'Tria3R/Quad4 %.4e  1/(1+factor) %.4e'
               % (el_len/h, ref, q4r/ref, t3/ref, expected))
-        # NOTE value pre-determined on 2026-10-29, rtol for the round-off
+        # NOTE value pre-determined, rtol for the round-off
         #      of the eigenvalue solver
         assert np.isclose(q4r/ref, 1.013188709965525, rtol=1e-6)
         assert np.isclose(q4, q4r, rtol=1e-10)

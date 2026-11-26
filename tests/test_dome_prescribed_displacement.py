@@ -599,7 +599,7 @@ def test_cap_moderate_rotations(offset):
     r"""12x12 cells of Tria3R pairs on the quarter, mid-surface radius ``a +
     offset*th``, up to ``w/th = 7``: the load at ``w/th = 2.326`` and
     ``6.720`` of Table 3 within the 5 % tolerance, the published results
-    scattering by about 4 %; measured on 2026-10-30, +2.5 % and +2.1 % with
+    scattering by about 4 %; the differences are +2.5 % and +2.1 % with
     ``offset = 0``, +1.6 % and +1.2 % with ``offset = 0.5``, and -0.5 % and
     -1.9 % with 24x24 cells and ``offset = 0``. The edge
     reaction balances the crown reaction along ``Z``, the vertical rigid
@@ -634,7 +634,7 @@ def test_cap_von_karman_whole_path():
     -----
     A coarse mesh, so the reaction is a regression value of the code, not a
     literature value: ``F_n = 2.9986`` at ``w/th = 30``, against the linear
-    ``16.00``; measured on hpc12 on 2026-11-12, with the vertical balance
+    ``16.00``, with the vertical balance
     to 6.8e-14 of the crown reaction.
     """
     w, Fn, slope, an, model, dofw = run_cap(4, CAP['a'], initialInc=0.05,
@@ -653,7 +653,7 @@ def test_leicester_upper_limit_load():
     of the shallow shell theory of the references, up to ``w = 300`` mm:
     snap-through, with the upper limit load within 3 % of Leicester (1968),
     the reading uncertainty of 0.8 % plus the 1.9 % of the flat triangles of
-    Horrigmoe and Bergan (1978); measured on 2026-10-30: 50.22 kN, +2.0 %."""
+    Horrigmoe and Bergan (1978); the model gives 50.22 kN, +2.0 %."""
     w, P, slope, an, model, dofw = run_leicester(16, shear_factor=1000.)
     assert an.increments[-1] == 1.
     assert np.all(np.diff(w) > 0)
@@ -681,9 +681,9 @@ def test_cap_corotational_snap_back():
     A coarse mesh, so the limit load is a regression value of the code, not
     a literature value: ``F_n = 1.9525`` at ``w/th = 23.74``, the
     deflection turning back from 24.92 to 24.38, and ``F_n = 4.751`` at
-    ``w/th = 30``; measured on hpc12 on 2026-11-12. The limit load decreases
+    ``w/th = 30``. The limit load decreases
     with the mesh, 1.954, 1.915 and 1.894 with 8x8, 10x10 and 12x12 cells
-    and the arc length 0.05, measured on the same day.
+    and the arc length 0.05.
     """
     model, bu, dofw = cap_model(8, CAP['a'], 'Quad4R')
     th = CAP['th']
@@ -711,7 +711,7 @@ def test_leicester_corotational():
     stiffness times 1000, up to ``w = 300`` mm: the upper limit load within
     3 % and the lower within 7 % of Leicester (1968), the reading
     uncertainty of 1.1 % plus the 5.8 % between Leicester and the flat
-    triangles of Horrigmoe and Bergan (1978); measured on 2026-10-30:
+    triangles of Horrigmoe and Bergan (1978); the model gives
     50.38 kN, +2.3 %, and 37.73 kN, +4.8 %, against 49.95 and 38.09 kN
     with ``kinematics='von_karman'``, i.e. :func:`run_leicester` with the
     same mesh of Quad4R."""
@@ -732,7 +732,7 @@ def test_cap_axisymmetric_map_exact():
     of :func:`run_cap_axisymmetric` with one sector of the same mesh up to
     ``w/th = 20``; the polar mesh is invariant under the rotations by the
     sector angle, so the axisymmetric path is a solution of the
-    unrestricted model. Measured on 2026-10-31: largest difference of the
+    unrestricted model. Measured values: largest difference of the
     loads, interpolated at the same ``w``, 4.6e-7 of the largest load; the
     largest rotation of the meridian ``Y = 0`` at ``w/th = 20``, from
     :func:`meridian_rotation`, 61 degrees."""
@@ -767,7 +767,7 @@ def test_cap_axisymmetric():
     :func:`test_cap_corotational_snap_back`), and the three points of
     :data:`FIG3_SHELL_COMSOL16` are matched: the limit load within 2 %, the
     load at ``w/th = 25.51`` within 2 % and the deflection at the load
-    2.787 within 1 %. Measured on 2026-10-31: the limit load 1.835 at
+    2.787 within 1 %. Measured values: the limit load 1.835 at
     ``w/th = 23.21``, +1.6 %, decreasing to 1.828 with 256 rings, +1.2 %,
     see :func:`test_cap_axisymmetric_mesh_trend`; 1.737 at 25.51, +1.1 %;
     ``w/th = 28.61`` at 2.787, +0.6 %."""
@@ -799,10 +799,10 @@ def test_cap_axisymmetric_mesh_trend():
 
     Notes
     -----
-    Values of the code, measured on hpc12 on 2026-11-12: limit loads
+    Values of the code: limit loads
     1.9513, 1.8575 and 1.8335, differences 0.094 and 0.024; Kirchhoff limit
     1.8990, +2.2 %, with the minimum 1.7109 against 1.7342. The limit load
-    converges to 1.828 with 256 rings and the arc length 0.01 (2026-10-31).
+    converges to 1.828 with 256 rings and the arc length 0.01.
     Under a point load the crown deflection of a shell with transverse
     shear has no converged value, its linear compliance growing by `\ln 2
     \, (h/a) \, 2 (1 + \nu)/\kappa` at each halving of the crown elements

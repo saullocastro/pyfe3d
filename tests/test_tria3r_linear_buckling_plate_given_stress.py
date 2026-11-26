@@ -242,7 +242,7 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
     error = abs(P_cr_calc/P_cr_theory - 1)
     print('error', P_cr_calc/P_cr_theory - 1)
     if refinement == 1:
-        # NOTE pre-determined by this test with refinement=1 on 2026-10-29
+        # NOTE pre-determined by this test with refinement=1
         assert isclose(P_cr_calc, -12864.930796789686, rtol=1e-4)
         assert error <= 0.10
     else:

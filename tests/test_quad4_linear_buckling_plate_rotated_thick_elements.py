@@ -40,8 +40,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
     below the Kirchhoff value here. Measured against it, with the 13 x 13
     mesh: +0.91 % with the default, the MITC4 transverse shear with the
     slopes of `w` of KG at the two-by-two points, +1.49 % with the slopes
-    at the centroid, ``shear_model = 0`` or ``centroid_slopes = 1``
-    (measured on 2026-11-01), see
+    at the centroid, ``shear_model = 0`` or ``centroid_slopes = 1``, see
     ``tests/test_quad4_geometric_hourglass.py``. The modified one-point
     shear rule of Hughes, Taylor and Kanoknukulchai (1977) for the thick
     elements, which :class:`pyfe3d.Quad4` does not use, gave +11.2 % through

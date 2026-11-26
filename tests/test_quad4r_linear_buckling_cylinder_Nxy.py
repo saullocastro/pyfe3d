@@ -91,8 +91,8 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     Measured with this test, with ``ntheta = 80*refinement`` elements around
     the circumference and nearly square elements, ``|Tcr|`` in Nm and its
     relative difference to the intercept of Fig. 13 of the same sign, with
-    the wall time of the test, both laminates, on a machine shared with
-    other jobs, measured on 2026-10-29 with the default stabilisation of
+    the approximate wall time of the test, both laminates, measured with
+    the default stabilisation of
     Quad4R, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994) [2]_::
 
         refinement ntheta elements  Z11, Nxy < 0      Z33, Nxy < 0     time
@@ -416,7 +416,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     circumferential waves. Measured with this test, with
     ``ntheta = 64*refinement`` elements around the circumference and nearly
     square elements, the critical ``N_xy`` in N/m and its ratio to the
-    reference, with the wall time on a machine shared with other jobs::
+    reference, with the approximate wall time::
 
         refinement  ntheta  elements    Nxy_cr    ratio    time
            0.5         32       640    736961.3   1.2475     1 s
@@ -427,7 +427,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
            3          192     23424    585175.2   0.9905   252 s
         extrapolated                              0.984
 
-    measured on 2026-10-29 with the default stabilisation of Quad4R, the
+    measured with the default stabilisation of Quad4R, the
     physical stabilisation of the bending and of the transverse shear of
     Belytschko and Leviathan (1994) [3]_. The extrapolation fits ``a +
     c*ntheta**-p`` to the three finest meshes (p = 2.0). The converged element is therefore 1.6 per cent below the

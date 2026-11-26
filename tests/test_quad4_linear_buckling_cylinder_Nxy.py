@@ -89,8 +89,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     Measured with this test, with ``ntheta = 80*refinement`` elements around
     the circumference and nearly square elements, ``|Tcr|`` in Nm and its
     relative difference to the intercept of Fig. 13 of the same sign, with
-    the wall time of the test, both laminates, on a machine shared with
-    other jobs::
+    the approximate wall time of the test, both laminates::
 
         refinement ntheta elements  Z11, Nxy < 0      Z33, Nxy < 0     time
            0.5       40      480   26567.1 +58.1 %   17343.1 +88.5 %     1 s
@@ -112,7 +111,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
     Rows 1 and 2 of the first table are those of the default ``shear_model
     = 1`` of Quad4, the assumed transverse shear strains of the MITC4
-    element (measured on 2026-10-30); the other rows, and the
+    element; the other rows, and the
     second table, were measured with the one-point transverse shear,
     ``shear_model = 0``, which gave 18773.5 and 10788.3 Nm with
     ``refinement=1`` and 17162.0 and 9543.3 Nm with ``refinement=2``, 0.005
@@ -412,7 +411,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     circumferential waves. Measured with this test, with
     ``ntheta = 64*refinement`` elements around the circumference and nearly
     square elements, the critical ``N_xy`` in N/m and its ratio to the
-    reference, with the wall time on a machine shared with other jobs::
+    reference, with the approximate wall time::
 
         refinement  ntheta  elements    Nxy_cr    ratio    time
            0.5         32       640    727275.0   1.2311     1 s
@@ -424,8 +423,8 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
         extrapolated                              0.984
 
     Rows 1 and 2 are those of the default ``shear_model = 1`` of Quad4, the
-    assumed transverse shear strains of the MITC4 element
-    (measured on 2026-10-30); the other rows were measured with the
+    assumed transverse shear strains of the MITC4 element;
+    the other rows were measured with the
     one-point transverse shear, ``shear_model = 0``, which gave 613557.8 and
     589288.8 N/m for rows 1 and 2, 0.012 and 0.009 per cent less. The
     extrapolation fits ``a + c*ntheta**-p`` to the three finest meshes

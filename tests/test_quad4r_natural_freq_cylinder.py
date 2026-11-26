@@ -54,7 +54,7 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
            64    +0.25 %    +0.83 %
            96    +0.09 %    +0.31 %
 
-    measured on 2026-11-04 with the default stabilisation of Quad4R, see
+    measured with the default stabilisation of Quad4R, see
     below, so the element converges to the three-dimensional solution: Table 2.6
     (concluded), p. 53, of the same reference puts the Flugge shell theory
     0.40 % above the elasticity value for ``n = 3`` at this geometry, and at
@@ -66,13 +66,13 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     grade A, 2 per cent, of [2]_, p. 14, which the test
     checks. It also compares Omega with the values pre-determined by this
     same test, with a tolerance for the round-off of other platforms only;
-    wall times on a machine shared with other jobs::
+    approximate wall times::
 
         refinement  ntheta  elements   n = 2       n = 3       time
             1         48      1440    0.12182617  0.13190618    2 s
             2         96      5760    0.12135407  0.13027999   17 s
 
-    measured on 2026-10-29 with the default stabilisation of Quad4R, the
+    measured with the default stabilisation of Quad4R, the
     physical stabilisation of the bending and of the transverse shear of
     Belytschko and Leviathan (1994) [3]_, +0.48 and +1.56 % and +0.09 and
     +0.31 % from the table.

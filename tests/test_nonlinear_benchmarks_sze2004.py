@@ -551,11 +551,10 @@ def test_hinged_roof_thick():
     Notes
     -----
     The path of :func:`run_hinged_roof` against the mesh, ``initialInc =
-    maxInc = 0.05``, measured on 2026-10-29: the limit loads, relative to
+    maxInc = 0.05``: the limit loads, relative to
     Table 9a, 0.7421 and 0.1729, the largest difference of the load at the
     deflections of Table 9a, and the relative difference at its first
-    point, 0.0877 P_max (times with ``OMP_NUM_THREADS=1``; Tria3DSG
-    measured with three such runs in parallel):
+    point, 0.0877 P_max (times with ``OMP_NUM_THREADS=1``):
 
     ============  ===============  ===============  ======  ======  =====
     mesh          upper            lower            max dP  first   time
@@ -634,8 +633,7 @@ def test_hinged_roof_thin_snap_back():
     The path turns back in ``-W_C`` twice. Limit loads against the mesh,
     with the arc-length increments ``initialInc = maxInc = 0.02``, which
     sample the lower limit point more finely than the 0.075 of
-    :func:`thin_roof_path`, measured on 2026-10-29 with ``OMP_NUM_THREADS=1``
-    and three runs in parallel:
+    :func:`thin_roof_path`, measured with ``OMP_NUM_THREADS=1``:
 
     =====  ===============  ================  =====
     mesh   upper, P/P_max   lower, P/P_max    time
@@ -733,7 +731,7 @@ def test_hinged_roof_hourglass_sensitivity():
     to the Kirchhoff theory, Tria3DSG and Quad4R converge to the
     shallow-shell Kirchhoff solution of :func:`ritz_roof_WC`, itself
     converged within 0.01 % (7.47913 and 7.47981 with ``m = 15`` and 20).
-    Measured on 2026-10-29, relative to the Ritz solution with ``m = 20``,
+    Measured, relative to the Ritz solution with ``m = 20``,
     transverse shear x100 (time of all ten meshes of a row, with
     ``OMP_NUM_THREADS=1``):
 

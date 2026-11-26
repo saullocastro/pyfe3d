@@ -68,11 +68,11 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     correction is not forced to the 5/6 of the paper (Sec. 6, p. 307).
     Measured with this test, ``Pcr`` in kN, with the default Quad4, the
     assumed transverse shear strains of the MITC4 element and the slopes of
-    `w` of the geometric stiffness at the two-by-two points (measured on
-    2026-11-01), and with the slopes at the centroid, the one-point
+    `w` of the geometric stiffness at the two-by-two points, and with the
+    slopes at the centroid, the one-point
     transverse shear of ``shear_model = 0`` except in row 1, measured with
-    ``shear_model = 1`` and ``centroid_slopes = 1`` on 2026-10-30, with the
-    wall time of the latter on a machine shared with other jobs::
+    ``shear_model = 1`` and ``centroid_slopes = 1``, with the
+    approximate wall time of the latter::
 
         refinement  ntheta  elements   default   centroid    time
              1         40       440     -494.8     -590.0      1 s
@@ -113,8 +113,8 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
         the geometric stiffness; the default Quad4, with the MITC4
         transverse shear, takes them at the two-by-two points.
         The reference of the ratios is Pcr = -35858 N, from
-        bfsccylinder/tests/test_linear_buckling_Z22_constant_stress.py,
-        which uses a C1 cubic element and CLPT with ny = 60. Table 6 of
+        a model of C1 cubic cylindrical shell elements with CLPT and 60
+        elements around the circumference. Table 6 of
         Castro et al. gives 36.35 kN for CLPT-BC2 SS2, 36.29 kN for
         FSDT-BC2 SS2 and 34.4 kN for the test; 36.29 kN is the FSDT-BC2
         load of an orthotropic laminate, Fig. 6(b), p. 308, while with the
@@ -149,9 +149,8 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
         The Quad4 rows were measured with
         shear_model = 0 and the slopes of w at the centroid. With the
         default Quad4, the MITC4 transverse shear and the slopes
-        of w at the two-by-two points, drilling_model = 0, measured on
-        2026-11-01 with a script that reproduces the row ntheta = 60 of
-        shear_model = 0 to the 0.1 N: -88117.6, -51925.4, -38811.0 and
+        of w at the two-by-two points, drilling_model = 0: -88117.6,
+        -51925.4, -38811.0 and
         -36093.6 N with ntheta = 60, 120, 240 and 480, 2.457, 1.448, 1.082
         and 1.007 of the reference, and -93751.2 N with ntheta = 60 and
         centroid_slopes = 1. No mesh-scale mode appears: the MITC4

@@ -1237,7 +1237,7 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
 
     The error of Tria3DSG on the 9x11 mesh is one of the mesh, and its limit
     one of the model, not of the formulation: with 9x11, 17x21, 33x41, 65x81
-    and 129x161 nodes, measured on 2026-10-29, the errors are, in %,
+    and 129x161 nodes, the errors are, in %,
 
     ==============  ======  ======  ======  ======  =======
     nodes           9x11    17x21   33x41   65x81   129x161
@@ -1392,7 +1392,7 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
     #      element is nearly twice too stiff, grade F. This is the locking,
     #      and it is what alpha is curing in Tria3R
     assert abs(e_dsg[0.]) <= 10.
-    # NOTE value pre-determined by this test on 2026-10-29, see the
+    # NOTE value pre-determined by this test, see the
     #      docstring, compared as a frequency with rtol 1e-4
     assert np.isclose(1 + e_dsg[0.]/100, 1 + 2.7470556272093605/100,
                       rtol=1e-4)

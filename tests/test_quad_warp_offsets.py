@@ -573,8 +573,8 @@ def test_macneal_harder_twisted_beam(name, nx, ny):
     for Quad4, 0.9978 and 0.9987 for Quad4R. With the MITC4 transverse
     shear of the default ``shear_model = 1``, Quad4 gives 0.9963 and 0.9974
     with 12x2 elements, and 0.9974 and 0.9980 with the one-point transverse
-    shear of ``shear_model = 0``, hence the tolerance of 0.4 %
-    (measured on 2026-10-30); the 96x16 values are the same to four digits.
+    shear of ``shear_model = 0``, hence the tolerance of 0.4 %;
+    the 96x16 values are the same to four digits.
 
     References
     ----------
@@ -862,7 +862,7 @@ def twisted_tip_nonlinear(name, kinematics, comp, loads, nx=12, ny=2):
 #: pre-determined by test_twisted_beam_von_karman; Quad4 with the default
 #: shear_model = 1, whose von Kármán terms take the slopes of
 #: w at the two-by-two points, 0.540811 and 0.524690 with the slopes at the
-#: centroid (measured on 2026-11-01); (0.541658, 0.539894) and (0.525850,
+#: centroid; (0.541658, 0.539894) and (0.525850,
 #: 0.525783) with the one-point transverse shear of shear_model = 0 and the
 #: slopes at the centroid
 TW_VK = {('Quad4', 2): (0.540710, 0.539268),

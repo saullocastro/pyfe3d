@@ -154,7 +154,7 @@ def test_fung_kaplan_beam_arch(method, convergence_criterion, monkeypatch):
     -0.0009, and -0.0043 and -0.0017. The converged point of extreme load is
     within about `3 B_{1,lim} h^2 + h^3 = 0.006` of the limit load of the
     model, with `B_{1,lim} = 1.13` and `h = 0.042` the largest increment of
-    `B_1` of a step, as in Eq. (23). Measured on 2026-10-30 with the
+    `B_1` of a step, as in Eq. (23). Measured with the
     increments of this test, 0.05, the same for both methods and both
     criteria within 2e-10 (time of one analysis):
 

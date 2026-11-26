@@ -52,9 +52,8 @@ compares its path with the values pre-determined by this same test with
 ``rtol = 1e-4``, for the platform round-off, and with Sze with the grades
 of MacNeal and Harder (1985), p. 14: A for a
 normalised error within 2 %, B within 10 %. The convergence with the mesh,
-measured once, is given in the docstrings. Times measured on 2026-10-31
-with ``OMP_NUM_THREADS=1`` and the compiled :mod:`pyfe3d.corotational`,
-several runs in parallel.
+is given in the docstrings. Times measured
+with ``OMP_NUM_THREADS=1`` and the compiled :mod:`pyfe3d.corotational`.
 
 References
 ----------
@@ -363,7 +362,7 @@ def test_cantilever_end_shear(element, num_elements):
     and 0.005 (W) with BeamC, within the rounding of its three decimals
     with Quad4R and Tria3R; from the elastica at ``P_max``, -0.02 % and
     +0.05 % (BeamC), -0.10 % and -0.02 % (Quad4R and Tria3R). Times 0.1 s
-    (BeamC), 0.2 s (Quad4R), 0.3 s (Tria3R), measured on 2026-10-31 with
+    (BeamC), 0.2 s (Quad4R), 0.3 s (Tria3R), measured with
     the compiled :mod:`pyfe3d.corotational`. The convergence of BeamC is
     in :func:`test_cantilever_end_shear_convergence`.
 
@@ -436,7 +435,7 @@ def test_cantilever_end_shear_translated(element, num_elements):
     internal and external force vectors and thus the convergence criterion
     unchanged, but not the round-off of positions computed as `\boldsymbol{X}
     + \boldsymbol{u}`, of the order of `\varepsilon |\boldsymbol{X}|`.
-    Measured on 2026-10-30 with 64 BeamC elements and the positions computed
+    Measured with 64 BeamC elements and the positions computed
     as `\boldsymbol{X} + \boldsymbol{u}`: the iterations of the first
     increment stagnated at `\zeta` of about 1e-8, 1e-7 and 1e-6 with the
     root at ``X = 0``, 100 and 1000, at 0.12 to 0.19 times `\varepsilon \|
@@ -707,7 +706,7 @@ def test_slit_annular_plate():
     The plate twists into a helix with large rotations, Fig. 4c of Sze.
     Measured at ``P_max`` (Table 4a: ``W_A = 13.891``, ``W_B =
     17.528``), Newton-Raphson, with ``OMP_NUM_THREADS=1`` and the compiled
-    :mod:`pyfe3d.corotational` (times of 2026-10-31):
+    :mod:`pyfe3d.corotational`:
 
     ============  ================  ================  =====
     mesh          W_A               W_B               time
