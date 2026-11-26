@@ -4,6 +4,18 @@ material axes given by ``matx``
 The plate is modelled with the material direction ``matx`` at angles from
 -90 to 90 degrees in its plane; the buckling load must equal that of
 ``thetadeg = 0`` to ``rtol = 1e-5``.
+
+Notes
+-----
+The single ply is laid at ``-thetadeg`` from the material direction, and the
+material direction makes the angle ``thetadeg`` with the global `X` axis, so
+that the fibres are along `X` for every ``thetadeg``. The element rotates
+the constitutive matrices of the property from the material direction to
+its own axes, with ``m11, m12, m21, m22`` of ``update_rotation_matrix``;
+this rotation is the inverse of the one of the lamination angle. The
+constitutive matrices in the element axes, and with them the buckling load, are
+therefore those of ``thetadeg = 0``, up to the round-off of the two
+rotations.
 """
 import sys
 sys.path.append('..')
@@ -190,7 +202,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
 
         # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
         #      estimates the Cayley shift and verifies that no lower load
-        #      multiplier was missed, which a hardcoded shift does not
+        #      multiplier was missed
         eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
 
         load_mult = eigvals[0]

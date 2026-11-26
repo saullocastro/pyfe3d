@@ -7,6 +7,19 @@ fibres stay along the global x axis. The fundamental frequency of the plate,
 with randomly distorted inner nodes, must not change: each ``thetadeg`` is
 compared with ``thetadeg = 0`` with ``rtol=1e-5``.
 
+Notes
+-----
+The single ply is laid at ``-thetadeg`` from the material direction, and the
+material direction makes the angle ``thetadeg`` with the global `X` axis, so
+that the fibres are along `X` for every ``thetadeg``. The element rotates
+the constitutive matrices of the property from the material direction to
+its own axes, with ``m11, m12, m21, m22`` of ``update_rotation_matrix``;
+this rotation is the inverse of the one of the lamination angle. The
+constitutive matrices in the element axes, and with them the frequency, are
+therefore those of ``thetadeg = 0``, up to the round-off of the two
+rotations.
+The mesh is distorted with the same random seed for every ``thetadeg``, so
+that only the material direction changes.
 """
 import sys
 sys.path.append('..')
