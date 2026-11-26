@@ -24,24 +24,23 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     r"""Linear buckling of the laminated cylinder Z11 under a prescribed axial
     shortening, displacement control against load control
 
-    The cylinder is Z11 of Castro et al. (2014), with the geometry and stacking sequence of its Table 4, p. 307, the
-    material Geier1997 of its Table 3, p. 307, and the boundary condition SS1
-    of its Table 1, p. 304, ``u = v = w = 0`` at both edges, the top edge being
-    moved axially by the prescribed shortening.
+    The cylinder is Z11 of Castro et al. (2014), with the geometry and
+    stacking sequence of its Table 4, p. 307, the material Geier1997 of its
+    Table 3, p. 307, and the boundary condition SS1 of its Table 1, p. 304,
+    ``u = v = w = 0`` at both edges, the top edge being moved axially by the
+    prescribed shortening.
 
     What is asserted is a property of the model and not a literature value.
     The buckling load is computed three times on the same mesh:
 
     1. displacement control, the axial shortening prescribed at the top edge;
     2. displacement control with twice that shortening, which must halve the
-       load multiplier and leave ``Pcr`` unchanged, because the prebuckling
-       field is linear in the shortening and the geometric stiffness linear
-       in the prebuckling field;
+       load multiplier and leave ``Pcr`` unchanged;
     3. load control, with the axial displacement of the top edge released in
        the static analysis and loaded by the axial reaction forces of
-       analysis 1. The static solution is unique, so the prebuckling field,
-       the geometric stiffness and ``Pcr`` must be those of analysis 1. The
-       buckling analysis keeps the same constraints as analysis 1.
+       analysis 1: the prebuckling field and ``Pcr`` must be those of
+       analysis 1. The buckling analysis keeps the same constraints as
+       analysis 1.
 
     The three must agree to round-off, which checks the recovery of the
     reaction forces from ``KC0``, the static solution with prescribed
@@ -51,6 +50,18 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
 
     Notes
     -----
+    Twice the shortening halves the load multiplier and leaves ``Pcr``
+    unchanged because the prebuckling field is linear in the shortening and
+    the geometric stiffness linear in the prebuckling field. Under load
+    control the static solution is unique, so the prebuckling field, the
+    geometric stiffness and ``Pcr`` must be those of analysis 1. The
+    geometric stiffness takes the full displacement field: a field that
+    held the solution at the free degrees-of-freedom but zero at the
+    prescribed ones would drop the shortening of the top edge from the
+    prebuckling field of the elements of the top row, and gives -498.4 kN
+    instead of -494.9 kN at ``refinement=1`` with the one-point transverse
+    shear and the slopes at the two-by-two points.
+
     Why there is no assertion against the paper: SS1 at both edges is not
     in it. Table 6, p. 308, of Castro et al. gives the axial buckling load
     of Z11 with SS2 and CC2, 282.82 kN with FSDT-BC2 and SS2 and 284.06 kN
@@ -94,17 +105,17 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     with the value of the table pre-determined by this same test, with a
     tolerance for the round-off of other platforms only. The one-point
     transverse shear of the thin elements with the slopes at the two-by-two
-    points, a combination that Quad4 does not offer, gave -494.9, -330.0
+    points, a combination that Quad4 does not offer, gives -494.9, -330.0
     and -81.6 kN with refinements 1, 2 and 4: the hourglass pattern of `w`
-    had the geometric stiffness of the two-by-two quadrature and no
-    transverse shear stiffness, and the load of a mesh-scale mode kept
+    has the geometric stiffness of the two-by-two quadrature and no
+    transverse shear stiffness, and the load of a mesh-scale mode keeps
     falling under refinement. The MITC4 strains of the default give that
     pattern its transverse shear stiffness, and the same slopes converge
     from above.
 
-    Record of a related study, on the laminated cylinder Z22::
+    Results on the laminated cylinder Z22::
 
-        a record of a related study on the laminated cylinder Z22 of
+        Results on the laminated cylinder Z22 of
         Castro et al., [+-49/+-36/0_2] of Geier1997 (Tables 3 and 4,
         p. 307), under the uniform membrane prestress of Eq. (13) applied
         through update_KG_given_stress, with SS2 of Table 1, over both
@@ -235,7 +246,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
         The corrected convergence, two triangles per cell of the same
         structured mesh, so twice the elements but the identical node
         count and identical number of degrees of freedom as the
-        quadrilateral study, drilling_model = 0 throughout:
+        quadrilateral tables above, drilling_model = 0 throughout:
 
                element    ntheta   as passed   corrected   waves   el/wave
                 Tria3R        60       0.213       1.478      30       2.0
@@ -511,7 +522,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
         KGuu = KG[bu, :][:, bu]
         # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
         #      estimates the Cayley shift and verifies that no lower load
-        #      multiplier was missed, which a hardcoded shift does not
+        #      multiplier was missed
         return linear_buckling(KC0uu, KGuu, num_eigvalues=num_eigvalues, tol=1e-9)
 
     num_eig_lb = max(mode+1, 1)
@@ -521,13 +532,8 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     u_prescribed = np.zeros(N, dtype=DOUBLE)
     u_prescribed[2::DOF] += checkTopEdge*compression
     u = solve_static(bk, u_prescribed[bk], np.zeros(N))
-    # NOTE the geometric stiffness takes the full displacement field: a
-    #      field that held the solution at the free degrees-of-freedom but
-    #      zero at the prescribed ones would drop the shortening of the top
-    #      edge from the prebuckling field of the elements of the top row,
-    #      and gave -498.4 kN instead of -494.9 kN at refinement=1 with the
-    #      one-point transverse shear and the slopes at the two-by-two
-    #      points
+    # NOTE the geometric stiffness takes the full displacement field,
+    #      prescribed degrees-of-freedom included, see the Notes
     # NOTE reaction forces at the constrained degrees-of-freedom
     reactions = KC0 @ u
     P = reactions[2::DOF][checkTopEdge].sum()
@@ -570,7 +576,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     if refinement in predetermined:
         assert np.isclose(Pcr, predetermined[refinement], rtol=1e-4)
 
-    # NOTE a record of a related study on the cylinder Z22 is in the Notes
+    # NOTE results on the laminated cylinder Z22 are in the Notes
 
     if plot_pyvista:
         import pyvista as pv

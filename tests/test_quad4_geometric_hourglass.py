@@ -253,22 +253,27 @@ def test_KG_of_the_pre_buckling_state():
 def test_thick_plate_two_by_two_slopes():
     r"""Hard simply supported square plate with `b/h = 10` under uniaxial
     compression, 12 by 12 elements, `h/\ell = 1.2`, against the Navier
-    solution of the Mindlin plate,
+    solution of the Mindlin plate (see the Notes), 5.56 % below the
+    Kirchhoff value `N_{cr,K} = 4 \pi^2 D/b^2`: the default, the MITC4
+    transverse shear with the slopes of `w` at the two-by-two points, is
+    +0.91 % above it, and +1.49 % with the slopes at the centroid,
+    ``centroid_slopes = 1`` or ``shear_model = 0``; +0.23 % and +0.37 %
+    with 24 by 24 elements
 
     Notes
     -----
+    The Navier solution of the Mindlin plate is
+
     .. math::
 
         N_{cr} = \frac{N_{cr,K}}{1 + D \alpha^2/A_{55}}, \qquad \alpha^2 =
         \left(\frac{\pi}{a}\right)^2 + \left(\frac{\pi}{b}\right)^2
 
-    5.56 % below the Kirchhoff value `N_{cr,K} = 4 \pi^2 D/b^2`, see
-    ``tests/test_quad4_linear_buckling_plate_rotated_thick_elements.py``:
-    the default, the MITC4 transverse shear with the slopes of `w` at the
-    two-by-two points, is +0.91 % above it, and +1.49 % with the slopes at
-    the centroid, ``centroid_slopes = 1`` or ``shear_model = 0``, whose
-    elements with `h/\ell \ge 1` have the MITC4 strains as well;
-    +0.23 % and +0.37 % with 24 by 24 elements"""
+    see
+    ``tests/test_quad4_linear_buckling_plate_rotated_thick_elements.py``.
+    ``shear_model = 0`` gives the load of ``centroid_slopes = 1`` because
+    its elements with `h/\ell \ge 1` have the MITC4 strains as well.
+    """
     h = 0.05
     prop = isotropic_plate(E=E, nu=NU, thickness=h)
     D = E*h**3/(12*(1 - NU**2))

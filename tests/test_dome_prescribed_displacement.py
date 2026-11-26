@@ -497,13 +497,17 @@ def prescribed_path_corotational(model, bu, dofw, w_max, initialInc=0.02,
                                   maxInc=0.02, NL_method='arc_length_riks'):
     r"""As :func:`prescribed_path`, with the elements of ``model`` added to a
     :class:`.CorotationalModel` with ``kinematics='corotational'`` and the
-    default convergence criterion; the co-rotational kinematics take the
-    nodal positions relative to the element centroid, so no ``absTOL`` is
-    needed against the round-off of the internal force
+    default convergence criterion, without ``absTOL``
 
     Returns the deflections and the reactions of the quarter model times 4,
     the linear reaction of the deflection ``w_max``, the
     :class:`.Analysis` and the :class:`.CorotationalModel`.
+
+    Notes
+    -----
+    The co-rotational kinematics take the nodal positions relative to the
+    element centroid, so no ``absTOL`` is needed against the round-off of
+    the internal force.
     """
     cr = CorotationalModel(model.x, model.N)
     for elem in model.elements:
@@ -601,10 +605,16 @@ def test_cap_moderate_rotations(offset):
     ``6.720`` of Table 3 within the 5 % tolerance, the published results
     scattering by about 4 %; the differences are +2.5 % and +2.1 % with
     ``offset = 0``, +1.6 % and +1.2 % with ``offset = 0.5``, and -0.5 % and
-    -1.9 % with 24x24 cells and ``offset = 0``. The edge
-    reaction balances the crown reaction along ``Z``, the vertical rigid
-    translation being an exact zero-energy mode of the von Kármán strains,
-    and the rotation of the meridian stays below 35 degrees."""
+    -1.9 % with 24x24 cells and ``offset = 0``. The edge reaction balances
+    the crown reaction along ``Z`` and the rotation of the meridian stays
+    below 35 degrees.
+
+    Notes
+    -----
+    The edge reaction balances the crown reaction because the vertical
+    rigid translation is an exact zero-energy mode of the von Kármán
+    strains.
+    """
     w, Fn, slope, an, model, dofw = run_cap(12, CAP['a'] + offset*CAP['th'],
                                             w_max=7., initialInc=0.05,
                                             maxInc=0.05)
@@ -625,17 +635,18 @@ def test_cap_von_karman_whole_path():
     von Kármán strains, the crown deflection prescribed up to ``w/th = 30``,
     beyond the inversion of the cap, with Riks' method: the path reaches the
     load factor 1 with ``w`` increasing monotonically, the edge reaction
-    balances the crown reaction along ``Z`` at ``w/th = 30``, the vertical
-    rigid translation being an exact zero-energy mode of the von Kármán
-    strains, the secant stiffness is below the linear one, and the crown
-    reaction is that of the code.
+    balances the crown reaction along ``Z`` at ``w/th = 30``, the secant
+    stiffness is below the linear one, and the crown reaction is that of
+    the code.
 
     Notes
     -----
     A coarse mesh, so the reaction is a regression value of the code, not a
     literature value: ``F_n = 2.9986`` at ``w/th = 30``, against the linear
     ``16.00``, with the vertical balance
-    to 6.8e-14 of the crown reaction.
+    to 6.8e-14 of the crown reaction. The edge reaction balances the crown
+    reaction because the vertical rigid translation is an exact zero-energy
+    mode of the von Kármán strains.
     """
     w, Fn, slope, an, model, dofw = run_cap(4, CAP['a'], initialInc=0.05,
                                             maxInc=0.05)
@@ -672,12 +683,16 @@ def test_cap_corotational_snap_back():
     decreasing load factor, and the path reaches the load factor 1 on a
     last branch along which ``w`` increases and the inverted cap stiffens,
     the final reaction above twice the limit load. The edge reaction
-    balances the crown reaction along ``Z`` at ``w/th = 30``, the vertical
-    rigid translation being a zero-energy mode of the co-rotational
-    kinematics, and the limit load is that of the code.
+    balances the crown reaction along ``Z`` at ``w/th = 30``, and the limit
+    load is that of the code.
 
     Notes
     -----
+    The edge reaction balances the crown reaction because the vertical
+    rigid translation is a zero-energy mode of the co-rotational
+    kinematics.
+
+
     A coarse mesh, so the limit load is a regression value of the code, not
     a literature value: ``F_n = 1.9525`` at ``w/th = 23.74``, the
     deflection turning back from 24.92 to 24.38, and ``F_n = 4.751`` at
@@ -730,12 +745,16 @@ def test_cap_axisymmetric_map_exact():
     unrestricted, with ``kinematics='corotational'``, the symmetry
     conditions on ``X = 0`` and ``Y = 0`` and Riks' method, follows the path
     of :func:`run_cap_axisymmetric` with one sector of the same mesh up to
-    ``w/th = 20``; the polar mesh is invariant under the rotations by the
-    sector angle, so the axisymmetric path is a solution of the
-    unrestricted model. Measured values: largest difference of the
-    loads, interpolated at the same ``w``, 4.6e-7 of the largest load; the
+    ``w/th = 20``. Measured: the largest difference of the loads,
+    interpolated at the same ``w``, is 4.6e-7 of the largest load; the
     largest rotation of the meridian ``Y = 0`` at ``w/th = 20``, from
-    :func:`meridian_rotation`, 61 degrees."""
+    :func:`meridian_rotation`, is 61 degrees.
+
+    Notes
+    -----
+    The polar mesh is invariant under the rotations by the sector angle, so
+    the axisymmetric path is a solution of the unrestricted model.
+    """
     nr, nsec, dphi = 16, 4, np.pi/8
     w_max = 20.
     x, prop, elements, ring, azimuth = polar_cap(nr, nsec, dphi, CAP['a'])
@@ -767,7 +786,7 @@ def test_cap_axisymmetric():
     :func:`test_cap_corotational_snap_back`), and the three points of
     :data:`FIG3_SHELL_COMSOL16` are matched: the limit load within 2 %, the
     load at ``w/th = 25.51`` within 2 % and the deflection at the load
-    2.787 within 1 %. Measured values: the limit load 1.835 at
+    2.787 within 1 %. Measured: the limit load 1.835 at
     ``w/th = 23.21``, +1.6 %, decreasing to 1.828 with 256 rings, +1.2 %,
     see :func:`test_cap_axisymmetric_mesh_trend`; 1.737 at 25.51, +1.1 %;
     ``w/th = 28.61`` at 2.787, +0.6 %."""

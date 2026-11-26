@@ -285,13 +285,18 @@ def test_cantilever_end_moment_quad4r():
 @pytest.mark.slow
 @pytest.mark.parametrize('num_elements', [1, 4, 16])
 def test_cantilever_end_moment_beamc_no_membrane_locking(num_elements):
-    r"""BeamC replaces the nonlinear part of the von Kármán axial strain,
+    r"""No membrane locking of BeamC: the cantilever under the end moment,
+    up to ``M_max`` in 20 increments, has the tip deflections ``U`` and
+    ``W`` of :func:`von_karman_tip` within ``rtol = 1e-8`` for any number
+    of elements
+
+    Notes
+    -----
+    BeamC replaces the nonlinear part of the von Kármán axial strain,
     ``w_x**2/2``, by its mean over the element, constant as ``u_x``, so that
     the axial strain can vanish in each element and there is no membrane
     locking (Crisfield, 1991, Section 7.1.3, Eqs. (7.31)-(7.32)).
 
-    Notes
-    -----
     Under the end moment the von Kármán cantilever has no axial force, the
     curvature ``kappa = M/(E*I)`` is uniform and ``w = kappa*x**2/2``
     quadratic, which the consistent shape functions of BeamC represent
@@ -319,13 +324,18 @@ def test_cantilever_end_moment_beamc_no_membrane_locking(num_elements):
 
 @pytest.mark.parametrize('num_elements', [4, 16])
 def test_cantilever_end_moment_beamlr_no_membrane_locking(num_elements):
-    r"""BeamLR takes the slope ``w_x`` of the von Kármán axial strain from
+    r"""No membrane locking of BeamLR: the cantilever under ``M =
+    0.05*M_max`` has the tip deflection ``W`` of :func:`von_karman_tip`
+    within ``rtol = 1e-8``, and ``U/U_vk - 1 = -1/(4*num_elements**2)``
+    within ``rtol = 1e-4``
+
+    Notes
+    -----
+    BeamLR takes the slope ``w_x`` of the von Kármán axial strain from
     its linear interpolation of ``w``, constant in the element as ``u_x``,
     so that the axial strain ``u_x + w_x**2/2`` can vanish in each element
     and there is no membrane locking.
 
-    Notes
-    -----
     Under ``M = 0.05*M_max`` the von Kármán cantilever has no axial force,
     the curvature ``kappa = M/(E*I)`` is uniform, the rotation linear and
     ``w = kappa*x**2/2`` quadratic. The linear rotations of BeamLR give the
@@ -436,8 +446,14 @@ def linear_roof_WC(n=16, h=12.7, element='Quad4R', hgfactor_physical=1.,
 def ritz_roof_WC(m=20, h=12.7):
     r"""Linear deflection ``-W_C`` under ``P_max`` of the quarter of the roof
     of :func:`hinged_roof` with the shallow-shell (Donnell-Marguerre)
-    Kirchhoff theory and a Ritz method
+    Kirchhoff theory and a Ritz method, with ``m`` functions of
+    :func:`ritz.vecf` in each direction
 
+    The solution has no transverse shear deformation and is independent of
+    the finite elements of pyfe3d.
+
+    Notes
+    -----
     The quarter is the rectangle ``0 <= x <= L``, ``0 <= y <= b`` of the
     developed surface, ``b = R*theta``, with the membrane strains ``u_x``,
     ``v_y + w/R`` and ``u_y + v_x``, the curvatures ``-w_xx``, ``-w_yy`` and
@@ -448,8 +464,7 @@ def ritz_roof_WC(m=20, h=12.7):
     0`` (``v = w_y = 0``), hinged edge at ``y = b`` (``u = v = w = 0``), free
     edge at ``x = L``. The integrals are evaluated with a Gauss-Legendre
     quadrature of 200 points in each direction, exact for the polynomial
-    integrands. The solution has no transverse shear deformation and is
-    independent of the finite elements of pyfe3d.
+    integrands.
     """
     R, L, E, nu = ROOF['R'], ROOF['L'], ROOF['E'], ROOF['nu']
     b = R*ROOF['theta']
