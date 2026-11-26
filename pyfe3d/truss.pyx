@@ -323,7 +323,9 @@ cdef class Truss:
         is normal to the `x` axis and to the vector obtained by a cyclic
         permutation of the components of the `x` axis, ``(xj, xk, xi)``, the
         `y` axis completes the right-handed system, and the three axes are
-        normalized.
+        normalized. An element whose `x` axis has three equal global
+        components gives a null `z` axis and a rotation matrix with ``nan``
+        entries.
 
 
         Parameters
@@ -352,9 +354,11 @@ cdef class Truss:
         and `\boldsymbol{T}_{3\times 3} = [\boldsymbol{e}_x, \boldsymbol{e}_y,
         \boldsymbol{e}_z]`. The axis `\boldsymbol{e}_y` is thus the component
         of `\boldsymbol{v}_{xy}` normal to `\boldsymbol{e}_x`, normalized.
-        The element has only axial and torsional stiffness, so that the
-        orientation of `\boldsymbol{e}_y` and `\boldsymbol{e}_z` about the
-        axis does not change its matrices in global coordinates. A cyclic
+        The stiffness matrix, with axial and torsional terms only, does not
+        depend on the orientation of `\boldsymbol{e}_y` and
+        `\boldsymbol{e}_z` about the axis; the mass matrix depends on it
+        through the moments of the section, e.g. ``intrhoy`` and
+        ``intrhoz``, which are measured along these axes. A cyclic
         permutation of the components leaves a vector unchanged only when the
         three are equal: `\boldsymbol{v}_{xy}` is parallel to
         `\boldsymbol{e}_x` for an element along the global direction
