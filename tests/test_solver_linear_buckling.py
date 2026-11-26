@@ -279,7 +279,7 @@ def test_plate_buckling_fsdt_ritz():
     support of their Navier solution, Eq. (4.7.10b) of [2]_. With 20x10
     terms the load agrees with the reference to 1e-8, with 10x5 terms it is
     0.025 % above it. With the rotations free on all edges, the soft simple
-    support used before, the load is 1.28 % below the reference with 20x10
+    support, the load is 1.28 % below the reference with 20x10
     terms and 1.73 % with 30x15, the soft support lowering the load as the
     terms resolve the boundary layer along the edges.
 
@@ -437,8 +437,8 @@ def test_penalty_connections(precondition):
     With ``precondition=True``, the default, the relative residuals of
     ``eigsh()`` are below 2.2e-4 (SciPy 1.17.1, Intel MKL 2025.0.0)
 
-    The matrices were assembled with ``panels`` for Figure 7 (Section 3.2.2)
-    of Stamatelos and Labeas (2023): a square plate, ``a = b = 0.5`` m, of
+    The matrices were assembled with a semi-analytical model for Figure 7
+    (Section 3.2.2) of Stamatelos and Labeas (2023): a square plate, ``a = b = 0.5`` m, of
     11 ``[0_3/90_3]s`` skin strips, ply thickness 0.134 mm, with 10
     ``[0/90]s`` blades of height 2 mm, every domain a ``plate_clpt_donnell``
     with 12 x 6 (skin) and 12 x 4 (blades) terms, connected by penalty
@@ -1189,8 +1189,14 @@ def test_splu_warnings_shown_once():
 
 def laplacian_3d(n):
     r"""Finite difference Laplacian of the unit cube with ``n`` inner points
-    per direction and its eigenvalues
+    per direction and its eigenvalues in closed form, sorted
 
+    With `\boldsymbol{K}_G = -\boldsymbol{I}` the eigenvalues are the load
+    multipliers, exactly repeated for the permutations of the three indices
+    of the directions.
+
+    Notes
+    -----
     `\boldsymbol{K} = \boldsymbol{T} \otimes \boldsymbol{I} \otimes \boldsymbol{I} + \boldsymbol{I} \otimes \boldsymbol{T} \otimes \boldsymbol{I} + \boldsymbol{I}
     \otimes \boldsymbol{I} \otimes \boldsymbol{T}`, with `\boldsymbol{T}` = tridiag(-1, 2, -1) of size `n`.
     Closed form: `\boldsymbol{T} \boldsymbol{x}_i = \mu_i \boldsymbol{x}_i` with `x_{i,j} = \sin(i j
@@ -1476,10 +1482,9 @@ def torsion_cylinder_Z33(ntheta):
 
 
 def test_repeated_load_multipliers_cylinder():
-    r"""The torsional buckling loads of a cylinder come in pairs equal up to
-    the round-off, the modes `\cos n\theta` and `\sin n\theta` of the
-    rotationally symmetric mesh; both copies of the lowest pair are
-    returned, without the dense fallback, and the inertia of `\boldsymbol{K} +
+    r"""Both copies of the lowest pair of torsional buckling loads of a
+    cylinder, equal up to the round-off, are returned without the dense
+    fallback, and the inertia of `\boldsymbol{K} +
     s \boldsymbol{K}_G` just below and above them confirms that exactly two load
     multipliers lie there
 
@@ -1490,12 +1495,21 @@ def test_repeated_load_multipliers_cylinder():
     each of the two lowest pairs, the verification reports 1 load multiplier
     missing below 100.443, and the deflated pass of
     :func:`pyfe3d.solver.eigen._complete_repeated` finds the second copy of
-    96.4816. Before it, with ``max_dense_size=0``, ``linear_buckling``
-    raised a ``RuntimeError``; with 80 elements around the circumference,
-    ``num_eigvalues`` of 2, 3 and 4 also raised for the 3680 non-null rows
-    of ``KG``, more than the default ``max_dense_size=2000``. Whether the
+    96.4816, here with ``max_dense_size=0``. With 80 elements around the
+    circumference ``KG`` has 3680 non-null rows, more than the default
+    ``max_dense_size=2000``. Whether the
     first call misses the copy depends on the rounding errors, so that
     other platforms may not need the deflated pass.
+
+    Notes
+    -----
+    The torsional buckling loads of a cylinder come in pairs equal up to
+    the round-off, the modes `\cos n\theta` and `\sin n\theta` of the
+    rotationally symmetric mesh. The count of the load multipliers is
+    independent of the eigenvalue solvers, by Sylvester's law of inertia:
+    the factorization of `\boldsymbol{K} + s \boldsymbol{K}_G` has no
+    negative pivot for `s` just below the pair and two for `s` just above
+    it.
     """
     K, KG = torsion_cylinder_Z33(32)
     with warnings.catch_warnings():
@@ -1506,8 +1520,7 @@ def test_repeated_load_multipliers_cylinder():
     assert np.all(relative_residuals(K, KG, eigvals, eigvecs) < 1e-6)
     G = eigvecs.T @ K @ eigvecs
     assert abs(G[0, 1])/np.sqrt(G[0, 0]*G[1, 1]) < 1e-6
-    # NOTE independent of the eigenvalue solvers, by Sylvester's law of
-    #      inertia: no load multiplier below the pair, two up to it
+    # NOTE inertia: no load multiplier below the pair, two up to it
     lam = eigvals[0]
     assert eigen._negative_pivots(K + lam*(1 - 1e-6)*KG) == 0
     assert eigen._negative_pivots(K + lam*(1 + 1e-6)*KG) == 2

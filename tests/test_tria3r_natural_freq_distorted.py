@@ -239,7 +239,7 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0, refinement=1):
         error = abs(omegan[0]/wmn - 1)
         print('error', omegan[0]/wmn - 1)
         if refinement == 1:
-            # NOTE pre-determined by this test with refinement=1 on 2026-10-29
+            # NOTE pre-determined by this test with refinement=1
             assert isclose(omegan[0], 2412.86091037, rtol=1e-4)
             assert error <= 0.10
         else:

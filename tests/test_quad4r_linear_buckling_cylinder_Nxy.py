@@ -91,8 +91,8 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     Measured with this test, with ``ntheta = 80*refinement`` elements around
     the circumference and nearly square elements, ``|Tcr|`` in Nm and its
     relative difference to the intercept of Fig. 13 of the same sign, with
-    the wall time of the test, both laminates, on a machine shared with
-    other jobs, measured on 2026-10-29 with the default stabilisation of
+    the approximate wall time of the test, both laminates, measured with
+    the default stabilisation of
     Quad4R, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994) [2]_::
 
         refinement ntheta elements  Z11, Nxy < 0      Z33, Nxy < 0     time
@@ -129,6 +129,24 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     and the boundary condition CC2 is that of Table 1. In Fig. 1 and
     Eq. (13) of [1]_ a positive torque T gives a negative shear force per
     unit length ``Nxy``, so ``-Tcr`` is the positive torque T of the paper.
+    The element normal of this mesh points outwards and the element x axis
+    is the cylinder axis, so the plies are listed from the bottom to the
+    top of the laminate. That the sign conventions of the ply angles and of
+    the torque agree with those of the paper is shown in
+    tests/test_quad4_linear_buckling_cylinder_Nxy.py: ``Nxy < 0``
+    reproduces the positive-torque intercepts of Fig. 13 and ``Nxy > 0``
+    the negative ones, for both laminates.
+
+    The rigid axial translation is removed with a single node at
+    mid-length. Holding the axial displacement of the whole ring of nodes
+    at mid-length and both rotations at the edges is not CC2. That ring
+    constraint stiffens the torsional mode, whose buckles are inclined
+    helices crossing the mid-length: for the enriched Quad4 at ``ntheta =
+    80`` it raises ``Tcr`` of Z11 from -18980.9 to -22193.3 Nm, +16.9 per
+    cent, and holding the rotation about the radial direction at the edges
+    adds another 1.1 per cent. Together they make the converged values
+    exceed Fig. 13 by 16 per cent (Z11) and 23 per cent (Z33), -19197.8 and
+    -11093.7 Nm at ``ntheta = 320`` with this element.
 
     References
     ----------
@@ -149,13 +167,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
     """
     # NOTE stacking sequences of the reference, see Notes, from inwards to
-    #      outwards. The element normal of this mesh points outwards and the
-    #      element x axis is the cylinder axis, so the plies are listed from
-    #      the bottom to the top of the laminate. That the sign conventions
-    #      of the ply angles and of the torque agree with those of the paper
-    #      is shown in tests/test_quad4_linear_buckling_cylinder_Nxy.py:
-    #      Nxy < 0 reproduces the positive-torque intercepts of Fig. 13 and
-    #      Nxy > 0 the negative ones, for both laminates
+    #      outwards, i.e. from the bottom to the top of the laminate
     stacks = {
         'Z11' : [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37],
         'Z33' : [0, 0, 19, -19, 37, -37, 45, -45, 51, -51],
@@ -306,16 +318,8 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         # NOTE removing the rigid axial translation with a single node
         middle = np.where(isclose(z, L/2))[0]
         bk[2::DOF][middle[0]] = True
-        # NOTE holding the axial displacement of the whole ring of nodes at
-        #      mid-length and both rotations at the edges is not CC2. That
-        #      ring constraint stiffens the torsional mode, whose buckles are
-        #      inclined helices crossing the mid-length: for the enriched
-        #      Quad4 at ntheta = 80 it raises Tcr of Z11 from -18980.9 to
-        #      -22193.3 Nm, +16.9 per cent, and holding the rotation about
-        #      the radial direction at the edges adds another 1.1 per cent.
-        #      Together they make the converged values exceed Fig. 13 by 16
-        #      per cent (Z11) and 23 per cent (Z33), -19197.8 and -11093.7 Nm
-        #      at ntheta = 320 with this element
+        # NOTE a single node, not the whole ring at mid-length, see the Notes
+        #      of the docstring
 
         bu = ~bk
 
@@ -332,7 +336,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
         # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
         #      estimates the Cayley shift and verifies that no lower load
-        #      multiplier was missed, which a hardcoded shift does not
+        #      multiplier was missed
         eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
 
         eigvecs[bu] = eigvecsu
@@ -416,7 +420,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     circumferential waves. Measured with this test, with
     ``ntheta = 64*refinement`` elements around the circumference and nearly
     square elements, the critical ``N_xy`` in N/m and its ratio to the
-    reference, with the wall time on a machine shared with other jobs::
+    reference, with the approximate wall time::
 
         refinement  ntheta  elements    Nxy_cr    ratio    time
            0.5         32       640    736961.3   1.2475     1 s
@@ -427,7 +431,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
            3          192     23424    585175.2   0.9905   252 s
         extrapolated                              0.984
 
-    measured on 2026-10-29 with the default stabilisation of Quad4R, the
+    measured with the default stabilisation of Quad4R, the
     physical stabilisation of the bending and of the transverse shear of
     Belytschko and Leviathan (1994) [3]_. The extrapolation fits ``a +
     c*ntheta**-p`` to the three finest meshes (p = 2.0). The converged element is therefore 1.6 per cent below the

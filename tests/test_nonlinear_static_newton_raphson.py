@@ -281,10 +281,17 @@ def test_triangles_under_refinement():
 
     The nonlinear plate is refined and the triangles are compared with
     Quad4R. Tria3DSG and the default Tria3R, which takes the discrete shear
-    gap field of Tria3DSG, ``shear_model = 1``, close the gap. Tria3R with
+    gap field of Tria3DSG, ``shear_model = 1``, close the gap monotonically,
+    by more than a factor of five over the three meshes, and end within half
+    a per cent. Tria3R with
     ``shear_model = 0`` and ``alpha_shear_locking = 0.7``, the
-    centroid-sampled shear, set explicitly here, settles about two and a half per cent away from the quadrilateral
-    and stops improving, which is the same signature that stabilisation
+    centroid-sampled shear, set explicitly here, settles about two and a
+    half per cent away from the quadrilateral and stops improving.
+
+    Notes
+    -----
+    The stalling of Tria3R with ``shear_model = 0`` is the same signature
+    that stabilisation
     leaves on the linear problem in ``tests/test_tria3dsg.py`` and on the
     buckling problem in ``tests/test_quad4_linear_buckling_cylinder_displ.py``.
     The drilling rotations are held at zero by :func:`plate`, so the Allman

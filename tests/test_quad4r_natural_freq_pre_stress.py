@@ -36,8 +36,8 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=2):
     minimised over ``m`` and ``n``, and the buckling load (10.46).
 
     With 42x26 elements the frequencies of the three mass matrices are 0.03 to
-    0.29 % above the reference, with 20x12 elements 0.21 to 1.39 %, measured on
-    2026-10-29 with the physical stabilisation of the bending and of the
+    0.29 % above the reference, with 20x12 elements 0.21 to 1.39 %,
+    with the physical stabilisation of the bending and of the
     transverse shear of Belytschko and Leviathan (1994) [2]_ that Quad4R
     uses, see :mod:`pyfe3d.quad4r`.
 

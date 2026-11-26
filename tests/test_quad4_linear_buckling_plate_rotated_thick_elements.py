@@ -40,14 +40,20 @@ def test_linear_buckling_plate(plot=False, mode=0):
     below the Kirchhoff value here. Measured against it, with the 13 x 13
     mesh: +0.91 % with the default, the MITC4 transverse shear with the
     slopes of `w` of KG at the two-by-two points, +1.49 % with the slopes
-    at the centroid, ``shear_model = 0`` or ``centroid_slopes = 1``
-    (measured on 2026-11-01), see
+    at the centroid, ``shear_model = 0`` or ``centroid_slopes = 1``, see
     ``tests/test_quad4_geometric_hourglass.py``. The modified one-point
     shear rule of Hughes, Taylor and Kanoknukulchai (1977) for the thick
-    elements, which :class:`pyfe3d.Quad4` does not use, gave +11.2 % through
+    elements, which :class:`pyfe3d.Quad4` does not use, gives +11.2 % through
     its spurious twist stiffness, see ``tests/test_quad4_thick_twist.py``,
-    and with a soft simple support the same spurious stiffness brought the
+    and with a soft simple support the same spurious stiffness brings the
     result within 3 % of the Kirchhoff value.
+
+    With ``K6ROT = 1e4`` the thick plate (``h = 0.05`` m) has a worse
+    drilling-to-bending stiffness ratio, causing an ill-conditioned
+    ``KC0uu`` (condition number about 1e14);
+    :func:`pyfe3d.solver.linear_buckling` equilibrates the diagonal,
+    estimates the Cayley shift and verifies that no lower load multiplier
+    was missed.
 
     References
     ----------
@@ -135,10 +141,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
                 quad.c2 = DOF*nid_pos[n2]
                 quad.c3 = DOF*nid_pos[n3]
                 quad.c4 = DOF*nid_pos[n4]
-                # NOTE The thick plate (h=0.05 m) has a worse drilling-to-bending
-                #      stiffness ratio with K6ROT=1e4, causing an ill-conditioned
-                #      KC0uu (condition number ~1e14). A diagonal preconditioner
-                #      is used in the eigensolver to normalise KC0 diagonal to 1.
+                # NOTE K6ROT = 1e4, see the Notes of the docstring
                 quad.K6ROT = 1e4
                 quad.init_k_KC0 = init_k_KC0
                 quad.init_k_KG = init_k_KG
@@ -181,9 +184,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
 
             num_eig_lb = max(mode+1, 3)
 
-            # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
-            #      estimates the Cayley shift and verifies that no lower load
-            #      multiplier was missed, which a hardcoded shift does not
+            # NOTE lowest load multipliers, see the Notes of the docstring
             eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
 
             load_mult = eigvals[0]

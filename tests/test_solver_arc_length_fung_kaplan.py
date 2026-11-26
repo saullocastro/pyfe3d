@@ -18,9 +18,7 @@ null loads.
 At the default ``relTOL = 1e-9`` the arc-length solvers pass the null load
 between the limit points only with the round-off floor of the convergence
 criteria, see :mod:`pyfe3d.solver.convergence`: without it, they stop near
-the load factor 0.03, the residual of the large self-equilibrated axial
-forces being then larger than ``relTOL`` times the references of the
-criteria.
+the load factor 0.03.
 
 Notes
 -----
@@ -43,6 +41,11 @@ thrust, the symmetric path is their Eq. (23), `B_1^3 - B_1(\lambda_1^2 - 1)
 (23), at `B_1 = -\sqrt{(\lambda_1^2 - 1)/3}`, is at `\lambda_1 -
 \sqrt{4(\lambda_1^2 - 1)^3/27}`. With `\lambda_1^2 < 5.5` the arch buckles
 at the limit point, their Eq. (29).
+
+Without the round-off floor of the convergence criteria the solvers stop
+near the null load between the limit points, the residual of the large
+self-equilibrated axial forces being then larger than ``relTOL`` times the
+references of the criteria.
 
 References
 ----------
@@ -154,7 +157,7 @@ def test_fung_kaplan_beam_arch(method, convergence_criterion, monkeypatch):
     -0.0009, and -0.0043 and -0.0017. The converged point of extreme load is
     within about `3 B_{1,lim} h^2 + h^3 = 0.006` of the limit load of the
     model, with `B_{1,lim} = 1.13` and `h = 0.042` the largest increment of
-    `B_1` of a step, as in Eq. (23). Measured on 2026-10-30 with the
+    `B_1` of a step, as in Eq. (23). Measured with the
     increments of this test, 0.05, the same for both methods and both
     criteria within 2e-10 (time of one analysis):
 

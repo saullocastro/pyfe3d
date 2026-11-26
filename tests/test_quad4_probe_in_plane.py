@@ -4,6 +4,15 @@ The membrane strain `\varepsilon_{xx}` evaluated by
 :class:`.Quad4Probe` at the centroid of an element of a plate compressed by
 opposite edge forces is compared with the strain of the displacement field
 solved for the plate.
+
+Notes
+-----
+The edge forces are the consistent nodal forces of a uniform membrane force
+along `x`, half of the force of an inner node at the corner nodes, and the
+plate is free to contract along `y`. The membrane strain
+`\varepsilon_{xx} = \partial u/\partial x` is then constant, `u` is linear
+in `x`, and `\varepsilon_{xx} a = u(a) - u(0)`; under compression `u(a)` is
+the smallest and `u(0)` the largest value of the field of `u`.
 """
 import sys
 sys.path.append('..')

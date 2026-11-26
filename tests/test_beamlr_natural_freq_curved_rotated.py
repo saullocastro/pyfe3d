@@ -57,7 +57,7 @@ def test_nat_freq_curved_beam(refinement=2, mtypes=range(2)):
 
     Following the policy of the tests whose reference is not reached on the
     mesh used, the frequencies are compared with the values pre-determined by
-    this same test with the default ``refinement`` on 2026-10-29, with
+    this same test with the default ``refinement``, with
     ``rtol = 1e-4`` for the round-off of the eigenvalue solver, called with
     ``tol=1e-9``; the frequencies with shear deformation, whose difference
     to the reference is one of the model, are compared with the reference
@@ -173,7 +173,7 @@ def test_nat_freq_curved_beam(refinement=2, mtypes=range(2)):
                 # boundary conditions
                 bk = np.zeros(N, dtype=bool)
                 # NOTE the end nodes are the first and the last of the arc; selecting
-                #      them with np.isclose(x, x.max()) also caught the neighbour of
+                #      them with np.isclose(x, x.max()) would also select the neighbour of
                 #      the end at theta = 0 with fine meshes, where x varies as theta**2
                 check = np.zeros(n, dtype=bool)
                 check[[0, -1]] = True

@@ -75,7 +75,7 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
        https://doi.org/10.1016/0168-874X(85)90003-4
 
     """
-    # NOTE pre-determined by this test with refinement=1 on 2026-10-29
+    # NOTE pre-determined by this test with refinement=1
     predetermined = {0: 2386.04605865, 1: 2336.69402554, 2: 2403.19824795}
     data = Tria3RData()
     probe = Tria3RProbe()

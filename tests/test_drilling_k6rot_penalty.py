@@ -122,7 +122,24 @@ def test_k6rot_penalty_energy_closed_form():
 
 
 def test_k6rot_penalty_scales_linearly():
-    r"""The penalty is linear in K6ROT and it is the only term that reads it"""
+    r"""The penalty is linear in K6ROT and it is the only term that reads it
+
+    The second difference of the element matrix with respect to ``K6ROT``
+    must vanish, relative to the scale of the matrix.
+
+    Notes
+    -----
+    `K(a) = K_{other} + a K_{drill}`, so the second difference vanishes. It
+    is measured against the scale of the matrix and not against the scale of
+    the first difference: the drilling operator contributes to the membrane
+    entries through its `u` and `v` terms, and those entries are of the
+    order of `A_{66}`/element size, about 8e8 here, whereas the change per
+    unit of ``K6ROT`` is about 1e2. Differencing therefore loses some seven
+    digits, so a relative tolerance on the difference itself cannot be met
+    in double precision, while the second difference does vanish to the
+    machine precision of the entries being differenced.
+
+    """
     prop = isotropic_plate(thickness=0.01, E=200e9, nu=0.3)
     cases = [
         ('Quad4', Quad4, Quad4Data, Quad4Probe, DISTORTED),
@@ -133,16 +150,8 @@ def test_k6rot_penalty_scales_linearly():
         K1 = build_KC0(cls, Data, Probe, ncoords, 1., prop)
         K2 = build_KC0(cls, Data, Probe, ncoords, 2., prop)
         K3 = build_KC0(cls, Data, Probe, ncoords, 3., prop)
-        # NOTE K(a) = Kother + a*Kdrill, so the second difference vanishes.
-        #      It is measured against the scale of the matrix and not against
-        #      the scale of the first difference: the drilling operator
-        #      contributes to the membrane entries through its u and v terms,
-        #      and those entries are of the order of A66/element size, about
-        #      8e8 here, whereas the change per unit of K6ROT is about 1e2.
-        #      Differencing therefore loses some seven digits, so a relative
-        #      tolerance on the difference itself cannot be met in double
-        #      precision, while the second difference does vanish to the
-        #      machine precision of the entries being differenced
+        # NOTE K(a) = Kother + a*Kdrill, so the second difference vanishes,
+        #      measured against the scale of the matrix, see the Notes
         scale = np.abs(K1).max()
         second = np.abs((K3 - K2) - (K2 - K1)).max()
         print(name, 'second difference/scale =', second/scale)
@@ -175,7 +184,11 @@ def test_k6rot_penalty_is_not_the_default():
 
     With the default physics-based drilling stiffness the ``K6ROT``
     attribute is not read at all. This
-    applies to all three shell elements. Note that Quad4R reaches it by a
+    applies to all three shell elements.
+
+    Notes
+    -----
+    Quad4R reaches it by a
     different route from Quad4 and Tria3R: it applies the coefficient
     `\gamma_{r_z} = A_{66}` of Hughes and Brezzi (1989) to the same operator
     that carries the penalty, without the in-plane enrichment of Allman

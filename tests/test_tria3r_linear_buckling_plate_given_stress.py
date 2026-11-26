@@ -26,17 +26,19 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
 
     The buckling load is compared with the exact solution of Leissa (1969),
     Eq. (10.46), and, for ``refinement=1``, with a value pre-determined by
-    this test.
+    this test. The global ``N_xx`` is rotated to the axes of each triangle
+    before it is given to ``update_KG_given_stress``.
 
+    Notes
+    -----
     The resultants given to ``update_KG_given_stress`` are in the element
     coordinate system, so the global ``N_xx`` is rotated to the axes of each
     triangle, whose x axis is along the diagonal for one triangle out of
     two. Passed unrotated, it would apply a different load to those
-    triangles: with the default element below, the unrotated load gives a buckling load 1.96 % under the reference with 248x120
-    elements, and not approaching it.
+    triangles: with the default element below, the unrotated load gives a
+    buckling load 1.96 % under the reference with 248x120 elements, and not
+    approaching it.
 
-    Notes
-    -----
     The reference is the exact solution of Leissa [1]_, Sec. 10.2.1,
     p. 277, Eq. (10.46), minimised over the number ``m`` of half-waves along
     ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c = (m*b/a + a/(m*b))**2``.
@@ -215,7 +217,7 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
 
     # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
     #      estimates the Cayley shift and verifies that no lower load
-    #      multiplier was missed, which a hardcoded shift does not
+    #      multiplier was missed
     eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
     
     load_mult = eigvals[0]
@@ -242,7 +244,7 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
     error = abs(P_cr_calc/P_cr_theory - 1)
     print('error', P_cr_calc/P_cr_theory - 1)
     if refinement == 1:
-        # NOTE pre-determined by this test with refinement=1 on 2026-10-29
+        # NOTE pre-determined by this test with refinement=1
         assert isclose(P_cr_calc, -12864.930796789686, rtol=1e-4)
         assert error <= 0.10
     else:

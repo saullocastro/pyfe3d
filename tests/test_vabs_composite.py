@@ -18,9 +18,7 @@ beam axis towards `y_2`, see the figure of :class:`pyfe3d.vabs.CrossSection`.
 This convention of pyfe3d reproduces all signs of the CUS box. With it, the
 pipe and CAS1 give three couplings each with the published magnitude and
 the opposite sign: ``S14``, ``S25``, ``S36`` of the pipe and ``S12``,
-``S45``, ``S46`` of CAS1. These differences are attributed to the
-labelling of the axes and ply angles in those papers, as explained in the
-docstrings of the two tests, which check the magnitudes and assert the
+``S45``, ``S46`` of CAS1. The two tests check the magnitudes and assert the
 opposite signs explicitly.
 
 Notes
@@ -28,6 +26,10 @@ Notes
 The reference values are those of Table 2 of Yu et al. (2012) [1]_, of
 Table 3 and Eq. (26) of Yu and Hodges (2005) [2]_ and of Table 2 of Yu et
 al. (2002) [3]_; each test gives the table, the data and the tolerance.
+
+The differences of sign of the pipe and of CAS1 are attributed to the
+labelling of the axes and ply angles in those papers, as explained in the
+docstrings of the two tests.
 
 References
 ----------

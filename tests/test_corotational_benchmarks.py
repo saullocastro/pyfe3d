@@ -52,9 +52,8 @@ compares its path with the values pre-determined by this same test with
 ``rtol = 1e-4``, for the platform round-off, and with Sze with the grades
 of MacNeal and Harder (1985), p. 14: A for a
 normalised error within 2 %, B within 10 %. The convergence with the mesh,
-measured once, is given in the docstrings. Times measured on 2026-10-31
-with ``OMP_NUM_THREADS=1`` and the compiled :mod:`pyfe3d.corotational`,
-several runs in parallel.
+is given in the docstrings. Times measured
+with ``OMP_NUM_THREADS=1`` and the compiled :mod:`pyfe3d.corotational`.
 
 References
 ----------
@@ -300,11 +299,16 @@ def elastica_end_force(alpha2):
 def polygon_tip(m, num_elements):
     r"""Tip deflections ``-U/L, W/L`` of the cantilever of Sze, Section 3.2,
     discretised with ``num_elements`` elements, under ``M = m*M_max``: the
-    axial and shear forces vanish, every element keeps its length ``l0 =
-    L/num_elements`` and turns by ``phi/num_elements``, ``phi = 2*pi*m``,
-    the nodes lying on the polygon inscribed in the circle of the exact
-    solution (derived here; see ``test_sze_cantilever_half_circle`` in
-    ``tests/test_corotational_core.py``)"""
+    tip of the polygon inscribed in the circle of the exact solution
+
+    Notes
+    -----
+    The axial and shear forces vanish, every element keeps its length ``l0
+    = L/num_elements`` and turns by ``phi/num_elements``, ``phi =
+    2*pi*m``, the nodes lying on the polygon inscribed in the circle of the
+    exact solution (derived here; see ``test_sze_cantilever_half_circle``
+    in ``tests/test_corotational_core.py``).
+    """
     phi = 2*np.pi*np.atleast_1d(m)[:, None]
     j = np.arange(num_elements) + 0.5
     U = np.cos(j*phi/num_elements).sum(axis=1)/num_elements - 1
@@ -363,7 +367,7 @@ def test_cantilever_end_shear(element, num_elements):
     and 0.005 (W) with BeamC, within the rounding of its three decimals
     with Quad4R and Tria3R; from the elastica at ``P_max``, -0.02 % and
     +0.05 % (BeamC), -0.10 % and -0.02 % (Quad4R and Tria3R). Times 0.1 s
-    (BeamC), 0.2 s (Quad4R), 0.3 s (Tria3R), measured on 2026-10-31 with
+    (BeamC), 0.2 s (Quad4R), 0.3 s (Tria3R), measured with
     the compiled :mod:`pyfe3d.corotational`. The convergence of BeamC is
     in :func:`test_cantilever_end_shear_convergence`.
 
@@ -436,7 +440,7 @@ def test_cantilever_end_shear_translated(element, num_elements):
     internal and external force vectors and thus the convergence criterion
     unchanged, but not the round-off of positions computed as `\boldsymbol{X}
     + \boldsymbol{u}`, of the order of `\varepsilon |\boldsymbol{X}|`.
-    Measured on 2026-10-30 with 64 BeamC elements and the positions computed
+    Measured with 64 BeamC elements and the positions computed
     as `\boldsymbol{X} + \boldsymbol{u}`: the iterations of the first
     increment stagnated at `\zeta` of about 1e-8, 1e-7 and 1e-6 with the
     root at ``X = 0``, 100 and 1000, at 0.12 to 0.19 times `\varepsilon \|
@@ -461,17 +465,24 @@ def test_cantilever_end_shear_translated(element, num_elements):
 
 
 def test_cantilever_end_shear_von_karman():
-    r"""The same strip of 16x1 Quad4R with ``kinematics='von_karman'``:
-    without axial force the von Kármán cantilever bends as the linear one,
+    r"""The same strip of 16x1 Quad4R with ``kinematics='von_karman'``,
+    against the closed forms of the von Kármán cantilever, ``W = P
+    L**3/(3 E I)`` and ``U = -(P/(E I))**2 L**5/15``, and against Table 2a
+    of Sze, which this path leaves at the second load level. Measured: the
+    von Kármán strip within 0.1 % of these closed forms in ``W`` and 0.25 %
+    in ``U``, 0.1 s.
+
+    Notes
+    -----
+    Without axial force the von Kármán cantilever bends as the linear one,
     ``W = P L**3/(3 E I)``, and ``u_x = -w_x**2/2`` gives ``U = -(P/(E
     I))**2 L**5/15`` (derived here). At ``P_max`` this is ``W = 13.33``,
     twice Table 2a, and ``U = -10.67``; it is 0.5 % above Table 2a in
     ``W`` at ``0.05*P_max`` (tip rotation 0.1 rad) and 1.8 % at
     ``0.1*P_max``, whereas the co-rotational strip stays within the
     rounding of Table 2a at every level, see
-    :func:`test_cantilever_end_shear`. Measured: the von Kármán strip
-    within 0.1 % of these closed forms in ``W`` (the transverse shear
-    flexibility of Quad4R) and 0.25 % in ``U``, 0.1 s.
+    :func:`test_cantilever_end_shear`. The difference of 0.1 % in ``W``
+    from the closed form is the transverse shear flexibility of Quad4R.
     """
     m, U, W, t = run_cantilever_end_shear('Quad4R', 16,
                                           kinematics='von_karman')
@@ -555,9 +566,9 @@ def test_cantilever_end_shear_corotational_von_karman(element):
         # NOTE values pre-determined with 16 BeamC, see the docstring
         assert np.isclose(U[-1], 3.28948, rtol=1e-4)
         assert np.isclose(W[-1], 6.70008, rtol=1e-4)
-        # NOTE slightly more flexible than the elastica, by the transverse
-        #      shear flexibility of BeamC, +0.002 % and +0.007 %, and closer
-        #      to it than 'corotational'
+        # NOTE slightly more flexible than the elastica, +0.002 % and
+        #      +0.007 % (see the docstring), and closer to it than
+        #      'corotational'
         assert 0 < U[-1]/(L*Ue) - 1 < 1e-4
         assert 0 < W[-1]/(L*We) - 1 < 1e-4
         assert abs(U[-1]/(L*Ue) - 1) < abs(Uc[-1]/(L*Ue) - 1)
@@ -590,9 +601,9 @@ def test_cantilever_end_moment_full_circle(element, inc):
     Notes
     -----
     The rotation-vector map is singular at `|\boldsymbol{\psi}| = 2 \pi`,
-    see :mod:`pyfe3d.corotational`. Following decision D1 of the design,
-    the out-of-plane rotations `\psi_X` and `\psi_Z` are restrained at all
-    the nodes, which is exact for this plane problem. The moment is
+    see :mod:`pyfe3d.corotational`. The out-of-plane rotations `\psi_X` and
+    `\psi_Z` are restrained at all the nodes, which is exact for this plane
+    problem. The moment is
     conjugate to the rotation vector, which is the moment about the fixed
     axis -Y here, since `\boldsymbol{\Lambda}^T \boldsymbol{n} =
     \boldsymbol{n}` for `\boldsymbol{\psi} \parallel \boldsymbol{n}`, see
@@ -707,7 +718,7 @@ def test_slit_annular_plate():
     The plate twists into a helix with large rotations, Fig. 4c of Sze.
     Measured at ``P_max`` (Table 4a: ``W_A = 13.891``, ``W_B =
     17.528``), Newton-Raphson, with ``OMP_NUM_THREADS=1`` and the compiled
-    :mod:`pyfe3d.corotational` (times of 2026-10-31):
+    :mod:`pyfe3d.corotational`:
 
     ============  ================  ================  =====
     mesh          W_A               W_B               time
