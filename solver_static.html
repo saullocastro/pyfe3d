@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Linear static solution (pyfe3d.solver.static) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Linear static solution (pyfe3d.solver.static) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1313,7 +1313,12 @@ tangent stiffness matrix is the linear constitutive stiffness matrix
 degrees-of-freedom, e.g. <code class="docutils literal notranslate"><span class="pre">KC0uu</span> <span class="pre">=</span> <span class="pre">KC0[bu,</span> <span class="pre">:][:,</span> <span class="pre">bu]</span></code>: a null row or
 column, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>, and an exactly singular
 matrix raise an error instead of giving a solution with NaN values, as
-<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.spsolve()</span></code> does.</p>
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.spsolve()</span></code> does with its
+<code class="xref py py-class docutils literal notranslate"><span class="pre">scipy.sparse.linalg.MatrixRankWarning</span></code>. The system is solved as
+given: in a finite element model the known displacements are
+partitioned out beforehand, and a null row or column of <code class="docutils literal notranslate"><span class="pre">A</span></code> is a
+degree-of-freedom without stiffness, i.e. a modelling error, which is
+reported instead of being removed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1350,19 +1355,6 @@ a <code class="docutils literal notranslate"><span class="pre">RuntimeError</spa
 </dd>
 </dl>
 </div>
-<p class="rubric">Notes</p>
-<p>The system <span class="math notranslate nohighlight">\(\boldsymbol{A} \boldsymbol{x} = \boldsymbol{b}\)</span> is solved as given. In a finite element
-model the known displacements are partitioned out beforehand, and a null
-row or column of <span class="math notranslate nohighlight">\(\boldsymbol{A}\)</span> is a degree-of-freedom without stiffness, i.e. a
-modelling error, which is reported instead of being removed, see
-<a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>.</p>
-<p>An exactly singular matrix is detected by the factorization, which
-raises, instead of the <code class="xref py py-class docutils literal notranslate"><span class="pre">scipy.sparse.linalg.MatrixRankWarning</span></code> and
-the NaN values of <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.spsolve()</span></code>. Turning that
-warning into an error needs a <code class="xref py py-func docutils literal notranslate"><span class="pre">warnings.catch_warnings()</span></code> block,
-whose exit resets the registry of the warnings already shown, of every
-module, such that the warnings of the caller shown once per location
-would be shown again after each call.</p>
 </dd></dl>
 
 

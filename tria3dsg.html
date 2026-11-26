@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tria3DSG - Triangular element with discrete shear gap (pyfe3d.tria3dsg) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Tria3DSG - Triangular element with discrete shear gap (pyfe3d.tria3dsg) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1256,39 +1256,22 @@ in-plane bending, <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.
 carry one. <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> takes, by
 default, the transverse shear field of this element, so the two triangles
 differ only in the membrane and drilling terms, see <a class="reference internal" href="tria3r.html#module-pyfe3d.tria3r" title="pyfe3d.tria3r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code></a>.
-With its enriched membrane <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> is the recommended
-triangle; this element is the better choice on a coarse mesh of a doubly
-curved shell, where it is the less stiff of the two. Geometrically nonlinear analyses with the von Kármán membrane
+Geometrically nonlinear analyses with the von Kármán membrane
 strains are supported by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_fint" title="pyfe3d.tria3dsg.Tria3DSG.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_fint()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>,
 <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_KCNL()</span></code></a> and <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG" title="pyfe3d.tria3dsg.Tria3DSG.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_KG()</span></code></a>.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
 <p>The transverse shear field is obtained with the discrete shear gap (DSG)
 method of Bletzinger, Bischoff and Ramm (2000) <a class="reference internal" href="#r467003471fab-1" id="id1">[1]</a>.</p>
-<p class="rubric">Why this element exists</p>
-<p>A transverse shear taken from a single point at the centroid, as in
-<a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, still locks;
-dividing the transverse shear stiffnesses by <span class="math notranslate nohighlight">\(1 + \alpha \ell^2/h^2\)</span>, e.g.
-with <span class="math notranslate nohighlight">\(\alpha = 0.7\)</span>, following Lyly, Stenberg and Vihinen (1993) <a class="reference internal" href="#r467003471fab-2" id="id2">[2]</a>,
-cures the locking only in part. On a thin plate the error that remains
-stalls under refinement at a value set by
-<span class="math notranslate nohighlight">\(\alpha\)</span>, -14 per cent on the deflection of a simply supported plate with
-<span class="math notranslate nohighlight">\(a/h = 1000\)</span>, see the Notes of <a class="reference internal" href="tria3r.html#module-pyfe3d.tria3r" title="pyfe3d.tria3r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code></a>, and the factor leaves
-the element unable to reproduce a state of
-constant transverse shear: measured on an 8 by 8 patch, its stiffness
-against a transverse displacement field with all rotations at zero is
-<span class="math notranslate nohighlight">\(3 \times 10^{-1}\)</span>, <span class="math notranslate nohighlight">\(2 \times 10^{-2}\)</span> and <span class="math notranslate nohighlight">\(1 \times 10^{-3}\)</span> of the
-<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.quad4.Quad4</span></code></a> value at <span class="math notranslate nohighlight">\(\ell/h\)</span> of 1.25, 6.25 and 25. A
-Donnell geometric stiffness matrix works on <span class="math notranslate nohighlight">\(\partial w/\partial x\)</span>, which
-is exactly that subspace, so thin-shell buckling suffers badly. See
-<code class="docutils literal notranslate"><span class="pre">tests/test_transverse_shear_stiffness.py</span></code>.</p>
-<p>The DSG removes the locking in the operator instead of in the constitutive
-matrix, so no stabilisation parameter is needed and the transverse shear
-stiffness is used as the laminate gives it.</p>
-<p>The algebraic stabilisation of Lyly, Stenberg and Vihinen (1993) <a class="reference internal" href="#r467003471fab-2" id="id3">[2]</a>, called
-Stenberg’s method by Bischoff and Bletzinger (2004) <a class="reference internal" href="#r467003471fab-3" id="id4">[3]</a> (Sec. 3.1), is
+<p class="rubric">Shear locking and the optional stabilisation</p>
+<p>A transverse shear field taken from the linear interpolation of <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span>
+and <span class="math notranslate nohighlight">\(r_y\)</span> locks. The DSG removes the locking in the operator instead of in
+the constitutive matrix, so no stabilisation parameter is needed and the
+transverse shear stiffness is used as the laminate gives it.</p>
+<p>The algebraic stabilisation of Lyly, Stenberg and Vihinen (1993) <a class="reference internal" href="#r467003471fab-2" id="id2">[2]</a>, called
+Stenberg’s method by Bischoff and Bletzinger (2004) <a class="reference internal" href="#r467003471fab-3" id="id3">[3]</a> (Sec. 3.1), is
 nevertheless available through the <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code> attribute, in the
-form of Castro et al. (2019) <a class="reference internal" href="#r467003471fab-4" id="id5">[4]</a> (Eq. (26)), which is <code class="docutils literal notranslate"><span class="pre">0.</span></code> by default and
+form of Castro et al. (2019) <a class="reference internal" href="#r467003471fab-4" id="id4">[4]</a> (Eq. (26)), which is <code class="docutils literal notranslate"><span class="pre">0.</span></code> by default and
 then has no effect whatsoever. It is there because Castro et al. apply the
 factor on top of a discrete shear gap field, as this one, and Lyly et al. on
 top of the assumed-strain field of the MITC4 quadrilateral, so setting it
@@ -1304,7 +1287,8 @@ unlocking itself, with values such as <span class="math notranslate nohighlight"
 element’s field with <span class="math notranslate nohighlight">\(\alpha = 0\)</span>, and the same remarks then apply to it.</p>
 <p>The default here is zero because the factor is unbounded in <span class="math notranslate nohighlight">\(\ell/h\)</span>, so any
 non-zero <span class="math notranslate nohighlight">\(\alpha\)</span> removes nearly all of the transverse shear stiffness on a
-practical shell mesh and with it the three properties listed above. The
+practical shell mesh and with it the properties of the discrete shear gap
+field listed below. The
 Notes of <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a> carry the measurements and the recommended value
 of <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code>.</p>
 <p>The transverse shear stiffnesses <span class="math notranslate nohighlight">\(A_{44}\)</span>, <span class="math notranslate nohighlight">\(A_{45}\)</span> and <span class="math notranslate nohighlight">\(A_{55}\)</span> are read
@@ -1314,7 +1298,7 @@ already applied, see
 brought to the element coordinate system with
 <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_Ats_element" title="pyfe3d.shellprop.ShellProp.calc_Ats_element"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp.calc_Ats_element()</span></code></a>, which, with
 <code class="docutils literal notranslate"><span class="pre">shear_correction='rohwer'</span></code> and the plies available, re-evaluates the
-equilibrium-based stiffness of Rohwer (1988) <a class="reference internal" href="#r467003471fab-7" id="id6">[7]</a> with the plies rotated to
+equilibrium-based stiffness of Rohwer (1988) <a class="reference internal" href="#r467003471fab-7" id="id5">[7]</a> with the plies rotated to
 the element coordinate system. No shear correction factor is applied by the
 element.</p>
 <p class="rubric">The discrete shear gap</p>
@@ -1326,9 +1310,9 @@ element’s convention are</p>
 \gamma_{yz} = \frac{\partial w}{\partial y} - r_x\]</div>
 <p>that is <span class="math notranslate nohighlight">\(\boldsymbol{\gamma} = \nabla w - \boldsymbol{\phi}\)</span>. The shear gap <span class="math notranslate nohighlight">\(\Delta w\)</span> is
 the part of the increase of the deflection between two points that is due to
-shear rather than to bending (<a class="reference internal" href="#r467003471fab-1" id="id7">[1]</a>, Sec. 2, Eq. (3)). On the three-node
+shear rather than to bending (<a class="reference internal" href="#r467003471fab-1" id="id6">[1]</a>, Sec. 2, Eq. (3)). On the three-node
 triangle its nodal values are obtained by integrating the shear strains along
-the straight edges that join node 1 to the other two nodes (<a class="reference internal" href="#r467003471fab-1" id="id8">[1]</a>, Sec. 4.1.1),
+the straight edges that join node 1 to the other two nodes (<a class="reference internal" href="#r467003471fab-1" id="id7">[1]</a>, Sec. 4.1.1),
 with <span class="math notranslate nohighlight">\(\boldsymbol{\phi}\)</span> interpolated linearly,</p>
 <div class="math notranslate nohighlight">
 \[\Delta w_1 = 0
@@ -1358,7 +1342,7 @@ constant over the element, so it is formed once per element.</p></li>
 </ul>
 <p>The gap is integrated away from one node, which makes the plain operator
 depend on which node that is, a dependence inherent to the method whose
-influence on the solution diminishes with mesh refinement (<a class="reference internal" href="#r467003471fab-1" id="id9">[1]</a>,
+influence on the solution diminishes with mesh refinement (<a class="reference internal" href="#r467003471fab-1" id="id8">[1]</a>,
 Sec. 4.1.1): measured on an irregular triangle, the element
 matrix moves by 14 and 17 per cent under the two cyclic relabellings, against
 <span class="math notranslate nohighlight">\(3 \times 10^{-16}\)</span> for <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> with
@@ -1373,7 +1357,7 @@ invariance, measured at <span class="math notranslate nohighlight">\(6 \times 10
 <p>The in-plane and curvature fields are the constant-strain ones of the linear
 triangle, so no locking arises there and one point integrates them exactly.
 The drilling rotation <span class="math notranslate nohighlight">\(r_z\)</span> is given stiffness with the regularisation of
-Hughes and Brezzi (1989) <a class="reference internal" href="#r467003471fab-5" id="id10">[5]</a>, tying <span class="math notranslate nohighlight">\(r_z\)</span> to the in-plane rotation
+Hughes and Brezzi (1989) <a class="reference internal" href="#r467003471fab-5" id="id9">[5]</a>, tying <span class="math notranslate nohighlight">\(r_z\)</span> to the in-plane rotation
 <span class="math notranslate nohighlight">\(\theta_z = (v_{,x} - u_{,y})/2\)</span>, exactly as in <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.quad4.Quad4</span></code></a>
 and <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, the default, uses the physics-based coefficient
@@ -1388,11 +1372,10 @@ enrichment, integrates it with a single point at the centroid.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This element does <strong>not</strong> carry the hierarchical edge-mode
-enrichment of Allman (1984) <a class="reference internal" href="#r467003471fab-6" id="id11">[6]</a> that <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> and
+enrichment of Allman (1984) <a class="reference internal" href="#r467003471fab-6" id="id10">[6]</a> that <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> and
 <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.quad4.Quad4</span></code></a> apply to the in-plane displacement field, so
 its membrane response in in-plane bending is the stiff one of the
-constant-strain triangle. The element is aimed at the transverse shear
-behaviour; for in-plane dominated problems prefer the enriched elements.</p>
+constant-strain triangle.</p>
 </div>
 <p class="rubric">Geometrically nonlinear analysis</p>
 <p>The element carries the von Kármán membrane strains,</p>
@@ -1436,7 +1419,7 @@ strains, hence at least four zero modes, three of which are the rigid-body
 motions <span class="math notranslate nohighlight">\(w = \text{const.}\)</span> and the rotations about the in-plane axes; the
 membrane with its drilling term has only the three in-plane rigid-body
 motions. The mode is the triangular counterpart of the spurious twisting
-mode of the one-point quadrilateral, Eq. (13) of Brockman <a class="reference internal" href="#r467003471fab-8" id="id12">[8]</a>, p. 2347,
+mode of the one-point quadrilateral, Eq. (13) of Brockman <a class="reference internal" href="#r467003471fab-8" id="id11">[8]</a>, p. 2347,
 which exists for a single element but not in a mesh of two or more
 elements. Measured with both <code class="docutils literal notranslate"><span class="pre">drilling_model</span></code>, thicknesses of 0.001 to 0.1
 times the size of the triangle, in the <span class="math notranslate nohighlight">\(xy\)</span> plane and rotated out of it:
@@ -1449,53 +1432,52 @@ triangles about an interior node have only the six rigid-body modes.</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r467003471fab-1" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id7">2</a>,<a role="doc-backlink" href="#id8">3</a>,<a role="doc-backlink" href="#id9">4</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id6">2</a>,<a role="doc-backlink" href="#id7">3</a>,<a role="doc-backlink" href="#id8">4</a>)</span>
 <p>Bletzinger, K.-U., Bischoff, M., and Ramm, E., A unified approach for
 shear-locking-free triangular and rectangular shell finite elements,
 Computers &amp; Structures, 75(3), 321-334, 2000.
 <a class="reference external" href="https://doi.org/10.1016/S0045-7949(99)00140-6">https://doi.org/10.1016/S0045-7949(99)00140-6</a></p>
 </div>
 <div class="citation" id="r467003471fab-2" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id2">1</a>,<a role="doc-backlink" href="#id3">2</a>)</span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
 <p>Lyly, M., Stenberg, R., and Vihinen, T., A stable bilinear element for
 the Reissner-Mindlin plate model, Computer Methods in Applied Mechanics
 and Engineering, 110(3-4), 343-357, 1993.
 <a class="reference external" href="https://doi.org/10.1016/0045-7825(93)90214-I">https://doi.org/10.1016/0045-7825(93)90214-I</a></p>
 </div>
 <div class="citation" id="r467003471fab-3" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">3</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">3</a><span class="fn-bracket">]</span></span>
 <p>Bischoff, M., and Bletzinger, K.-U., Improving stability and accuracy
 of Reissner-Mindlin plate finite elements via algebraic subgrid scale
 stabilization, Computer Methods in Applied Mechanics and Engineering,
 193(15-16), 1517-1528, 2004. <a class="reference external" href="https://doi.org/10.1016/j.cma.2003.12.036">https://doi.org/10.1016/j.cma.2003.12.036</a></p>
 </div>
 <div class="citation" id="r467003471fab-4" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id5">4</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">4</a><span class="fn-bracket">]</span></span>
 <p>Castro, S. G. P., Donadon, M. V., and Guimaraes, T. A. M., ES-PIM
 applied to buckling of variable angle tow laminates, Composite
 Structures, 209, 67-78, 2019.
 <a class="reference external" href="https://doi.org/10.1016/j.compstruct.2018.10.058">https://doi.org/10.1016/j.compstruct.2018.10.058</a></p>
 </div>
 <div class="citation" id="r467003471fab-5" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id10">5</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id9">5</a><span class="fn-bracket">]</span></span>
 <p>Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
 Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
 1989. <a class="reference external" href="https://doi.org/10.1016/0045-7825(89)90124-2">https://doi.org/10.1016/0045-7825(89)90124-2</a></p>
 </div>
 <div class="citation" id="r467003471fab-6" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id11">6</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id10">6</a><span class="fn-bracket">]</span></span>
 <p>Allman, D. J., A compatible triangular element including vertex
 rotations for plane elasticity analysis, Computers &amp; Structures,
 19(1-2), 1-8, 1984. <a class="reference external" href="https://doi.org/10.1016/0045-7949(84)90197-4">https://doi.org/10.1016/0045-7949(84)90197-4</a></p>
 </div>
 <div class="citation" id="r467003471fab-7" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">7</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id5">7</a><span class="fn-bracket">]</span></span>
 <p>Rohwer, K., Improved transverse shear stiffness for layered finite
 elements, DFVLR-FB 88-32, 1988.</p>
 </div>
 <div class="citation" id="r467003471fab-8" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id12">8</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id11">8</a><span class="fn-bracket">]</span></span>
 <p>Brockman, R. A., Dynamics of the bilinear Mindlin plate element,
 International Journal for Numerical Methods in Engineering, 24(12),
 2343-2356, 1987. <a class="reference external" href="https://doi.org/10.1002/nme.1620241208">https://doi.org/10.1002/nme.1620241208</a></p>
@@ -1615,7 +1597,7 @@ element to global coordinates, whose columns are the element axes.</p>
 </div>
 <p class="rubric">Notes</p>
 <p><code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">0</span></code> uses <span class="math notranslate nohighlight">\(\gamma_{r_z} = A_{66}\)</span> of Hughes and
-Brezzi <a class="reference internal" href="#r157ad23e8ff2-1" id="id13">[1]</a>, and any other value <span class="math notranslate nohighlight">\(K6ROT \cdot 10^{-6} A_{66}\)</span>, see the
+Brezzi <a class="reference internal" href="#r157ad23e8ff2-1" id="id12">[1]</a>, and any other value <span class="math notranslate nohighlight">\(K6ROT \cdot 10^{-6} A_{66}\)</span>, see the
 module documentation. Overriding <span class="math notranslate nohighlight">\(A_{66}\)</span> with <code class="docutils literal notranslate"><span class="pre">gamma_rz</span></code> is what makes
 the sensitivity study recommended in the literature possible.</p>
 <p><code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code> is the optional algebraic stabilisation of the
@@ -1625,9 +1607,9 @@ edge and <span class="math notranslate nohighlight">\(h\)</span> the total thick
 described in the module documentation: the discrete shear gap is
 already locking-free, so nothing has to be rescaled.</p>
 <p>A non-zero value applies the factor of Stenberg’s method, as Bischoff
-and Bletzinger (2004) <a class="reference internal" href="#r157ad23e8ff2-2" id="id14">[2]</a> (Sec. 3.1) call the stabilisation of Lyly,
+and Bletzinger (2004) <a class="reference internal" href="#r157ad23e8ff2-2" id="id13">[2]</a> (Sec. 3.1) call the stabilisation of Lyly,
 Stenberg and Vihinen, on top of a discrete shear gap field, as Castro
-et al. (2019) <a class="reference internal" href="#r157ad23e8ff2-3" id="id15">[3]</a> (Eq. (26)) do, which is not how
+et al. (2019) <a class="reference internal" href="#r157ad23e8ff2-3" id="id14">[3]</a> (Eq. (26)) do, which is not how
 <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> uses the same
 symbol. There the factor is applied to a centroid-sampled shear field
 and has to do the unlocking itself, with values such as 0.7, seven
@@ -1688,13 +1670,13 @@ never as a constant of the element.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r157ad23e8ff2-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id13">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id12">1</a><span class="fn-bracket">]</span></span>
 <p>Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
 Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
 1989. <a class="reference external" href="https://doi.org/10.1016/0045-7825(89)90124-2">https://doi.org/10.1016/0045-7825(89)90124-2</a></p>
 </div>
 <div class="citation" id="r157ad23e8ff2-2" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id14">2</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id13">2</a><span class="fn-bracket">]</span></span>
 <p>Bischoff, M., and Bletzinger, K.-U., Improving stability and
 accuracy of Reissner-Mindlin plate finite elements via algebraic
 subgrid scale stabilization, Computer Methods in Applied Mechanics and
@@ -1702,7 +1684,7 @@ Engineering, 193(15-16), 1517-1528, 2004.
 <a class="reference external" href="https://doi.org/10.1016/j.cma.2003.12.036">https://doi.org/10.1016/j.cma.2003.12.036</a></p>
 </div>
 <div class="citation" id="r157ad23e8ff2-3" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id15">3</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id14">3</a><span class="fn-bracket">]</span></span>
 <p>Castro, S. G. P., Donadon, M. V., and Guimaraes, T. A. M., ES-PIM
 applied to buckling of variable angle tow laminates, Composite
 Structures, 209, 67-78, 2019.
@@ -2011,7 +1993,7 @@ rotation, and of force times length between rotations.</p>
 \boldsymbol{B}_{NL})^\top \boldsymbol{C} (\boldsymbol{B}_L +
 \boldsymbol{B}_{NL}) d\Omega\)</span> that contain <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}\)</span>, plus
 the geometric stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{GNL}\)</span> of the stress
-resultants of the nonlinear strains. Crisfield <a class="reference internal" href="#rfcefae024c8f-1" id="id19">[1]</a>, Section 8.1.5,
+resultants of the nonlinear strains. Crisfield <a class="reference internal" href="#rfcefae024c8f-1" id="id18">[1]</a>, Section 8.1.5,
 Eqs. (8.26)-(8.31), groups the same terms differently: his
 <span class="math notranslate nohighlight">\(\boldsymbol{K}_{t1}\)</span> is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}\)</span>,
 and his initial-stress matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{t\sigma}\)</span>, built with
@@ -2064,7 +2046,7 @@ integrated exactly by a multiplication by the element area, see
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="rfcefae024c8f-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id19">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id18">1</a><span class="fn-bracket">]</span></span>
 <p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids
 and Structures, Volume 1: Essentials, John Wiley &amp; Sons,
 Chichester, 1991.</p>
@@ -2258,7 +2240,7 @@ matrix, <code class="docutils literal notranslate"><span class="pre">2</span></c
 <p>With the displacements <span class="math notranslate nohighlight">\(u + z r_y\)</span>, <span class="math notranslate nohighlight">\(v - z r_x\)</span> and <span class="math notranslate nohighlight">\(w\)</span> through the
 thickness, consistent with the curvatures of
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_BL_G()</span></code>, the kinetic energy integrated through the
-thickness is that of Eq. (20) of Brockman <a class="reference internal" href="#r4f3a296c1e73-1" id="id21">[1]</a>,</p>
+thickness is that of Eq. (20) of Brockman <a class="reference internal" href="#r4f3a296c1e73-1" id="id20">[1]</a>,</p>
 <div class="math notranslate nohighlight">
 \[T = \frac{1}{2} \int_A \left[ I_\rho (\dot{u}^2 + \dot{v}^2 +
 \dot{w}^2) + 2 I_{\rho z} (\dot{u} \dot{r}_y - \dot{v} \dot{r}_x)
@@ -2286,7 +2268,7 @@ centroid of the element; the term <span class="math notranslate nohighlight">\(I
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r4f3a296c1e73-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id21">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id20">1</a><span class="fn-bracket">]</span></span>
 <p>Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
 International Journal for Numerical Methods in Engineering, 24(12),
 2343-2356, 1987. <a class="reference external" href="https://doi.org/10.1002/nme.1620241208">https://doi.org/10.1002/nme.1620241208</a></p>
@@ -2634,7 +2616,7 @@ matrices or internal forces.</p>
 three shape functions are linear, so each is formed once per element and
 no quadrature loop appears anywhere in this module except for the
 drilling term. <code class="docutils literal notranslate"><span class="pre">BLdrilling</span></code> is the residual of the regularisation of
-Hughes and Brezzi <a class="reference internal" href="#rfd5aee371127-1" id="id23">[1]</a>, whose <span class="math notranslate nohighlight">\(r_z\)</span> part varies over the element; its
+Hughes and Brezzi <a class="reference internal" href="#rfd5aee371127-1" id="id22">[1]</a>, whose <span class="math notranslate nohighlight">\(r_z\)</span> part varies over the element; its
 stiffness is integrated exactly with the three-point rule, see
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG._update_probe_KC0ve()</span></code>. <code class="docutils literal notranslate"><span class="pre">BLgxz</span></code> and <code class="docutils literal notranslate"><span class="pre">BLgyz</span></code> are the
 discrete shear gap operators averaged over the three starting nodes, see
@@ -2642,7 +2624,7 @@ discrete shear gap operators averaged over the three starting nodes, see
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="rfd5aee371127-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id23">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id22">1</a><span class="fn-bracket">]</span></span>
 <p>Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
 Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
 1989. <a class="reference external" href="https://doi.org/10.1016/0045-7825(89)90124-2">https://doi.org/10.1016/0045-7825(89)90124-2</a></p>

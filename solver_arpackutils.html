@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities for ARPACK, against the Intel MKL bug of dsteqr (pyfe3d.solver.arpackutils) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Utilities for ARPACK, against the Intel MKL bug of dsteqr (pyfe3d.solver.arpackutils) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1468,15 +1468,8 @@ e.g. the Cayley mode with <code class="docutils literal notranslate"><span class
 than all <span class="math notranslate nohighlight">\(w\)</span>.</p>
 <p>When <code class="docutils literal notranslate"><span class="pre">ncv</span></code> is capped at <code class="docutils literal notranslate"><span class="pre">max_ncv</span></code>, see <a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_max_ncv" title="pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="xref py py-func docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a>, and
 <code class="docutils literal notranslate"><span class="pre">k</span></code> is larger than <code class="docutils literal notranslate"><span class="pre">(max_ncv</span> <span class="pre">-</span> <span class="pre">1)//2</span></code>, i.e. 15, the eigenpairs are
-computed in passes of at most 15 eigenpairs, each with <code class="docutils literal notranslate"><span class="pre">ncv=max_ncv</span></code>.
-The first pass is a call in the requested mode. The following passes
-use the shift-invert mode about the shift <code class="docutils literal notranslate"><span class="pre">sigma_d</span></code> given by
-<a class="reference internal" href="#pyfe3d.solver.arpackutils._deflation_shift" title="pyfe3d.solver.arpackutils._deflation_shift"><code class="xref py py-func docutils literal notranslate"><span class="pre">_deflation_shift()</span></code></a>, with the eigenvectors of the previous passes
-deflated from the operator, and each of them returns the next
-eigenvalues by increasing <span class="math notranslate nohighlight">\(w\)</span>. Each pass factorizes <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">-</span> <span class="pre">sigma_d*M</span></code>
-with SuperLU, and every call starts from <a class="reference internal" href="#pyfe3d.solver.arpackutils.start_kwargs" title="pyfe3d.solver.arpackutils.start_kwargs"><code class="xref py py-func docutils literal notranslate"><span class="pre">start_kwargs()</span></code></a>. The
-eigenvectors of all the passes are finally combined with a
-Rayleigh-Ritz projection, see <a class="reference internal" href="#pyfe3d.solver.arpackutils._rayleigh_ritz" title="pyfe3d.solver.arpackutils._rayleigh_ritz"><code class="xref py py-func docutils literal notranslate"><span class="pre">_rayleigh_ritz()</span></code></a>, such that they are
+computed in passes of at most 15 eigenpairs, each with <code class="docutils literal notranslate"><span class="pre">ncv=max_ncv</span></code>
+and its own factorization, see the Notes. The eigenvectors are
 <code class="docutils literal notranslate"><span class="pre">M</span></code>-orthonormal also across the passes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1524,8 +1517,9 @@ Chapter 3, Section 3.2, Eq. (3.2.2)).
 The passes keep <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">&lt;=</span> <span class="pre">(max_ncv</span> <span class="pre">-</span> <span class="pre">1)//2</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">ncv</span> <span class="pre">&gt;=</span> <span class="pre">2</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">1</span></code>.
 With <code class="docutils literal notranslate"><span class="pre">k</span></code> close to <code class="docutils literal notranslate"><span class="pre">ncv</span></code> ARPACK converges very slowly, not at all, or
 misses eigenvalues, e.g. <code class="docutils literal notranslate"><span class="pre">k=31</span></code> and <code class="docutils literal notranslate"><span class="pre">ncv=32</span></code>.</p>
-<p>The passes after the first one use the shift-invert mode about
-<span class="math notranslate nohighlight">\(\sigma_d\)</span>, the middle of the largest gap between the last five
+<p>The first pass is a call in the requested mode.
+The passes after the first one use the shift-invert mode about
+<span class="math notranslate nohighlight">\(\sigma_d\)</span>, given by <a class="reference internal" href="#pyfe3d.solver.arpackutils._deflation_shift" title="pyfe3d.solver.arpackutils._deflation_shift"><code class="xref py py-func docutils literal notranslate"><span class="pre">_deflation_shift()</span></code></a>, the middle of the largest gap between the last five
 eigenvalues found, with the eigenvectors <span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span> of the previous passes
 deflated from the operator:</p>
 <div class="math notranslate nohighlight">
@@ -1536,7 +1530,11 @@ not found again. Each pass therefore returns the eigenvalues nearest
 <span class="math notranslate nohighlight">\(w\)</span>. A shift close to them, instead of <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, separates them better.
 ARPACK applies the operator to <span class="math notranslate nohighlight">\(\boldsymbol{M} \boldsymbol{x}\)</span>; for an eigenvector <span class="math notranslate nohighlight">\(\boldsymbol{v}_i\)</span> of <span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span>,
 <span class="math notranslate nohighlight">\((\boldsymbol{A} - \sigma_d \boldsymbol{M})^{-1} \boldsymbol{M} \boldsymbol{v}_i = \boldsymbol{v}_i/(w_i - \sigma_d)\)</span> and,
-<span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span> being <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>-orthonormal, <span class="math notranslate nohighlight">\((\boldsymbol{I} - \boldsymbol{V} \boldsymbol{V}^\top \boldsymbol{M}) \boldsymbol{v}_i = \boldsymbol{0}\)</span>.</p>
+<span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span> being <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>-orthonormal, <span class="math notranslate nohighlight">\((\boldsymbol{I} - \boldsymbol{V} \boldsymbol{V}^\top \boldsymbol{M}) \boldsymbol{v}_i = \boldsymbol{0}\)</span>.
+Each pass factorizes <span class="math notranslate nohighlight">\(\boldsymbol{A} - \sigma_d \boldsymbol{M}\)</span> with SuperLU, and every call
+starts from <a class="reference internal" href="#pyfe3d.solver.arpackutils.start_kwargs" title="pyfe3d.solver.arpackutils.start_kwargs"><code class="xref py py-func docutils literal notranslate"><span class="pre">start_kwargs()</span></code></a>. The eigenvectors of all the passes
+are finally combined with a Rayleigh-Ritz projection, see
+<a class="reference internal" href="#pyfe3d.solver.arpackutils._rayleigh_ritz" title="pyfe3d.solver.arpackutils._rayleigh_ritz"><code class="xref py py-func docutils literal notranslate"><span class="pre">_rayleigh_ritz()</span></code></a>.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r66d50ffc18a7-1" role="doc-biblioentry">

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Spring - 3D spring element with constant stiffnesses (pyfe3d.spring) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Spring - 3D spring element with constant stiffnesses (pyfe3d.spring) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1624,6 +1624,12 @@ dimension length and rotations, 1-D array of size <code class="docutils literal 
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>For each node, <span class="math notranslate nohighlight">\(\{u, v, w\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+\{u, v, w\}^\top\)</span> and <span class="math notranslate nohighlight">\(\{r_x, r_y, r_z\}_e^\top =
+\boldsymbol{T}_{3\times 3}^\top \{r_x, r_y, r_z\}^\top\)</span>, with
+<span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> of <a class="reference internal" href="#pyfe3d.spring.Spring.update_rotation_matrix" title="pyfe3d.spring.Spring.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a>,
+whose columns are the element axes in global coordinates.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1655,6 +1661,21 @@ and a rotation matrix with <code class="docutils literal notranslate"><span clas
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>With <span class="math notranslate nohighlight">\(\boldsymbol{x}\)</span> the vector <code class="docutils literal notranslate"><span class="pre">(xi,</span> <span class="pre">xj,</span> <span class="pre">xk)</span></code> and
+<span class="math notranslate nohighlight">\(\boldsymbol{v}_{xy}\)</span> the vector <code class="docutils literal notranslate"><span class="pre">(vxyi,</span> <span class="pre">vxyj,</span> <span class="pre">vxyk)</span></code>,
+<span class="math notranslate nohighlight">\(\boldsymbol{e}_x = \boldsymbol{x} / \|\boldsymbol{x}\|\)</span> and</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{e}_z = \frac{\boldsymbol{e}_x \times
+\boldsymbol{v}_{xy}}{\|\boldsymbol{e}_x \times
+\boldsymbol{v}_{xy}\|}, \qquad
+\boldsymbol{e}_y = \boldsymbol{e}_z \times \boldsymbol{e}_x\]</div>
+<p>and <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3} = [\boldsymbol{e}_x, \boldsymbol{e}_y,
+\boldsymbol{e}_z]\)</span>. The axis <span class="math notranslate nohighlight">\(\boldsymbol{e}_y\)</span> is thus the component
+of <span class="math notranslate nohighlight">\(\boldsymbol{v}_{xy}\)</span> normal to <span class="math notranslate nohighlight">\(\boldsymbol{e}_x\)</span>, normalized.
+The norm <span class="math notranslate nohighlight">\(\|\boldsymbol{e}_x \times \boldsymbol{v}_{xy}\|\)</span> vanishes
+when <span class="math notranslate nohighlight">\(\boldsymbol{v}_{xy}\)</span> is parallel to <span class="math notranslate nohighlight">\(\boldsymbol{x}\)</span>, and the
+division then gives the <code class="docutils literal notranslate"><span class="pre">nan</span></code> entries.</p>
 </dd></dl>
 
 <dl class="py attribute">

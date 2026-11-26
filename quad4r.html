@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1244,9 +1244,7 @@ internal force vector.</p>
 <span class="math notranslate nohighlight">\(r_x\)</span>, <span class="math notranslate nohighlight">\(r_y\)</span>, <span class="math notranslate nohighlight">\(r_z\)</span>. All DOF are interpolated bi-linearly between the nodes.</p>
 <p>All stiffness terms, besides drilling, are integrated using the reduced
 integration scheme for the <a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> element, with a single point at
-the centroid, making it very efficient concerning the time needed to
-calculate the internal forces and stiffness matrices, in comparison with the
-<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> element. The hourglass modes of the bending and of the
+the centroid. The hourglass modes of the bending and of the
 transverse shear, of <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span>, are controlled by the physical
 stabilisation of Belytschko and Leviathan (1994), which has no parameter,
 and those of the membrane, of <span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(v\)</span>, by the artificial stiffness of
@@ -1259,8 +1257,7 @@ is selected with the <code class="docutils literal notranslate"><span class="pre
 default <code class="docutils literal notranslate"><span class="pre">0</span></code> is physics-based, any other value gives the fictitious penalty
 of MSC Nastran and Autodesk Nastran controlled by the <code class="docutils literal notranslate"><span class="pre">K6ROT</span></code> attribute.
 Unlike <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> and <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a>, this element does
-<strong>not</strong> enrich the in-plane displacement field with the drilling rotations.
-Use <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> to use Allman’s enrichment.</p>
+<strong>not</strong> enrich the in-plane displacement field with the drilling rotations.</p>
 <p>The transverse shear stiffnesses <span class="math notranslate nohighlight">\(A_{44}\)</span>, <span class="math notranslate nohighlight">\(A_{45}\)</span> and <span class="math notranslate nohighlight">\(A_{55}\)</span> are read
 from the <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a> object with the shear correction
 already applied, see <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness" title="pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness()</span></code></a>,
@@ -1382,7 +1379,7 @@ length unit, see <code class="docutils literal notranslate"><span class="pre">te
 <p>Belytschko and Leviathan stabilise the membrane physically too, with the
 nonconstant part of the membrane strains, their Eqs. (3.27) and (B.13),
 which on a flat element is the bilinear membrane integrated with two by two
-points and locks in in-plane bending. Measured on 2026-10-29 with that
+points and locks in in-plane bending. With that
 stabilisation, integrated with two by two points, in place of Brockman’s:
 the in-plane tip load of the straight cantilever of MacNeal and Harder
 (1985) <a class="reference internal" href="#r1bca8bcc39c0-7" id="id7">[7]</a>, 6 by 1 elements, gives 0.076, 0.024 and 0.028 times the
@@ -1401,8 +1398,8 @@ constant-twist patch test: the operator <span class="math notranslate nohighligh
 for a uniform twist, and would add the fraction <span class="math notranslate nohighlight">\(0.6 (1 + \nu)/(1 + 1/A)\)</span>
 to its energy, 0.78 for <span class="math notranslate nohighlight">\(\nu = 0.3\)</span> and <span class="math notranslate nohighlight">\(A \gg 1\)</span>, an error that
 refinement does not remove where the element areas are large in the unit
-of length of the model. The results of that alternative, measured on
-2026-10-29, against those of the element:</p>
+of length of the model. The results of that alternative, against those
+of the element:</p>
 <ul class="simple">
 <li><p>the one-element-wide torsion strip of MacNeal and Harder (1985) <a class="reference internal" href="#r1bca8bcc39c0-7" id="id8">[7]</a>:
 4.78 times the reference twist, grade F, against 0.941, grade B, the
@@ -1531,9 +1528,8 @@ energy is defined per element as:</p>
 <div class="math notranslate nohighlight">
 \[U_{r_z} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA\]</div>
 <p>where <span class="math notranslate nohighlight">\(10^{-6}\)</span> is a scaling factor suggested by MSC Nastran’s approach (CQUAD4) to make the artificial
-drilling stiffness sufficiently small. AUTODESK NASTRAN’s quick reference guide recommends <span class="math notranslate nohighlight">\(K6ROT = 100\)</span>
-for static analysis. For modal solutions, <span class="math notranslate nohighlight">\(K6ROT = 10^4\)</span> is suggested. MSC NASTRAN’s quick reference guide
-states that <span class="math notranslate nohighlight">\(K6ROT &gt; 100\)</span> should not be used, thus contradicting AUTODESK NASTRAN. The rotation <span class="math notranslate nohighlight">\(r_z\)</span> represents
+drilling stiffness sufficiently small. The values of <code class="docutils literal notranslate"><span class="pre">K6ROT</span></code> are discussed in the Notes of
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>. The rotation <span class="math notranslate nohighlight">\(r_z\)</span> represents
 the drilling degree-of-freedom in element’s coordinates, whereas <span class="math notranslate nohighlight">\(\theta_z\)</span> the in-plane rotation strain, defined as:</p>
 <div class="math notranslate nohighlight">
 \[\theta_z = \frac{1}{2}\left(\frac{\partial v}{\partial x} - \frac{\partial u}{\partial y}\right)\]</div>
@@ -2569,7 +2565,7 @@ the second-order terms of the offsets, <span class="math notranslate nohighlight
 \boldsymbol{\theta}_a \times (\boldsymbol{\theta}_a \times
 \boldsymbol{r}_a)\)</span>, change the strains by terms of order
 <span class="math notranslate nohighlight">\((\tilde{z}/\ell) \epsilon^3\)</span>, beyond those kept (derived here).
-Measured on 2026-11-01 on the twisted beam of
+On the twisted beam of
 <code class="docutils literal notranslate"><span class="pre">tests/test_quad_warp_offsets.py</span></code> with 12 by 2 Quad4 elements, the
 default <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">centroid_slopes</span> <span class="pre">=</span> <span class="pre">0</span></code>, and tip
 loads of 500 along <span class="math notranslate nohighlight">\(z\)</span> and 1100 along <span class="math notranslate nohighlight">\(y\)</span>, rotations up to 0.32, the

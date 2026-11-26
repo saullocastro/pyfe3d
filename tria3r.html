@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tria3R - Triangular element with reduced integration (pyfe3d.tria3r) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Tria3R - Triangular element with reduced integration (pyfe3d.tria3r) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1251,15 +1251,7 @@ what distinguishes this element from <a class="reference internal" href="tria3ds
 <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> the transverse shear is sampled at the centroid and its
 stiffness divided by <span class="math notranslate nohighlight">\(1 + \alpha \ell^2/h^2\)</span>, e.g. with
 <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code>; that field does not converge on thin plates
-and shells and is not recommended, see the Notes.</p>
-<p><a class="reference internal" href="#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a> is the recommended triangle of pyfe3d. With the same
-transverse shear field, it gives the results of
-<a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3dsg.Tria3DSG</span></code></a> on flat plates in bending, buckling and
-vibration, is much better in in-plane bending, better on shells whose
-response mixes membrane and bending, and cheaper to assemble. The exception
-is a coarse mesh of a doubly curved shell, where its drilling enrichment
-makes it stiffer than <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3dsg.Tria3DSG</span></code></a>, which is then the
-better choice; the measurements are in the Notes.</p>
+and shells, see the Notes.</p>
 <p>The drilling rotation <span class="math notranslate nohighlight">\(r_z\)</span> is given stiffness by one of two models, selected
 with the <code class="docutils literal notranslate"><span class="pre">drilling_model</span></code> attribute of <a class="reference internal" href="#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a>: the physics-based
 default, for which the nodal moments about the shell normal recovered in the
@@ -1292,41 +1284,19 @@ bending, the two give the same results to round-off, measured at <span class="ma
 10^{-10}\)</span>. <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">0.</span></code>; a non-zero value
 applies the factor below on top of the DSG field, exactly as
 <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a> does, whose Notes give the measurements.</p>
-<p>Compared with <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>, the Allman membrane makes this element much
-better in in-plane bending, better on shells whose response mixes membrane
-and bending, and no worse on plates; on the coarse meshes of a doubly curved
-shell in inextensional bending it is stiffer. Measured with quadrilateral
-meshes split along the diagonal 1-3, normalised by the reference:</p>
-<ul class="simple">
-<li><p>Cook’s skew membrane, reference 23.956 of Felippa <a class="reference internal" href="#re859cacb2c48-11" id="id2">[11]</a> (Sec. 9.3),
-<span class="math notranslate nohighlight">\(n \times n\)</span> cells: 0.864, 0.948, 0.982 and 0.994 for <span class="math notranslate nohighlight">\(n\)</span> = 4, 8, 16 and
-32, against 0.457, 0.713, 0.896 and 0.970 for <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>;</p></li>
-<li><p>the Scordelis-Lo roof of Belytschko et al. <a class="reference internal" href="#re859cacb2c48-12" id="id3">[12]</a> (Table 3), reference
-0.3024, <span class="math notranslate nohighlight">\(N \times N\)</span> on the quarter: 0.975, 0.989, 0.994 and 0.996 for <span class="math notranslate nohighlight">\(N\)</span>
-= 8, 16, 32 and 64, against 0.853, 0.952, 0.984 and 0.994;</p></li>
-<li><p>the pinched cylinder of <a class="reference internal" href="#re859cacb2c48-12" id="id4">[12]</a>: 0.564, 0.852, 0.961 and 0.996, against
-0.545, 0.843, 0.958 and 0.996;</p></li>
-<li><p>the twisted beam of MacNeal and Harder <a class="reference internal" href="#re859cacb2c48-13" id="id5">[13]</a> (Table 3), out-of-plane load:
-0.933, 0.988 and 0.997 with 12x2, 48x4 and 192x8 cells, against 0.817,
-0.954 and 0.990;</p></li>
-<li><p>the pinched hemisphere with an 18 degree hole of <a class="reference internal" href="#re859cacb2c48-12" id="id6">[12]</a>, reference 0.0924:
-0.288, 0.862, 0.998 and 1.011 for <span class="math notranslate nohighlight">\(N\)</span> = 8, 16, 32 and 64, against 0.451,
-0.926, 0.998 and 1.009. On these coarse meshes of a doubly curved surface
-the drilling rotation of one facet is made of the rotations that bend its
-neighbours, and the edge modes of the Allman field turn them into
-membrane strain, which stiffens an inextensional deformation. The
-penalty drilling model, <code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">1</span></code>, which has no Allman
-field, gives 0.929 and 0.988 at <span class="math notranslate nohighlight">\(N\)</span> = 8 and 16, whereas reducing
-<code class="docutils literal notranslate"><span class="pre">gamma_rz</span></code> hundredfold leaves this element at 0.309 at <span class="math notranslate nohighlight">\(N\)</span> = 8: the
-stiffening is in the enrichment, not in the Hughes-Brezzi coefficient.
-It is gone at <span class="math notranslate nohighlight">\(N = 32\)</span>.</p></li>
-</ul>
-<p>The assembly of <a class="reference internal" href="#pyfe3d.tria3r.Tria3R.update_KC0" title="pyfe3d.tria3r.Tria3R.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3R.update_KC0()</span></code></a> takes about half the time of
-the one of <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>, 0.64 against 1.36 s for 80000 elements on
-one thread.</p>
-<p>These measurements are why <a class="reference internal" href="#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a> is the recommended triangle, and
-why <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a> is the better choice on a coarse mesh of a doubly
-curved shell.</p>
+<p>The Allman membrane is the only difference from <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>. It
+improves the in-plane bending, e.g. of the skew membrane of Cook with the
+reference of Felippa <a class="reference internal" href="#re859cacb2c48-11" id="id2">[11]</a> (Sec. 9.3), and the response of shells that mixes
+membrane and bending, e.g. of the Scordelis-Lo roof and the pinched cylinder
+of Belytschko et al. <a class="reference internal" href="#re859cacb2c48-12" id="id3">[12]</a> and of the twisted beam of MacNeal and Harder
+<a class="reference internal" href="#re859cacb2c48-13" id="id4">[13]</a>. On a coarse mesh of a doubly curved surface in inextensional bending,
+e.g. the pinched hemisphere of <a class="reference internal" href="#re859cacb2c48-12" id="id5">[12]</a>, the drilling rotation of one facet is
+made of the rotations that bend its neighbours, and the edge modes of the
+Allman field turn them into membrane strain, which stiffens the
+deformation. This stiffening is in the enrichment, not in the Hughes-Brezzi
+coefficient: the penalty drilling model, <code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">1</span></code>, which has
+no Allman field, does not show it, reducing <code class="docutils literal notranslate"><span class="pre">gamma_rz</span></code> hundredfold does
+not remove it, and it vanishes with mesh refinement.</p>
 <p class="rubric">Transverse shear with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code></p>
 <p>The transverse shear strains are sampled at the centroid, and the transverse
 shear stiffnesses <span class="math notranslate nohighlight">\(A_{44}\)</span>, <span class="math notranslate nohighlight">\(A_{45}\)</span> and <span class="math notranslate nohighlight">\(A_{55}\)</span> are divided by <span class="math notranslate nohighlight">\(1 +
@@ -1335,9 +1305,9 @@ factor\)</span>, with</p>
 \[factor = \frac{\alpha \ell^2}{h^2}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\alpha\)</span> is the <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code> attribute, <span class="math notranslate nohighlight">\(\ell\)</span> the longest
 edge of the triangle and <span class="math notranslate nohighlight">\(h\)</span> the total thickness. It is the scalar factor
-that Lyly, Stenberg and Vihinen <a class="reference internal" href="#re859cacb2c48-1" id="id7">[1]</a> proposed for the MITC4 quadrilateral,
-their Eq. (3.12), called Stenberg’s method by Bischoff and Bletzinger <a class="reference internal" href="#re859cacb2c48-2" id="id8">[2]</a>
-(Sec. 3.1), in the form of Castro et al. <a class="reference internal" href="#re859cacb2c48-3" id="id9">[3]</a> (Eq. (26)), with the longest
+that Lyly, Stenberg and Vihinen <a class="reference internal" href="#re859cacb2c48-1" id="id6">[1]</a> proposed for the MITC4 quadrilateral,
+their Eq. (3.12), called Stenberg’s method by Bischoff and Bletzinger <a class="reference internal" href="#re859cacb2c48-2" id="id7">[2]</a>
+(Sec. 3.1), in the form of Castro et al. <a class="reference internal" href="#re859cacb2c48-3" id="id8">[3]</a> (Eq. (26)), with the longest
 edge of the triangle as the element size. The values of those references
 are near <span class="math notranslate nohighlight">\(0.1\)</span>, roughly seven times smaller than <span class="math notranslate nohighlight">\(\alpha = 0.7\)</span> of the
 measurements below: in all of them the factor sits on top of an
@@ -1350,12 +1320,12 @@ plates and shells. The factor tends to zero only when <span class="math notransl
 below <span class="math notranslate nohighlight">\(h\)</span>, <span class="math notranslate nohighlight">\(\ell &lt; 0.12 h\)</span> for 1 per cent; before that, the
 centroid-sampled field it scales still locks, and the error stalls at a
 value set by <span class="math notranslate nohighlight">\(\alpha\)</span> and by the mesh pattern. Lyly, Stenberg and
-Vihinen <a class="reference internal" href="#re859cacb2c48-1" id="id10">[1]</a> (p. 348) state that the stabilisation was first introduced
+Vihinen <a class="reference internal" href="#re859cacb2c48-1" id="id9">[1]</a> (p. 348) state that the stabilisation was first introduced
 for a piecewise quadratic deflection, and that a linear or bilinear
 deflection needs an MITC reduction operator with it; the centroid
 sample is neither. Measured on a simply supported square plate under a
 uniform pressure, with <span class="math notranslate nohighlight">\(n \times n\)</span> squares cut along one diagonal,
-against the closed form of Timoshenko and Woinowsky-Krieger <a class="reference internal" href="#re859cacb2c48-14" id="id11">[14]</a>
+against the closed form of Timoshenko and Woinowsky-Krieger <a class="reference internal" href="#re859cacb2c48-14" id="id10">[14]</a>
 (Table 8, p. 120), the error of the centre deflection, in per cent, is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">n</span> <span class="n">x</span> <span class="n">n</span> <span class="n">squares</span>          <span class="mi">8</span><span class="n">x8</span>    <span class="mi">16</span><span class="n">x16</span>   <span class="mi">32</span><span class="n">x32</span>   <span class="mi">64</span><span class="n">x64</span>  <span class="mi">128</span><span class="n">x128</span>
 <span class="n">a</span><span class="o">/</span><span class="n">h</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">alpha</span> <span class="mf">0.7</span>  <span class="o">-</span><span class="mf">8.6</span>   <span class="o">-</span><span class="mf">13.0</span>   <span class="o">-</span><span class="mf">14.1</span>   <span class="o">-</span><span class="mf">14.4</span>   <span class="o">-</span><span class="mf">14.3</span>
@@ -1369,8 +1339,9 @@ against the closed form of Timoshenko and Woinowsky-Krieger <a class="reference 
 <p>The buckling load of that plate under a uniform compression, <span class="math notranslate nohighlight">\(a/h =
 1000\)</span>, stalls at +16.4 per cent and its first frequency at +8.0 per cent
 with <span class="math notranslate nohighlight">\(\alpha = 0.7\)</span>, where the default converges to +0.02 per cent. On
-shells, with <span class="math notranslate nohighlight">\(\alpha = 0.7\)</span>, the hemisphere above stalls at 0.826 from
-<span class="math notranslate nohighlight">\(N = 32\)</span> to 64 and the Scordelis-Lo roof is at 0.894 with <span class="math notranslate nohighlight">\(N = 64\)</span>. A
+shells, with <span class="math notranslate nohighlight">\(\alpha = 0.7\)</span> and <span class="math notranslate nohighlight">\(N \times N\)</span> cells split in two, the
+pinched hemisphere of <a class="reference internal" href="#re859cacb2c48-12" id="id11">[12]</a> stalls at 0.826 of the reference from <span class="math notranslate nohighlight">\(N =
+32\)</span> to 64 and the Scordelis-Lo roof is at 0.894 with <span class="math notranslate nohighlight">\(N = 64\)</span>. A
 larger <span class="math notranslate nohighlight">\(\alpha\)</span> moves the stall at the price of a much too flexible
 coarse mesh, and on a thin cylinder in buckling the large factor admits
 a mode at two elements per wavelength, the mesh Nyquist limit, that
@@ -1448,11 +1419,9 @@ meaningless. The penalty energy is defined per element as:</p>
 <div class="math notranslate nohighlight">
 \[U_{r_z} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA\]</div>
 <p>where <span class="math notranslate nohighlight">\(10^{-6}\)</span> is a scaling factor suggested by MSC Nastran’s approach
-(CQUAD4) to make the artificial drilling stiffness sufficiently small.
-AUTODESK NASTRAN’s quick reference guide recommends <span class="math notranslate nohighlight">\(K6ROT = 100\)</span> for static
-analysis. For modal solutions, <span class="math notranslate nohighlight">\(K6ROT = 10^4\)</span> is suggested. MSC NASTRAN’s
-quick reference guide states that <span class="math notranslate nohighlight">\(K6ROT &gt; 100\)</span> should not be used, thus
-contradicting AUTODESK NASTRAN. The rotation <span class="math notranslate nohighlight">\(r_z\)</span> represents the drilling
+(CQUAD4) to make the artificial drilling stiffness sufficiently small. The
+values of <code class="docutils literal notranslate"><span class="pre">K6ROT</span></code> are discussed in the Notes of <a class="reference internal" href="#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a>. The
+rotation <span class="math notranslate nohighlight">\(r_z\)</span> represents the drilling
 degree-of-freedom in element’s coordinates, whereas <span class="math notranslate nohighlight">\(\theta_z\)</span> the in-plane
 rotation strain, defined as <span class="math notranslate nohighlight">\(\theta_z = \frac{1}{2}\left(v_{,x} -
 u_{,y}\right)\)</span>, such that the penalty is built from the operator</p>
@@ -1466,13 +1435,6 @@ motions and all constant-strain states exactly. <span class="math notranslate no
 over the element. This term is integrated with the three-point rule. The
 approach herein presented is very similar to the one presented in Eq. 2.20 of
 <a class="reference internal" href="#re859cacb2c48-6" id="id18">[6]</a>.</p>
-<p><strong>Choosing between them.</strong> The physics-based model is the default because it
-is the one that is correct when the drilling moment is part of the load path,
-when shells are connected to beams or stiffeners that must transmit in-plane
-moments, or when the mesh is too coarse for the unenriched membrane response
-to be trusted. It is markedly more accurate in in-plane bending: on Cook’s
-skew membrane with a four by four mesh of split quadrilaterals it gives 20.7
-against the reference 23.9, where the penalty gives 11.3.</p>
 <p class="rubric">Zero-energy modes of a single element</p>
 <p>The stiffness matrix <code class="docutils literal notranslate"><span class="pre">KC0</span></code> of a single free element has seven zero
 eigenvalues: the six rigid-body motions and one mode of the rotations,</p>
@@ -1504,21 +1466,21 @@ the six rigid-body modes.</p>
 <div role="list" class="citation-list">
 <div class="citation" id="re859cacb2c48-1" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id7">1</a>,<a role="doc-backlink" href="#id10">2</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id6">1</a>,<a role="doc-backlink" href="#id9">2</a>)</span>
 <p>Lyly, M., Stenberg, R., and Vihinen, T., A stable bilinear element for
 the Reissner-Mindlin plate model, Computer Methods in Applied Mechanics
 and Engineering, 110(3-4), 343-357, 1993.
 <a class="reference external" href="https://doi.org/10.1016/0045-7825(93)90214-I">https://doi.org/10.1016/0045-7825(93)90214-I</a></p>
 </div>
 <div class="citation" id="re859cacb2c48-2" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id8">2</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id7">2</a><span class="fn-bracket">]</span></span>
 <p>Bischoff, M., and Bletzinger, K.-U., Improving stability and accuracy
 of Reissner-Mindlin plate finite elements via algebraic subgrid scale
 stabilization, Computer Methods in Applied Mechanics and Engineering,
 193(15-16), 1517-1528, 2004. <a class="reference external" href="https://doi.org/10.1016/j.cma.2003.12.036">https://doi.org/10.1016/j.cma.2003.12.036</a></p>
 </div>
 <div class="citation" id="re859cacb2c48-3" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id9">3</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id8">3</a><span class="fn-bracket">]</span></span>
 <p>Castro, S. G. P., Donadon, M. V., and Guimaraes, T. A. M., ES-PIM
 applied to buckling of variable angle tow laminates, Composite
 Structures, 209, 67-78, 2019.
@@ -1576,7 +1538,7 @@ freedoms, Computer Methods in Applied Mechanics and Engineering,
 </div>
 <div class="citation" id="re859cacb2c48-12" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>12<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id3">1</a>,<a role="doc-backlink" href="#id4">2</a>,<a role="doc-backlink" href="#id6">3</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id3">1</a>,<a role="doc-backlink" href="#id5">2</a>,<a role="doc-backlink" href="#id11">3</a>)</span>
 <p>Belytschko, T., Stolarski, H., Liu, W. K., Carpenter, N., and Ong,
 J. S.-J., Stress projection for membrane and shear locking in shell
 finite elements, Computer Methods in Applied Mechanics and Engineering,
@@ -1584,14 +1546,14 @@ finite elements, Computer Methods in Applied Mechanics and Engineering,
 </div>
 <div class="citation" id="re859cacb2c48-13" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>13<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id5">1</a>,<a role="doc-backlink" href="#id12">2</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id4">1</a>,<a role="doc-backlink" href="#id12">2</a>)</span>
 <p>MacNeal, R. H., and Harder, R. L., A proposed standard set of
 problems to test finite element accuracy, Finite Elements in Analysis
 and Design, 1(1), 3-20, 1985.
 <a class="reference external" href="https://doi.org/10.1016/0168-874X(85)90003-4">https://doi.org/10.1016/0168-874X(85)90003-4</a></p>
 </div>
 <div class="citation" id="re859cacb2c48-14" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id11">14</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id10">14</a><span class="fn-bracket">]</span></span>
 <p>Timoshenko, S., and Woinowsky-Krieger, S., Theory of Plates and
 Shells, 2nd ed., McGraw-Hill, 1959.</p>
 </div>

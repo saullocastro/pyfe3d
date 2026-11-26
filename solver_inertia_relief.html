@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Static analysis with inertia relief (pyfe3d.solver.inertia_relief) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Static analysis with inertia relief (pyfe3d.solver.inertia_relief) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1286,11 +1286,7 @@ rigid-body modes, <code class="docutils literal notranslate"><span class="pre">m
 </dd>
 <dt><strong>pivot_rtol</strong><span class="classifier">float, optional</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KC0uu</span></code> is taken as singular when the smallest pivot of its
 factorization is at most <code class="docutils literal notranslate"><span class="pre">pivot_rtol</span></code> times the largest. Default
-<code class="docutils literal notranslate"><span class="pre">1.e-13</span></code>: a rigid-body mode left free by the supports gives a
-pivot of the order of the round-off, below <code class="docutils literal notranslate"><span class="pre">1.e-15</span></code> times the
-largest, whereas the beam models of the tests, up to 200 elements,
-and the airplane of <code class="docutils literal notranslate"><span class="pre">tests/test_inertia_relief_ha144a.py</span></code> have
-ratios above <code class="docutils literal notranslate"><span class="pre">1.e-7</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">1.e-13</span></code>, see the Notes.</p>
 </dd>
 </dl>
 </dd>
@@ -1401,6 +1397,11 @@ factorization gives both <span class="math notranslate nohighlight">\(\boldsymbo
 <span class="math notranslate nohighlight">\(\boldsymbol{u}_u\)</span>. The methods for large singular systems without a
 reference support, which compute the null space of <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>
 during the factorization, are discussed in <a class="reference internal" href="#re7e01b0bb4f9-3" id="id8">[3]</a>, Secs. 1-4.</p>
+<p>The default of <code class="docutils literal notranslate"><span class="pre">pivot_rtol</span></code> separates two ranges: a rigid-body mode
+left free by the supports gives a pivot of the order of the round-off,
+below <span class="math notranslate nohighlight">\(10^{-15}\)</span> times the largest, whereas the beam models of the
+tests, up to 200 elements, and the airplane of
+<code class="docutils literal notranslate"><span class="pre">tests/test_inertia_relief_ha144a.py</span></code> have ratios above <span class="math notranslate nohighlight">\(10^{-7}\)</span>.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="re7e01b0bb4f9-1" role="doc-biblioentry">

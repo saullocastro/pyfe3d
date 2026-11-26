@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tutorial: large rotations with the co-rotational kinematics &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Tutorial: large rotations with the co-rotational kinematics &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="../_static/documentation_options.js?v=f24cbf82"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -122,7 +122,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1066,7 +1066,6 @@
                   
   <section id="Tutorial:-large-rotations-with-the-co-rotational-kinematics">
 <h1>Tutorial: large rotations with the co-rotational kinematics<a class="headerlink" href="#Tutorial:-large-rotations-with-the-co-rotational-kinematics" title="Link to this heading">#</a></h1>
-<p>Date: 30 of October 2026</p>
 <p>Author: Saullo G. P. Castro</p>
 <p>The elements of pyfe3d use either their own von Kármán strains, valid for small strains and moderate rotations, or, through <code class="docutils literal notranslate"><span class="pre">pyfe3d.corotational.CorotationalModel</span></code>, the element-independent co-rotational (EICR) formulation, valid for large displacements and large rotations with small strains. This notebook compares the three non-linear kinematics of <code class="docutils literal notranslate"><span class="pre">CorotationalModel.add()</span></code> on three benchmarks of Sze, Liu and Lo [1]:</p>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -1117,7 +1116,7 @@ cells below run in less than half a minute.</p>
 <p><strong>Rotations below one revolution.</strong> The rotational degrees-of-freedom of the nodes of co-rotational elements are total rotation vectors <span class="math notranslate nohighlight">\(\boldsymbol{\psi}_a\)</span>, the nodal rotation matrix being <span class="math notranslate nohighlight">\(\boldsymbol{R}_a = \exp(\mathrm{Spin}(\boldsymbol{\psi}_a))\)</span>; no state is kept between the evaluations, and the solvers of <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code> add the rotation vectors like the translations. The map from the variation of <span class="math notranslate nohighlight">\(\boldsymbol{\psi}\)</span> to the spin,
 <span class="math notranslate nohighlight">\(\boldsymbol{\Lambda}(\boldsymbol{\psi})\)</span> (<code class="docutils literal notranslate"><span class="pre">pyfe3d.corotational.Lambda</span></code>), is singular at <span class="math notranslate nohighlight">\(|\boldsymbol{\psi}| = 2 k \pi\)</span>, <span class="math notranslate nohighlight">\(k \ge 1\)</span>: each nodal rotation must stay below one full revolution, <span class="math notranslate nohighlight">\(|\boldsymbol{\psi}_a| &lt; 2 \pi\)</span>. The cantilever of case 2 reaches this limit, its tip turning by <span class="math notranslate nohighlight">\(2 \pi\)</span> at the last load level, and cannot be continued beyond it.</p>
 <p><strong>Convergence criterion.</strong> The co-rotational kinematics take the nodal positions relative to the centroid of each element, so that the default convergence criterion of <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code> suffices, without <code class="docutils literal notranslate"><span class="pre">absTOL</span></code>.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
@@ -1140,21 +1139,12 @@ from test_corotational_benchmarks import (CANTILEVER_SHEAR, TABLE_2A,
     tip_deflections, elastica_end_force, polygon_tip,
     run_cantilever_end_shear, run_corotational_roof)
 
-print('pyfe3d', pyfe3d.__version__)
 KINEMATICS = ['von_karman', 'corotational', 'corotational_von_karman']
 STYLE = {'von_karman': 'C0--', 'corotational': 'C1-',
          'corotational_von_karman': 'C2:'}
 T_START = time.time()
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-pyfe3d 0.12.0
-</pre></div></div>
 </div>
 </section>
 </section>
@@ -1327,8 +1317,8 @@ Quad4R  corotational_von_karman  1.3 s; at M_max -U/L 1.00000, W/L 0.00000, tip 
 </pre></div></div>
 </div>
 <p>Both elements with <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code> lie on the polygon of 16 chords to round-off at the 20 levels, and their tips turn by exactly <span class="math notranslate nohighlight">\(2 \pi\)</span> at <span class="math notranslate nohighlight">\(M_{max}\)</span>, back at the root: the full circle. The von Kármán models follow the von Kármán solution, which agrees with the exact one only for small rotations, and end at <span class="math notranslate nohighlight">\(W = \pi L\)</span>, <span class="math notranslate nohighlight">\(-U = 6.6 L\)</span>, far from the root.</p>
-<p><code class="docutils literal notranslate"><span class="pre">BeamC</span></code> with <code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code> does better than the polygon: its tip lies on the exact circle within <span class="math notranslate nohighlight">\(10^{-6} L\)</span>, because the averaged von Kármán axial strain in the CR frame accounts for the arc of each element against its chord. Measured separately on 2026-10-30, its largest distance from the exact tip over the 20 levels is <span class="math notranslate nohighlight">\(5 \times 10^{-3} L\)</span>, <span class="math notranslate nohighlight">\(2.7 \times 10^{-4} L\)</span> and <span class="math notranslate nohighlight">\(1.0 \times 10^{-6} L\)</span> with 2, 4 and 16 elements, decreasing about as <span class="math notranslate nohighlight">\(n^{-4}\)</span>.
-With <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> the two co-rotational kinematics coincide.</p>
+<p><code class="docutils literal notranslate"><span class="pre">BeamC</span></code> with <code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code> does better than the polygon: its tip lies on the exact circle within <span class="math notranslate nohighlight">\(10^{-6} L\)</span>, because the averaged von Kármán axial strain in the CR frame accounts for the arc of each element against its chord. Measured separately, its largest distance from the exact tip over the 20 levels is <span class="math notranslate nohighlight">\(5 \times 10^{-3} L\)</span>, <span class="math notranslate nohighlight">\(2.7 \times 10^{-4} L\)</span> and <span class="math notranslate nohighlight">\(1.0 \times 10^{-6} L\)</span> with 2, 4 and 16 elements, decreasing about as <span class="math notranslate nohighlight">\(n^{-4}\)</span>. With
+<code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> the two co-rotational kinematics coincide.</p>
 <p>The deformed cantilevers at four levels of Table 3a, without amplification, with the exact circles:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:

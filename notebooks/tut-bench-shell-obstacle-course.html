@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Benchmark: shell obstacle course &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Benchmark: shell obstacle course &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="../_static/documentation_options.js?v=f24cbf82"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -122,7 +122,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1066,7 +1066,6 @@
                   
   <section id="Benchmark:-shell-obstacle-course">
 <h1>Benchmark: shell obstacle course<a class="headerlink" href="#Benchmark:-shell-obstacle-course" title="Link to this heading">#</a></h1>
-<p>Date: 22 of October 2026</p>
 <p>Author: Saullo G. P. Castro</p>
 <p>Belytschko et al. [1] assembled three linear problems, the “obstacle course” of their Section 5, that together test whether a shell element represents inextensional bending, rigid-body rotations about the normal and complex membrane states: the Scordelis-Lo roof, the pinched cylinder with rigid diaphragms and the pinched hemispherical shell. This notebook runs the three problems with the four shell elements of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code>, <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>, each with its default
 attributes, on <span class="math notranslate nohighlight">\(N \times N\)</span> meshes of the symmetric part of each shell, and compares the converged and the coarse-mesh results with the reference values of Table 3 of [1] (p. 239). The roof and the hemisphere are also problems of MacNeal and Harder [2], whose Tables 13 and 14 give the results of the QUAD4 of MSC/NASTRAN, compared at the end.</p>

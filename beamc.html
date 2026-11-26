@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1496,8 +1496,7 @@ arrays of the closed-form expressions to 1.3e-14 of their largest
 entries, see <code class="docutils literal notranslate"><span class="pre">tests/test_beam_sectional_stiffness.py</span></code>, and costs
 about 4 to 7 µs more per element and call than the 1.5 to 2 µs of
 <code class="docutils literal notranslate"><span class="pre">update_KC0</span></code>, <code class="docutils literal notranslate"><span class="pre">update_M</span></code>, <code class="docutils literal notranslate"><span class="pre">update_KG</span></code> and <code class="docutils literal notranslate"><span class="pre">update_fint</span></code> with
-the closed-form expressions (measured on 2026-10-31, Windows, calls
-from Python).</p>
+the closed-form expressions, in calls from Python.</p>
 <p>The element is therefore exact under nodal loads for any <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>:
 one element gives the tip displacements of a cantilever under any tip
 load, measured in <code class="docutils literal notranslate"><span class="pre">tests/test_beam_sectional_stiffness.py</span></code> to 2.7e-15
@@ -2152,6 +2151,12 @@ exact Jacobian of the internal forces is <code class="docutils literal notransla
 <p>The distance between the two nodes, computed from the coordinates
 <code class="docutils literal notranslate"><span class="pre">probe.xe</span></code> in the element coordinate system, is stored in the
 attribute <code class="docutils literal notranslate"><span class="pre">length</span></code>. Called by <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_probe_xe" title="pyfe3d.beamc.BeamC.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>.</p>
+<p class="rubric">Notes</p>
+<p>With the element coordinates <span class="math notranslate nohighlight">\((x_i, y_i, z_i)\)</span> of nodes 1 and 2,</p>
+<div class="math notranslate nohighlight">
+\[L = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2 + (z_2 - z_1)^2}\]</div>
+<p>which, the transformation to element coordinates being a rotation,
+is the distance between the two nodes in global coordinates.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2223,6 +2228,12 @@ dimension length and rotations, 1-D array of size <code class="docutils literal 
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>For each node, <span class="math notranslate nohighlight">\(\{u, v, w\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+\{u, v, w\}^\top\)</span> and <span class="math notranslate nohighlight">\(\{r_x, r_y, r_z\}_e^\top =
+\boldsymbol{T}_{3\times 3}^\top \{r_x, r_y, r_z\}^\top\)</span>, with
+<span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> of <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_rotation_matrix" title="pyfe3d.beamc.BeamC.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a>,
+whose columns are the element axes in global coordinates.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2251,6 +2262,12 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>. Dimension length, 1-D array of size
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>For each node, <span class="math notranslate nohighlight">\(\{x, y, z\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+\{x, y, z\}^\top\)</span>, with <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> of
+<a class="reference internal" href="#pyfe3d.beamc.BeamC.update_rotation_matrix" title="pyfe3d.beamc.BeamC.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a>, whose columns are the element axes in
+global coordinates. The element coordinates are thus measured from
+the origin of the global system along the element axes.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2287,6 +2304,22 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>. Dimension length, 1-D array of size
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>With <span class="math notranslate nohighlight">\(\boldsymbol{x}_1\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{x}_2\)</span> the positions of the
+two nodes and <span class="math notranslate nohighlight">\(\boldsymbol{v}_{xy}\)</span> the vector <code class="docutils literal notranslate"><span class="pre">(vxyi,</span> <span class="pre">vxyj,</span> <span class="pre">vxyk)</span></code>,
+<span class="math notranslate nohighlight">\(\boldsymbol{e}_x = (\boldsymbol{x}_2 - \boldsymbol{x}_1) /
+\|\boldsymbol{x}_2 - \boldsymbol{x}_1\|\)</span> and</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{e}_z = \frac{\boldsymbol{e}_x \times
+\boldsymbol{v}_{xy}}{\|\boldsymbol{e}_x \times
+\boldsymbol{v}_{xy}\|}, \qquad
+\boldsymbol{e}_y = \boldsymbol{e}_z \times \boldsymbol{e}_x\]</div>
+<p>and <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3} = [\boldsymbol{e}_x, \boldsymbol{e}_y,
+\boldsymbol{e}_z]\)</span>. The axis <span class="math notranslate nohighlight">\(\boldsymbol{e}_y\)</span> is thus the component
+of <span class="math notranslate nohighlight">\(\boldsymbol{v}_{xy}\)</span> normal to <span class="math notranslate nohighlight">\(\boldsymbol{e}_x\)</span>, normalized.
+The norm <span class="math notranslate nohighlight">\(\|\boldsymbol{e}_x \times \boldsymbol{v}_{xy}\|\)</span> vanishes
+when <span class="math notranslate nohighlight">\(\boldsymbol{v}_{xy}\)</span> is parallel to the element axis, and the
+division then gives the <code class="docutils literal notranslate"><span class="pre">nan</span></code> entries.</p>
 </dd></dl>
 
 <dl class="py attribute">

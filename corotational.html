@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Co-rotational kinematics, EICR (pyfe3d.corotational) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Co-rotational kinematics, EICR (pyfe3d.corotational) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1952,6 +1952,15 @@ Solids and Structures, Volume 2: Advanced Topics, Wiley, 1997.</p>
 <code class="docutils literal notranslate"><span class="pre">inc*(fext</span> <span class="pre">+</span> <span class="pre">sum_k</span> <span class="pre">F_k(c))</span></code>, size <code class="docutils literal notranslate"><span class="pre">N</span></code>, with <code class="docutils literal notranslate"><span class="pre">F_k</span></code> the
 configuration-dependent moments of <a class="reference internal" href="#pyfe3d.corotational.CorotationalModel.add_moment" title="pyfe3d.corotational.CorotationalModel.add_moment"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_moment()</span></code></a>, see
 <a class="reference internal" href="#pyfe3d.corotational.CorotationalModel" title="pyfe3d.corotational.CorotationalModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalModel</span></code></a>.</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.solver.Analysis</span></code> treats the load as
+configuration-dependent when <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> declares <code class="docutils literal notranslate"><span class="pre">c</span></code> in its
+signature, see <a class="reference internal" href="solver_callbacks.html#pyfe3d.solver.callbacks.accepts_kwarg" title="pyfe3d.solver.callbacks.accepts_kwarg"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks.accepts_kwarg()</span></code></a>, and a
+linear static analysis then iterates on the load. The returned
+callable declares <code class="docutils literal notranslate"><span class="pre">c</span></code> only when configuration-dependent moments
+(<code class="docutils literal notranslate"><span class="pre">kind='fixed_axes'</span></code> or <code class="docutils literal notranslate"><span class="pre">'follower'</span></code> of <a class="reference internal" href="#pyfe3d.corotational.CorotationalModel.add_moment" title="pyfe3d.corotational.CorotationalModel.add_moment"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_moment()</span></code></a>) are
+present; otherwise <code class="docutils literal notranslate"><span class="pre">c</span></code> is accepted as a keyword argument and
+ignored. The attribute is read when it is passed to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.solver.Analysis</span></code>, so add the moments before.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1966,16 +1975,6 @@ moments at the base configuration.</p>
 </dl>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.solver.Analysis</span></code> treats the load as
-configuration-dependent when <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> declares <code class="docutils literal notranslate"><span class="pre">c</span></code> in its
-signature, see <a class="reference internal" href="solver_callbacks.html#pyfe3d.solver.callbacks.accepts_kwarg" title="pyfe3d.solver.callbacks.accepts_kwarg"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks.accepts_kwarg()</span></code></a>, and a
-linear static analysis then iterates on the load. The returned
-callable declares <code class="docutils literal notranslate"><span class="pre">c</span></code> only when configuration-dependent moments
-(<code class="docutils literal notranslate"><span class="pre">kind='fixed_axes'</span></code> or <code class="docutils literal notranslate"><span class="pre">'follower'</span></code> of <a class="reference internal" href="#pyfe3d.corotational.CorotationalModel.add_moment" title="pyfe3d.corotational.CorotationalModel.add_moment"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_moment()</span></code></a>) are
-present; otherwise <code class="docutils literal notranslate"><span class="pre">c</span></code> is accepted as a keyword argument and
-ignored. The attribute is read when it is passed to
-<code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.solver.Analysis</span></code>, so add the moments before.</p>
 </dd></dl>
 
 <dl class="py method">

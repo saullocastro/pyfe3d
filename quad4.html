@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quad4 - Quadrilateral element with mixed integration (pyfe3d.quad4) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Quad4 - Quadrilateral element with mixed integration (pyfe3d.quad4) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1240,11 +1240,9 @@ the element. The <code class="docutils literal notranslate"><span class="pre">up
 contributions in sparse row, column and value arrays, from the positions
 given by its <code class="docutils literal notranslate"><span class="pre">init_k_*</span></code> attributes, or add them to a global internal force
 vector.</p>
-<p>The <a class="reference internal" href="#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> is the recommended quadrilateral plane stress finite
-element.</p>
-<p>Another option is the <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> with full reduced
-integration, more efficient, but with an hourglass control that creates
-artificial stiffness to compensate the reduced integration.</p>
+<p>The <a class="reference internal" href="#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> element is a four-node quadrilateral shell element with
+full integration; <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> is the four-node element with reduced
+integration and hourglass control.</p>
 <p>The <a class="reference internal" href="#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> element has 6 degrees-of-freedom (DOF): <span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(w\)</span>,
 <span class="math notranslate nohighlight">\(r_x\)</span>, <span class="math notranslate nohighlight">\(r_y\)</span>, <span class="math notranslate nohighlight">\(r_z\)</span>. All DOF are interpolated bi-linearly between the nodes.
 The element matrices combine membrane, bending, membrane-bending coupling and
@@ -1436,14 +1434,14 @@ error decreasing as <span class="math notranslate nohighlight">\(\ell^2\)</span>
 shear stiffness at every element size, and with the slopes at the
 two-by-two points no spurious mode remains: +0.51 %, +0.13 % and +1.36 %,
 against +0.83 %, +0.21 % and +2.70 % with <code class="docutils literal notranslate"><span class="pre">centroid_slopes</span> <span class="pre">=</span> <span class="pre">1</span></code>, see
-<code class="docutils literal notranslate"><span class="pre">tests/test_quad4_geometric_hourglass.py</span></code> (measured on 2026-11-01). With
+<code class="docutils literal notranslate"><span class="pre">tests/test_quad4_geometric_hourglass.py</span></code>. With
 <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> the elements with <span class="math notranslate nohighlight">\(h/\ell \ge 1\)</span>, which have the MITC4
 strains, take the slopes at the centroid as well, such that the geometric
 stiffness does not depend on that gate and <code class="docutils literal notranslate"><span class="pre">update_KG_given_stress</span></code> does
 not need the thickness.</p>
 <p>The slopes at the two-by-two points integrate the geometric stiffness of a
 smooth mode more accurately, and the slopes at the centroid give higher
-buckling loads on coarse meshes. Measured on 2026-11-01, above the exact
+buckling loads on coarse meshes. Above the exact
 solutions, with the default, <code class="docutils literal notranslate"><span class="pre">centroid_slopes</span> <span class="pre">=</span> <span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span>
 <span class="pre">0</span></code>: a simply supported plate with 20 by 6 elements, 5 elements per
 half-wave along the load, +4.31 %, +6.81 % and +4.67 % above the Kirchhoff
@@ -1572,9 +1570,8 @@ meaningless. The penalty energy is defined per element as:</p>
 <div class="math notranslate nohighlight">
 \[U_{r_z} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA\]</div>
 <p>where <span class="math notranslate nohighlight">\(10^{-6}\)</span> is a scaling factor suggested by MSC Nastran’s approach (CQUAD4) to make the artificial
-drilling stiffness sufficiently small. AUTODESK NASTRAN’s quick reference guide recommends <span class="math notranslate nohighlight">\(K6ROT = 100\)</span>
-for static analysis. For modal solutions, <span class="math notranslate nohighlight">\(K6ROT = 10^4\)</span> is suggested. MSC NASTRAN’s quick reference guide
-states that <span class="math notranslate nohighlight">\(K6ROT &gt; 100\)</span> should not be used, thus contradicting AUTODESK NASTRAN. The rotation <span class="math notranslate nohighlight">\(r_z\)</span> represents
+drilling stiffness sufficiently small. The values of <code class="docutils literal notranslate"><span class="pre">K6ROT</span></code> are discussed in the Notes of
+<a class="reference internal" href="#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>. The rotation <span class="math notranslate nohighlight">\(r_z\)</span> represents
 the drilling degree-of-freedom in element’s coordinates, whereas <span class="math notranslate nohighlight">\(\theta_z\)</span> the in-plane rotation strain, defined as:</p>
 <div class="math notranslate nohighlight">
 \[\theta_z = \frac{1}{2}\left(\frac{\partial v}{\partial x} - \frac{\partial u}{\partial y}\right)\]</div>
@@ -1598,15 +1595,8 @@ rotation of the element about its normal, so both models represent all
 rigid-body motions and all constant-strain states exactly. <span class="math notranslate nohighlight">\(A_{66}\)</span> is
 assumed constant over the element. This term is integrated with the
 two-by-two quadrature. The approach herein presented is very similar to the
-one presented in Eq. 2.20 of Adam et al. <a class="reference internal" href="#rf682c6ac4421-5" id="id24">[5]</a>.</p>
-<p><strong>Choosing between them.</strong> The physics-based model is the default because it
-is the one that is correct when the drilling moment is part of the load path,
-when shells are connected to beams or stiffeners that must transmit in-plane
-moments, or when the mesh is too coarse for the unenriched membrane response
-to be trusted. It is markedly more accurate in in-plane bending: on Cook’s
-skew membrane with a two-by-two mesh it gives 20.8 against the reference
-23.9, where the penalty gives 11.8. The penalty is cheaper, since it
-leaves the membrane term on the two-by-two quadrature.</p>
+one presented in Eq. 2.20 of Adam et al. <a class="reference internal" href="#rf682c6ac4421-5" id="id24">[5]</a>. The penalty leaves the
+membrane term on the two-by-two quadrature.</p>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
@@ -2570,7 +2560,7 @@ the second-order terms of the offsets, <span class="math notranslate nohighlight
 \boldsymbol{\theta}_a \times (\boldsymbol{\theta}_a \times
 \boldsymbol{r}_a)\)</span>, change the strains by terms of order
 <span class="math notranslate nohighlight">\((\tilde{z}/\ell) \epsilon^3\)</span>, beyond those kept (derived here).
-Measured on 2026-11-01 on the twisted beam of
+On the twisted beam of
 <code class="docutils literal notranslate"><span class="pre">tests/test_quad_warp_offsets.py</span></code> with 12 by 2 Quad4 elements, the
 default <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">centroid_slopes</span> <span class="pre">=</span> <span class="pre">0</span></code>, and tip
 loads of 500 along <span class="math notranslate nohighlight">\(z\)</span> and 1100 along <span class="math notranslate nohighlight">\(y\)</span>, rotations up to 0.32, the
@@ -2701,8 +2691,7 @@ points no spurious mode remains: +0.51, +0.13 and +1.36 %, against
 the two-by-two points integrate the geometric stiffness of a smooth
 mode more accurately: a plate with 5 elements per half-wave along the
 load buckles 4.31 % above the Kirchhoff solution with them, 6.81 %
-with <code class="docutils literal notranslate"><span class="pre">centroid_slopes</span> <span class="pre">=</span> <span class="pre">1</span></code> and 4.67 % with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code>
-(measured on 2026-11-01). See
+with <code class="docutils literal notranslate"><span class="pre">centroid_slopes</span> <span class="pre">=</span> <span class="pre">1</span></code> and 4.67 % with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, see
 <code class="docutils literal notranslate"><span class="pre">tests/test_quad4_geometric_hourglass.py</span></code>. <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> takes
 the slopes at the centroid. In the co-rotational frame of
 <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.corotational.CorotationalShell</span></code></a> with

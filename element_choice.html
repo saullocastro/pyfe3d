@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Choosing an element &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Choosing an element &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1313,8 +1313,9 @@ exact with one element under nodal loads, see
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="truss.html#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a></p></td>
 <td><p>Axial and torsional stiffness only, linear analyses and mass matrix,
-without geometric stiffness matrix, hence no linear buckling. The
-documentation of <a class="reference internal" href="truss.html#module-pyfe3d.truss" title="pyfe3d.truss"><code class="xref py py-mod docutils literal notranslate"><span class="pre">truss</span></code></a> recommends <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> instead.</p></td>
+without geometric stiffness matrix, hence no linear buckling.
+<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> is recommended instead, because of its better
+physical representation.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="spring.html#pyfe3d.spring.Spring" title="pyfe3d.spring.Spring"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spring</span></code></a></p></td>
 <td><p>Six constant stiffnesses, <code class="docutils literal notranslate"><span class="pre">kxe,</span> <span class="pre">kye,</span> <span class="pre">kze,</span> <span class="pre">krxe,</span> <span class="pre">krye,</span> <span class="pre">krze</span></code>,
@@ -1327,7 +1328,7 @@ geometric stiffness matrix.</p></td>
 </div>
 <p>The cross section of the beams and of the truss is given by a
 <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, whose integrals are taken in the element coordinate
-system, see <a class="reference internal" href="shell_properties.html"><span class="doc">Shell properties</span></a>. Its orientation is defined by the
+system, see <a class="reference internal" href="beam_properties.html"><span class="doc">Beam properties</span></a>. Its orientation is defined by the
 vector <code class="docutils literal notranslate"><span class="pre">vxyi,</span> <span class="pre">vxyj,</span> <span class="pre">vxyk</span></code> of <code class="docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code>, see
 <a class="reference internal" href="conventions.html"><span class="doc">Conventions</span></a>. The beams have a transverse shear modulus for each
 plane of bending, <code class="docutils literal notranslate"><span class="pre">G12</span></code> for the element <span class="math notranslate nohighlight">\(xy\)</span> plane and <code class="docutils literal notranslate"><span class="pre">G13</span></code> for the

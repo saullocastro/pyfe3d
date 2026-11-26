@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1235,11 +1235,6 @@
 <span id="module-pyfe3d.truss"></span><h1>Truss - Linear truss 3D element with analytical integration (<a class="reference internal" href="#module-pyfe3d.truss" title="pyfe3d.truss"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code></a>)<a class="headerlink" href="#truss-linear-truss-3d-element-with-analytical-integration-pyfe3d-truss" title="Link to this heading">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> element is recommended because of the better
-physical representation.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
 <p>The <a class="reference internal" href="#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> element does not support linear buckling
 analysis.</p>
 </div>
@@ -1257,11 +1252,6 @@ The cross-section and material properties are given by a
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">______</span>   <span class="o">--&gt;</span> <span class="n">u</span>  <span class="o">-&gt;&gt;-</span> <span class="n">rx</span>
 <span class="mi">1</span>    <span class="mi">2</span>
 </pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> is recommended because of the better
-physical representation.</p>
 </div>
 <p>The constructor stores <code class="docutils literal notranslate"><span class="pre">p</span></code> in <code class="docutils literal notranslate"><span class="pre">probe</span></code>, sets <code class="docutils literal notranslate"><span class="pre">eid</span></code>, <code class="docutils literal notranslate"><span class="pre">pid</span></code>,
 <code class="docutils literal notranslate"><span class="pre">n1</span></code>, <code class="docutils literal notranslate"><span class="pre">n2</span></code>, <code class="docutils literal notranslate"><span class="pre">c1</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code> to <code class="docutils literal notranslate"><span class="pre">-1</span></code>, and sets the <code class="docutils literal notranslate"><span class="pre">init_k_*</span></code>
@@ -1666,6 +1656,12 @@ global coordinates, <span class="math notranslate nohighlight">\(\boldsymbol{f} 
 <p>The distance between the two nodes, computed from the coordinates
 <code class="docutils literal notranslate"><span class="pre">probe.xe</span></code> in the element coordinate system, is stored in the
 attribute <code class="docutils literal notranslate"><span class="pre">length</span></code>. Called by <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_xe" title="pyfe3d.truss.Truss.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>.</p>
+<p class="rubric">Notes</p>
+<p>With the element coordinates <span class="math notranslate nohighlight">\((x_i, y_i, z_i)\)</span> of nodes 1 and 2,</p>
+<div class="math notranslate nohighlight">
+\[L = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2 + (z_2 - z_1)^2}\]</div>
+<p>which, the transformation to element coordinates being a rotation,
+is the distance between the two nodes in global coordinates.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1732,6 +1728,12 @@ dimension length and rotations, 1-D array of size <code class="docutils literal 
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>For each node, <span class="math notranslate nohighlight">\(\{u, v, w\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+\{u, v, w\}^\top\)</span> and <span class="math notranslate nohighlight">\(\{r_x, r_y, r_z\}_e^\top =
+\boldsymbol{T}_{3\times 3}^\top \{r_x, r_y, r_z\}^\top\)</span>, with
+<span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> of <a class="reference internal" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="pyfe3d.truss.Truss.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a>,
+whose columns are the element axes in global coordinates.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1760,6 +1762,12 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>. Dimension length, 1-D array of size
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>For each node, <span class="math notranslate nohighlight">\(\{x, y, z\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+\{x, y, z\}^\top\)</span>, with <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> of
+<a class="reference internal" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="pyfe3d.truss.Truss.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a>, whose columns are the element axes in
+global coordinates. The element coordinates are thus measured from
+the origin of the global system along the element axes.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1777,7 +1785,9 @@ read from <code class="docutils literal notranslate"><span class="pre">x</span><
 is normal to the <span class="math notranslate nohighlight">\(x\)</span> axis and to the vector obtained by a cyclic
 permutation of the components of the <span class="math notranslate nohighlight">\(x\)</span> axis, <code class="docutils literal notranslate"><span class="pre">(xj,</span> <span class="pre">xk,</span> <span class="pre">xi)</span></code>, the
 <span class="math notranslate nohighlight">\(y\)</span> axis completes the right-handed system, and the three axes are
-normalized.</p>
+normalized. An element whose <span class="math notranslate nohighlight">\(x\)</span> axis has three equal global
+components gives a null <span class="math notranslate nohighlight">\(z\)</span> axis and a rotation matrix with <code class="docutils literal notranslate"><span class="pre">nan</span></code>
+entries.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1789,6 +1799,31 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>. Dimension length, 1-D array of size
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>With <span class="math notranslate nohighlight">\(\boldsymbol{x}_1\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{x}_2\)</span> the positions of the
+two nodes, <span class="math notranslate nohighlight">\(\boldsymbol{e}_x = (\boldsymbol{x}_2 - \boldsymbol{x}_1) /
+\|\boldsymbol{x}_2 - \boldsymbol{x}_1\| = \{e_{xi}, e_{xj},
+e_{xk}\}^\top\)</span>, the off-axis vector <span class="math notranslate nohighlight">\(\boldsymbol{v}_{xy} = \{e_{xj},
+e_{xk}, e_{xi}\}^\top\)</span> and</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{e}_z = \frac{\boldsymbol{e}_x \times
+\boldsymbol{v}_{xy}}{\|\boldsymbol{e}_x \times
+\boldsymbol{v}_{xy}\|}, \qquad
+\boldsymbol{e}_y = \boldsymbol{e}_z \times \boldsymbol{e}_x\]</div>
+<p>and <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3} = [\boldsymbol{e}_x, \boldsymbol{e}_y,
+\boldsymbol{e}_z]\)</span>. The axis <span class="math notranslate nohighlight">\(\boldsymbol{e}_y\)</span> is thus the component
+of <span class="math notranslate nohighlight">\(\boldsymbol{v}_{xy}\)</span> normal to <span class="math notranslate nohighlight">\(\boldsymbol{e}_x\)</span>, normalized.
+The stiffness matrix, with axial and torsional terms only, does not
+depend on the orientation of <span class="math notranslate nohighlight">\(\boldsymbol{e}_y\)</span> and
+<span class="math notranslate nohighlight">\(\boldsymbol{e}_z\)</span> about the axis; the mass matrix depends on it
+through the moments of the section, e.g. <code class="docutils literal notranslate"><span class="pre">intrhoy</span></code> and
+<code class="docutils literal notranslate"><span class="pre">intrhoz</span></code>, which are measured along these axes. A cyclic
+permutation of the components leaves a vector unchanged only when the
+three are equal: <span class="math notranslate nohighlight">\(\boldsymbol{v}_{xy}\)</span> is parallel to
+<span class="math notranslate nohighlight">\(\boldsymbol{e}_x\)</span> for an element along the global direction
+<span class="math notranslate nohighlight">\(\{1, 1, 1\}^\top\)</span>, where <span class="math notranslate nohighlight">\(\|\boldsymbol{e}_x \times
+\boldsymbol{v}_{xy}\|\)</span> vanishes and the division gives the <code class="docutils literal notranslate"><span class="pre">nan</span></code>
+entries.</p>
 </dd></dl>
 
 </dd></dl>

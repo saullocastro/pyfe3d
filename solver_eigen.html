@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Eigenvalue analyses (pyfe3d.solver.eigen) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Eigenvalue analyses (pyfe3d.solver.eigen) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1276,9 +1276,9 @@ which is another reason to keep it on.</p>
 <p>and natural frequency</p>
 <div class="math notranslate nohighlight">
 \[(\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}\]</div>
-<p>The reason this module exists is that neither problem is safe to hand to
-<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> without preparation, and the two traps are
-easy to fall into and silent when they bite:</p>
+<p>Two properties of these problems require a preparation before
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> is called, without which it may return
+wrong eigenpairs without a warning:</p>
 <ol class="arabic simple">
 <li><p><strong>The matrices are badly scaled.</strong> A shell element mixes translations and
 rotations, so the diagonal of <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> spans many orders of magnitude,
@@ -1466,11 +1466,9 @@ matrix, or <code class="docutils literal notranslate"><span class="pre">C</span>
 column, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>, whereas <code class="docutils literal notranslate"><span class="pre">C</span></code> and <code class="docutils literal notranslate"><span class="pre">M</span></code> may
 have null rows and columns. The matrices are optionally preconditioned
 with <a class="reference internal" href="#pyfe3d.solver.eigen.diagonal_preconditioner" title="pyfe3d.solver.eigen.diagonal_preconditioner"><code class="xref py py-func docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a>.</p>
-<p>The problem is linearized into a generalized eigenvalue problem of size
-<code class="docutils literal notranslate"><span class="pre">2*n</span></code>, the first companion form, solved with
-<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code> in shift-invert mode, which finds the
-eigenvalues nearest the shift <code class="docutils literal notranslate"><span class="pre">sigma</span></code> and factorizes the <code class="docutils literal notranslate"><span class="pre">n</span></code> by
-<code class="docutils literal notranslate"><span class="pre">n</span></code> matrix <code class="docutils literal notranslate"><span class="pre">sigma**2*M</span> <span class="pre">+</span> <span class="pre">sigma*C</span> <span class="pre">+</span> <span class="pre">K</span></code>, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_eigs_qep()</span></code>. The
+<p>The eigenvalues nearest the shift <code class="docutils literal notranslate"><span class="pre">sigma</span></code> are computed, with a
+factorization of the <code class="docutils literal notranslate"><span class="pre">n</span></code> by <code class="docutils literal notranslate"><span class="pre">n</span></code> matrix <code class="docutils literal notranslate"><span class="pre">sigma**2*M</span> <span class="pre">+</span> <span class="pre">sigma*C</span> <span class="pre">+</span> <span class="pre">K</span></code>.
+The
 eigenvalues of real matrices are real or come in complex conjugate
 pairs, and one eigenvalue per pair, the one with a positive imaginary
 part, is returned, with its eigenvector. The <code class="docutils literal notranslate"><span class="pre">num_eigvalues</span></code>
@@ -1565,7 +1563,12 @@ verification.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The problem solved is</p>
+<p>The problem is linearized into a generalized eigenvalue problem of size
+<span class="math notranslate nohighlight">\(2 n\)</span>, the first companion form, solved with
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code> in shift-invert mode, which finds the
+eigenvalues nearest the shift <span class="math notranslate nohighlight">\(\sigma\)</span> and factorizes the <span class="math notranslate nohighlight">\(n \times n\)</span>
+matrix <span class="math notranslate nohighlight">\(\sigma^2 \boldsymbol{M} + \sigma \boldsymbol{C} +
+\boldsymbol{K}\)</span>, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_eigs_qep()</span></code>. The problem solved is</p>
 <div class="math notranslate nohighlight">
 \[(\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}\]</div>
 <p>the free vibrations <span class="math notranslate nohighlight">\(\boldsymbol{q} = \boldsymbol{u} e^{\lambda t}\)</span> of <span class="math notranslate nohighlight">\(\boldsymbol{M} \ddot{\boldsymbol{q}} +
@@ -1830,33 +1833,20 @@ multipliers being sought. <code class="docutils literal notranslate"><span class
 columns. <code class="docutils literal notranslate"><span class="pre">K</span></code> and <code class="docutils literal notranslate"><span class="pre">KG</span></code> are symmetric when <code class="docutils literal notranslate"><span class="pre">symmetric=None</span></code> finds
 them so, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.is_symmetric" title="pyfe3d.solver.sparseutils.is_symmetric"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_symmetric()</span></code></a>.</p>
 <p><strong>Symmetric matrices.</strong> <code class="docutils literal notranslate"><span class="pre">K</span></code> must be positive definite, which is
-checked with <code class="docutils literal notranslate"><span class="pre">check=True</span></code>. The sparse solvers are
-<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> in Cayley mode, using the shift of
-<a class="reference internal" href="#pyfe3d.solver.eigen.estimate_cayley_sigma" title="pyfe3d.solver.eigen.estimate_cayley_sigma"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate_cayley_sigma()</span></code></a>, or <code class="docutils literal notranslate"><span class="pre">sigma</span></code> when given, and then the
-same with a 10 times larger shift; when the accurate eigenpairs of
-either one miss load multipliers below the highest one, e.g. copies of
-repeated ones, they are completed by deflated passes before the next
-solver, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_complete_both_signs()</span></code>. Each one computes the lowest
-positive load multipliers and, when fewer than <code class="docutils literal notranslate"><span class="pre">num_eigvalues</span></code> exist, the
-negative ones closest to zero, i.e. the critical load multipliers of the
-reversed load, with <code class="docutils literal notranslate"><span class="pre">-KG</span></code>, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_eigsh_both_signs()</span></code>. The
-eigenpairs are verified with the residual and inertia checks of
-<a class="reference internal" href="#pyfe3d.solver.eigen.check_eigenpairs" title="pyfe3d.solver.eigen.check_eigenpairs"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_eigenpairs()</span></code></a>, for both signs, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_check_both_signs()</span></code>.
-The dense fallback condenses out the degrees-of-freedom where <code class="docutils literal notranslate"><span class="pre">KG</span></code> has
-null rows and solves the condensed problem with
-<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.linalg.eigh()</span></code>, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_eigh_condensed()</span></code>.</p>
+checked with <code class="docutils literal notranslate"><span class="pre">check=True</span></code>. The lowest positive load multipliers are
+computed and, when fewer than <code class="docutils literal notranslate"><span class="pre">num_eigvalues</span></code> exist, the negative ones
+closest to zero, i.e. the critical load multipliers of the reversed
+load, with <code class="docutils literal notranslate"><span class="pre">-KG</span></code>. The eigenpairs are verified with the residual and
+inertia checks of <a class="reference internal" href="#pyfe3d.solver.eigen.check_eigenpairs" title="pyfe3d.solver.eigen.check_eigenpairs"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_eigenpairs()</span></code></a>, for both signs.</p>
 <p><strong>Unsymmetric matrices</strong>, e.g. <code class="docutils literal notranslate"><span class="pre">KG</span></code> with the load stiffness of a
-follower load, may have complex load multipliers. The sparse solver is a
-search of shifts along the positive real axis with
-<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code>, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_eigs_shift_search()</span></code>, which
-finds the lowest positive real load multiplier; the returned eigenpairs
-are the <code class="docutils literal notranslate"><span class="pre">num_eigvalues</span></code> load multipliers nearest the last shift of the
-search. Only the residuals are verified. The dense fallback,
-<code class="xref py py-func docutils literal notranslate"><span class="pre">_eig_condensed()</span></code>, keeps the degrees-of-freedom where either the
-row or the column of <code class="docutils literal notranslate"><span class="pre">KG</span></code> is not null; when none of its load
-multipliers is positive and real, they are returned with a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeWarning</span></code>. Eigenvalues whose imaginary part is below
-<code class="docutils literal notranslate"><span class="pre">1e-8</span></code> of their modulus are returned as real, with real eigenvectors.</p>
+follower load, may have complex load multipliers. The lowest positive
+real load multiplier is sought, and the returned eigenpairs are the
+<code class="docutils literal notranslate"><span class="pre">num_eigvalues</span></code> load multipliers nearest the last shift of the search
+that finds it. Only the residuals are verified. When none of the load
+multipliers of the dense solver is positive and real, they are returned
+with a <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeWarning</span></code>. Eigenvalues whose imaginary part is
+below <code class="docutils literal notranslate"><span class="pre">1e-8</span></code> of their modulus are returned as real, with real
+eigenvectors.</p>
 <p>The sparse solvers run first and the dense solver is a last resort, see
 the solver policy of <a class="reference internal" href="#module-pyfe3d.solver.eigen" title="pyfe3d.solver.eigen"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code></a>.</p>
 <dl class="field-list simple">
@@ -1964,6 +1954,22 @@ Cayley mode while the shift is large enough, see the notes of
 solved is the one of <span class="math notranslate nohighlight">\(\boldsymbol{P} \boldsymbol{K}_{C0} \boldsymbol{P}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{P} \boldsymbol{K}_G \boldsymbol{P}\)</span>, with the same
 eigenvalues, see <a class="reference internal" href="#pyfe3d.solver.eigen.diagonal_preconditioner" title="pyfe3d.solver.eigen.diagonal_preconditioner"><code class="xref py py-func docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a>; the verification
 always uses the original matrices.</p>
+<p>For symmetric matrices the sparse solvers are
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> in Cayley mode, using the shift of
+<a class="reference internal" href="#pyfe3d.solver.eigen.estimate_cayley_sigma" title="pyfe3d.solver.eigen.estimate_cayley_sigma"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate_cayley_sigma()</span></code></a>, or <code class="docutils literal notranslate"><span class="pre">sigma</span></code> when given, and then the
+same with a 10 times larger shift; when the accurate eigenpairs of
+either one miss load multipliers below the highest one, e.g. copies of
+repeated ones, they are completed by deflated passes before the next
+solver, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_complete_both_signs()</span></code>. Both signs are computed by
+<code class="xref py py-func docutils literal notranslate"><span class="pre">_eigsh_both_signs()</span></code> and verified by <code class="xref py py-func docutils literal notranslate"><span class="pre">_check_both_signs()</span></code>.
+The dense fallback condenses out the degrees-of-freedom where
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span> has null rows and solves the condensed problem with
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.linalg.eigh()</span></code>, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_eigh_condensed()</span></code>. For unsymmetric
+matrices the sparse solver is a search of shifts along the positive
+real axis with <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code>, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">_eigs_shift_search()</span></code>, and the dense fallback,
+<code class="xref py py-func docutils literal notranslate"><span class="pre">_eig_condensed()</span></code>, keeps the degrees-of-freedom where either the
+row or the column of <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span> is not null.</p>
 <p>A null row or column of <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> is a degree-of-freedom without
 stiffness, a modelling error: with the same null row or column of
 <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span>, <span class="math notranslate nohighlight">\(\det(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) = 0\)</span> for every <span class="math notranslate nohighlight">\(\lambda\)</span>, a
@@ -2007,10 +2013,8 @@ and a unit compressive geometric stiffness:</p>
 <p><code class="docutils literal notranslate"><span class="pre">K</span></code> must have no null row or column, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>,
 whereas <code class="docutils literal notranslate"><span class="pre">M</span></code> may have null rows and columns, e.g. a lumped mass matrix
 without rotary inertia. The matrices are optionally preconditioned
-with <a class="reference internal" href="#pyfe3d.solver.eigen.diagonal_preconditioner" title="pyfe3d.solver.eigen.diagonal_preconditioner"><code class="xref py py-func docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a>, and the eigenvalues, the squares
-of the circular frequencies, are computed in shift-invert mode with
-<code class="docutils literal notranslate"><span class="pre">sigma=-1.</span></code> and <code class="docutils literal notranslate"><span class="pre">which='LM'</span></code>, with <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code>
-for symmetric matrices and <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code> otherwise,
+with <a class="reference internal" href="#pyfe3d.solver.eigen.diagonal_preconditioner" title="pyfe3d.solver.eigen.diagonal_preconditioner"><code class="xref py py-func docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a>, and the eigenvalues are the
+squares of the circular frequencies. The matrices may be unsymmetric,
 e.g. with the aerodynamic matrix of piston theory or the load stiffness
 of a follower load in <code class="docutils literal notranslate"><span class="pre">K</span></code>. <code class="docutils literal notranslate"><span class="pre">K</span></code> and <code class="docutils literal notranslate"><span class="pre">M</span></code> are symmetric when
 <code class="docutils literal notranslate"><span class="pre">symmetric=None</span></code> finds them so, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.is_symmetric" title="pyfe3d.solver.sparseutils.is_symmetric"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_symmetric()</span></code></a>. The number
@@ -2019,10 +2023,7 @@ of computed frequencies is <code class="docutils literal notranslate"><span clas
 residual of each eigenpair must not be larger than <code class="docutils literal notranslate"><span class="pre">check_rtol</span></code>,
 unless its backward error is at the round-off, and, for symmetric
 matrices, no eigenvalue lower than the highest one returned may be
-missing. For symmetric matrices with a <code class="docutils literal notranslate"><span class="pre">K</span></code> without negative pivots,
-accurate eigenpairs that miss eigenvalues, e.g. copies of repeated
-ones, are completed by deflated passes, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_complete_repeated()</span></code>.
-When the verification still fails or the sparse
+missing. When the verification fails or the sparse
 solver raises an error, the dense solver of <code class="xref py py-func docutils literal notranslate"><span class="pre">_dense_freq()</span></code> is used
 as a last resort, with a <a class="reference internal" href="#pyfe3d.solver.eigen.DenseFallbackWarning" title="pyfe3d.solver.eigen.DenseFallbackWarning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DenseFallbackWarning</span></code></a>, see the solver
 policy of <a class="reference internal" href="#module-pyfe3d.solver.eigen" title="pyfe3d.solver.eigen"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code></a>.</p>
@@ -2112,7 +2113,13 @@ the frequencies of symmetric matrices are <span class="math notranslate nohighli
 eigenvalues closest to the shift <code class="docutils literal notranslate"><span class="pre">sigma=-1.</span></code>, i.e. the lowest ones
 when <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> is positive semi-definite and <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span> positive definite,
 factorizing <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} + \boldsymbol{M}\)</span>, which is not singular when <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> is
-singular only because of unconstrained rigid-body modes that have mass.</p>
+singular only because of unconstrained rigid-body modes that have mass.
+The sparse solver, called with <code class="docutils literal notranslate"><span class="pre">which='LM'</span></code>, is
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> for symmetric matrices and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code> otherwise. For symmetric matrices with
+a <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> without negative pivots, accurate eigenpairs
+that miss eigenvalues, e.g. copies of repeated ones, are completed by
+deflated passes before the verification, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_complete_repeated()</span></code>.</p>
 <p>A null row or column of <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> is a degree-of-freedom without
 stiffness, a modelling error: with the same null row or column of
 <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>, <span class="math notranslate nohighlight">\(\det(\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) = 0\)</span> for every <span class="math notranslate nohighlight">\(\omega_n^2\)</span>,

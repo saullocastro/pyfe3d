@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Shell property module (pyfe3d.shellprop) &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Shell property module (pyfe3d.shellprop) &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1233,7 +1233,6 @@
                   
   <section id="shell-property-module-pyfe3d-shellprop">
 <span id="module-pyfe3d.shellprop"></span><h1>Shell property module (<a class="reference internal" href="#module-pyfe3d.shellprop" title="pyfe3d.shellprop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code></a>)<a class="headerlink" href="#shell-property-module-pyfe3d-shellprop" title="Link to this heading">#</a></h1>
-<p>Highly based on the <a class="reference external" href="https://saullocastro.github.io/composites/">composites</a>. module.</p>
 <p>Classes of the material (<a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a>), of the ply (<a class="reference internal" href="#pyfe3d.shellprop.Lamina" title="pyfe3d.shellprop.Lamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lamina</span></code></a>)
 and of the shell property (<a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a>), of the lamination parameters
 (<a class="reference internal" href="#pyfe3d.shellprop.LaminationParameters" title="pyfe3d.shellprop.LaminationParameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">LaminationParameters</span></code></a>) and of their gradients (<a class="reference internal" href="#pyfe3d.shellprop.GradABD" title="pyfe3d.shellprop.GradABD"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradABD</span></code></a>),
@@ -1331,8 +1330,7 @@ lamination parameters and <code class="docutils literal notranslate"><span class
 <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">2]</span></code> of <code class="docutils literal notranslate"><span class="pre">gradAtsij</span></code>, which do not depend on the lamination
 parameters, are not updated. All six rows of <code class="docutils literal notranslate"><span class="pre">gradAij</span></code>, <code class="docutils literal notranslate"><span class="pre">gradBij</span></code>
 and <code class="docutils literal notranslate"><span class="pre">gradDij</span></code> are updated, including row 5 (<code class="docutils literal notranslate"><span class="pre">A66</span></code>, <code class="docutils literal notranslate"><span class="pre">B66</span></code>,
-<code class="docutils literal notranslate"><span class="pre">D66</span></code>), whose derivatives with respect to <span class="math notranslate nohighlight">\(\xi_{A3}\)</span>, <span class="math notranslate nohighlight">\(\xi_{B3}\)</span>
-and <span class="math notranslate nohighlight">\(\xi_{D3}\)</span> are <span class="math notranslate nohighlight">\(-h u_3\)</span>, <span class="math notranslate nohighlight">\(-h^2/4 \, u_3\)</span> and <span class="math notranslate nohighlight">\(-h^3/12 \, u_3\)</span>.</p>
+<code class="docutils literal notranslate"><span class="pre">D66</span></code>).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -1370,7 +1368,10 @@ D/\partial h = (h^2/4 + e^2) \, U \{1, 0\} + h^2/4 \, U \{0,
 \xi_{Ats}\}\)</span>, and
 at constant thickness the derivatives with respect to the lamination
 parameters are the columns of <span class="math notranslate nohighlight">\(U\)</span> multiplied by <span class="math notranslate nohighlight">\(h\)</span>, <span class="math notranslate nohighlight">\(h^2/4\)</span> and
-<span class="math notranslate nohighlight">\(h^3/12\)</span>, respectively, and those of <span class="math notranslate nohighlight">\(U_{ts}\)</span> by <span class="math notranslate nohighlight">\(h\)</span>.</p>
+<span class="math notranslate nohighlight">\(h^3/12\)</span>, respectively, and those of <span class="math notranslate nohighlight">\(U_{ts}\)</span> by <span class="math notranslate nohighlight">\(h\)</span>; e.g. the
+derivatives of <span class="math notranslate nohighlight">\(A_{66}\)</span>, <span class="math notranslate nohighlight">\(B_{66}\)</span> and <span class="math notranslate nohighlight">\(D_{66}\)</span> with respect to
+<span class="math notranslate nohighlight">\(\xi_{A3}\)</span>, <span class="math notranslate nohighlight">\(\xi_{B3}\)</span> and <span class="math notranslate nohighlight">\(\xi_{D3}\)</span> are <span class="math notranslate nohighlight">\(-h u_3\)</span>, <span class="math notranslate nohighlight">\(-h^2/4 \, u_3\)</span>
+and <span class="math notranslate nohighlight">\(-h^3/12 \, u_3\)</span>.</p>
 </dd></dl>
 
 <dl class="py attribute">

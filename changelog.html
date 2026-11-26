@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changelog &#8212; pyfe3d 0.12.1 documentation</title>
+    <title>Changelog &#8212; pyfe3d 0.12.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c5b435e8"></script>
+    <script src="_static/documentation_options.js?v=f24cbf82"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -118,7 +118,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.12.1 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.2 documentation</p>
   
 </a></div>
     
@@ -1066,7 +1066,7 @@
 <a class="reference external" href="https://github.com/saullocastro/pyfe3d/blob/main/CHANGELOG.md">repository</a>:</p>
 <div class="highlight-markdown notranslate"><div class="highlight"><pre><span></span><span class="gh"># Changelog</span>
 
-<span class="gu">## 0.12.1 (2026-11-13)</span>
+<span class="gu">## 0.12.2 (2026-11-26)</span>
 
 <span class="gu">### New features</span>
 
@@ -2060,6 +2060,34 @@
   loads converge; comparison with COMSOL and with an independent
   axisymmetric shell. Linked from <span class="sb">`nonlinear_analyses`</span> and
   <span class="sb">`tut-prescribed-displacement-dome-riks`</span>.
+<span class="k">-</span><span class="w"> </span>Docstrings of the library: the <span class="sb">`Notes`</span> of <span class="sb">`update_rotation_matrix`</span> of
+  <span class="sb">`BeamC`</span>, <span class="sb">`BeamLR`</span>, <span class="sb">`Truss`</span> and <span class="sb">`Spring`</span> give the element triad as
+  formulae and the cause of <span class="sb">`nan`</span> entries, and those of the probe updates
+  are completed; the summary of <span class="sb">`Truss.update_rotation_matrix`</span> states that
+  an axis with three equal global components gives <span class="sb">`nan`</span>. In
+  <span class="sb">`pyfe3d.solver`</span>, the summaries of <span class="sb">`linear_buckling`</span>, <span class="sb">`natural_frequency`</span>,
+  <span class="sb">`complex_frequency`</span> and <span class="sb">`capped_eigsh`</span> keep what the parameters and the
+  result need, and the algorithms are described in their <span class="sb">`Notes`</span>. Comments
+  with derivations in <span class="sb">`shellprop`</span>, <span class="sb">`quad4r`</span> and <span class="sb">`beamprop`</span> are shortened,
+  the derivations being in the <span class="sb">`Notes`</span>.
+<span class="k">-</span><span class="w"> </span>The choice of the element is described in <span class="sb">`element_choice`</span> only, which
+  receives the reason to prefer <span class="sb">`BeamC`</span>, and no longer in the module texts
+  of <span class="sb">`quad4`</span>, <span class="sb">`quad4r`</span>, <span class="sb">`tria3r`</span>, <span class="sb">`tria3dsg`</span> and <span class="sb">`truss`</span>; <span class="sb">`shell_tria3r`</span>
+  receives the results of the pinched cylinder and the constant-shear
+  stiffness of <span class="sb">`shear_model = 0`</span>.
+<span class="k">-</span><span class="w"> </span>Dates and machine names of the measurements are removed from the <span class="sb">`Notes`</span>,
+  the docstrings of the tests, the notebooks and the description of the
+  pytest marker <span class="sb">`slow`</span>, the measured values are kept; the text describes
+  the present behaviour only.
+<span class="k">-</span><span class="w"> </span>Tutorials <span class="sb">`tut-corotational-large-rotations`</span>,
+  <span class="sb">`tut-nafems-cap-axisymmetric`</span> and
+  <span class="sb">`tut-prescribed-displacement-dome-riks`</span>: the print of the version of
+  pyfe3d is removed.
+<span class="k">-</span><span class="w"> </span>Docstrings of the tests, in 73 files of <span class="sb">`tests/`</span>: the summary states what
+  is verified and against what, with the source named, and the theory and
+  the reasons are in <span class="sb">`Notes`</span>; new <span class="sb">`Notes`</span> in the eight <span class="sb">`*_mat_coord.py`</span>
+  tests, in <span class="sb">`test_quad4_probe_in_plane.py`</span> and in
+  <span class="sb">`test_solver_nonlinear_static.py`</span>. No test is added or removed.
 
 <span class="gu">### Continuous integration</span>
 
