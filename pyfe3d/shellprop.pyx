@@ -11,8 +11,6 @@ r"""
 Shell property module (:mod:`pyfe3d.shellprop`)
 ===============================================
 
-Highly based on the `composites <https://saullocastro.github.io/composites/>`_. module.
-
 .. currentmodule:: pyfe3d.shellprop
 
 Classes of the material (:class:`.MatLamina`), of the ply (:class:`.Lamina`)

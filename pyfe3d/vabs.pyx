@@ -1039,7 +1039,7 @@ cdef class CrossSection:
                  theta1=None, theta3=None, densities=None, double k1=0.,
                  double k2=0., double k3=0.):
         cdef int e, ne, k
-        # TODO(author): initially twisted and curved beams are not
+        # NOTE initially twisted and curved beams are not
         #      implemented, see the Notes of the module
         if k1 != 0 or k2 != 0 or k3 != 0:
             raise NotImplementedError('initially twisted or curved beams '
