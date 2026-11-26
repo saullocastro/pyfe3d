@@ -1,12 +1,8 @@
 r"""Tria3R with the discrete shear gap field, ``shear_model = 1``, the default
 
-With ``shear_model = 0`` the transverse shear strains of
-:class:`pyfe3d.tria3r.Tria3R` are sampled at the centroid, a field that
-locks, and the locking is relaxed by dividing the transverse shear
-stiffnesses by `1 + \alpha \ell^2/h^2`; on a thin plate the error then stalls
-at a value set by `\alpha` instead of decreasing under refinement.
-
-``shear_model = 1``, the default, replaces that field by the discrete shear
+``shear_model = 1``, the default, replaces the centroid-sampled transverse
+shear field of ``shear_model = 0`` of :class:`pyfe3d.tria3r.Tria3R` by the
+discrete shear
 gap (DSG) field of Bletzinger, Bischoff and Ramm (2000), the one of
 :class:`pyfe3d.tria3dsg.Tria3DSG`, and keeps the Allman membrane of Tria3R.
 The tests check that the shear stiffness is the one of Tria3DSG to round-off,
@@ -15,6 +11,12 @@ the element converges to the closed-form solution of a thin plate.
 
 Notes
 -----
+With ``shear_model = 0`` the transverse shear strains of Tria3R are sampled
+at the centroid, a field that
+locks, and the locking is relaxed by dividing the transverse shear
+stiffnesses by `1 + \alpha \ell^2/h^2`; on a thin plate the error then stalls
+at a value set by `\alpha` instead of decreasing under refinement.
+
 The stabilisation of the centroid-sampled field is the one of Lyly,
 Stenberg and Vihinen [1]_, p. 348, and the DSG field the one of Bletzinger,
 Bischoff and Ramm [2]_. Lyly, Stenberg and Vihinen state that this

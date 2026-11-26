@@ -298,7 +298,21 @@ def test_eigs_restart_reproducible():
     system, such that the same v0 gave different eigenvalues at each call,
     e.g. a spurious real load multiplier of about 1e16 or none, and
     linear_buckling() on Ziegler's double pendulum raised or not at
-    random"""
+    random
+
+    Notes
+    -----
+    The operator is ``K^-1 KG`` of Ziegler's double pendulum with eight
+    decoupled degrees-of-freedom where ``KG`` is null: ``(l/k)*[[-1, 1],
+    [-1, 1]]`` in the pendulum block, of rank 1 and nilpotent (null trace
+    and determinant). The test asserts that ``K^-1 KG v0`` is not null and
+    that ``(K^-1 KG)**2 v0`` is null: the Krylov subspace of ``v0`` is
+    invariant after two vectors, and ARPACK needs new starting vectors. The
+    ten calls give identical results since
+    :func:`pyfe3d.solver.arpackutils.start_kwargs` passes, at each call,
+    ``v0`` and a :class:`numpy.random.Generator` with the seed ``42`` as
+    ``rng``, from which the new starting vectors are drawn.
+    """
     from pyfe3d.solver.eigen import _eigs_shifted, _splu
 
     k, l = 3., 0.5

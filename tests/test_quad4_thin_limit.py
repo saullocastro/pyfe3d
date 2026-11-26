@@ -79,8 +79,7 @@ def test_quad4_thin_limit():
 
     Notes
     -----
-    Relative change from `\ell/h = 1.25 \times 10^3`, measured on
-    2026-10-30:
+    Relative change from `\ell/h = 1.25 \times 10^3`:
 
         ell/h         shear_model = 0    shear_model = 1
         1.25e4                             5.9e-8

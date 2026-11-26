@@ -324,10 +324,13 @@ def test_shell_mass(name, gname, mtype):
 def test_lumped_rotary_inertia_about_the_normal(name, gname, ratio):
     r"""The lumped inertia about the normal through the centre of mass
 
+    Lumped at the nodes, it is 4 times the exact value for a triangle and
+    3 times for a parallelogram.
+
+    Notes
+    -----
     The drilling rotation has no inertia and the inertia about the normal
-    comes only from the distribution of ``intrho`` over the area: lumped at
-    the nodes, it is 4 times the exact value for a triangle and 3 times for
-    a parallelogram.
+    comes only from the distribution of ``intrho`` over the area.
     """
     xy = TRIANGLES[gname] if name.startswith('Tria') else QUADS[gname]
     nnodes = xy.shape[0]

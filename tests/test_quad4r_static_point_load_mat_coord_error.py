@@ -49,8 +49,8 @@ def test_static_plate_quad_point_load(plot=False):
     2.0e-5 to 3.6e-5 of the reference deflection.
 
     With 18x30 elements the deflection at the centre is 0.35 % below the
-    reference, identical to the case without a material direction, measured on
-    2026-10-29 with the physical stabilisation of the bending and of the
+    reference, identical to the case without a material direction,
+    with the physical stabilisation of the bending and of the
     transverse shear of Belytschko and Leviathan (1994) [2]_ that Quad4R
     uses, see :mod:`pyfe3d.quad4r`.
 

@@ -35,7 +35,7 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=3):
     ``m`` of half-waves along ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c =
     (m*b/a + a/(m*b))**2``. With 92x44 elements the buckling load is above the
     reference by 0.05 %, with 62x30 elements 0.25 %, with 30x14 elements
-    1.45 %, measured on 2026-10-29 with the physical stabilisation of the
+    1.45 %, with the physical stabilisation of the
     bending and of the transverse shear of Belytschko and Leviathan (1994) [2]_ that
     Quad4R uses, see :mod:`pyfe3d.quad4r`.
 
@@ -209,7 +209,7 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=3):
 
     # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
     #      estimates the Cayley shift and verifies that no lower load
-    #      multiplier was missed, which a hardcoded shift does not
+    #      multiplier was missed
     eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
     eigvecs = np.zeros((N, num_eig_lb))
     eigvecs[bu] = eigvecsu

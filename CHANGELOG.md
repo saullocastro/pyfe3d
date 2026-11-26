@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.12.1 (2026-11-13)
+## 0.12.2 (2026-11-26)
 
 ### New features
 
@@ -994,6 +994,34 @@
   loads converge; comparison with COMSOL and with an independent
   axisymmetric shell. Linked from `nonlinear_analyses` and
   `tut-prescribed-displacement-dome-riks`.
+- Docstrings of the library: the `Notes` of `update_rotation_matrix` of
+  `BeamC`, `BeamLR`, `Truss` and `Spring` give the element triad as
+  formulae and the cause of `nan` entries, and those of the probe updates
+  are completed; the summary of `Truss.update_rotation_matrix` states that
+  an axis with three equal global components gives `nan`. In
+  `pyfe3d.solver`, the summaries of `linear_buckling`, `natural_frequency`,
+  `complex_frequency` and `capped_eigsh` keep what the parameters and the
+  result need, and the algorithms are described in their `Notes`. Comments
+  with derivations in `shellprop`, `quad4r` and `beamprop` are shortened,
+  the derivations being in the `Notes`.
+- The choice of the element is described in `element_choice` only, which
+  receives the reason to prefer `BeamC`, and no longer in the module texts
+  of `quad4`, `quad4r`, `tria3r`, `tria3dsg` and `truss`; `shell_tria3r`
+  receives the results of the pinched cylinder and the constant-shear
+  stiffness of `shear_model = 0`.
+- Dates and machine names of the measurements are removed from the `Notes`,
+  the docstrings of the tests, the notebooks and the description of the
+  pytest marker `slow`, the measured values are kept; the text describes
+  the present behaviour only.
+- Tutorials `tut-corotational-large-rotations`,
+  `tut-nafems-cap-axisymmetric` and
+  `tut-prescribed-displacement-dome-riks`: the print of the version of
+  pyfe3d is removed.
+- Docstrings of the tests, in 73 files of `tests/`: the summary states what
+  is verified and against what, with the source named, and the theory and
+  the reasons are in `Notes`; new `Notes` in the eight `*_mat_coord.py`
+  tests, in `test_quad4_probe_in_plane.py` and in
+  `test_solver_nonlinear_static.py`. No test is added or removed.
 
 ### Continuous integration
 

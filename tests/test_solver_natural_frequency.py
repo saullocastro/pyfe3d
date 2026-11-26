@@ -365,7 +365,15 @@ def test_quad4_plate_prestress():
     `\lambda \boldsymbol{K}_G`: the frequencies decrease with `\lambda`, and the
     squared lowest one vanishes linearly at the critical load multiplier of
     :func:`pyfe3d.solver.linear_buckling`; with ``symmetric=True`` the
-    eigenvectors are normalized with respect to the mass matrix"""
+    eigenvectors are normalized with respect to the mass matrix
+
+    Notes
+    -----
+    The last assertion compares the squared lowest frequency at 0.99 and
+    0.999 of the critical load multiplier `\lambda_1`: a linear decrease to
+    zero at `\lambda_1` gives the ratio `(1 - 0.99)/(1 - 0.999) = 10`,
+    checked with ``rtol = 1e-2``.
+    """
     from pyfe3d.solver import linear_buckling
     KC0uu, KGuu, Muu = plate_matrices(Nxx=-1., with_mass=True)
     lambda_1 = linear_buckling(KC0uu, KGuu, num_eigvalues=2)[0][0]
@@ -585,13 +593,18 @@ def test_K_not_positive_definite_message():
     r"""When the solvers fail and ``K`` is not positive definite, the
     ``RuntimeError`` starts with that diagnosis and the likely causes; an
     indefinite ``K`` is otherwise accepted, e.g. by the dense fallback,
-    since a preload beyond the buckling load gives negative `\omega_n^2`
-    and null frequencies
+    which returns a null frequency for the negative `\omega_n^2`
 
-    ``K = diag(1, ..., 60)`` with ``-1e6`` as its sixth entry and ``M = I``:
-    the shift-invert mode about `\omega_n^2 = -1` finds the eigenvalues 1 to
+    ``K = diag(1, ..., 60)`` with ``-1e6`` as its sixth entry and ``M = I``.
+
+    Notes
+    -----
+    An indefinite ``K`` is accepted since a preload beyond the buckling
+    load gives negative `\omega_n^2` and null frequencies. Here the
+    shift-invert mode about `\omega_n^2 = -1` finds the eigenvalues 1 to
     4, nearer the shift than `-10^6`, which the inertia check finds
-    missing."""
+    missing.
+    """
     d = np.arange(1., 61.)
     d[5] = -1e6
     K = diags(d).tocsr()

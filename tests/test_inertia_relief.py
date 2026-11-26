@@ -136,11 +136,15 @@ def test_function_input_errors():
 def test_function_balanced_loads():
     r"""Balanced loads give zero rigid-body accelerations and reactions
 
+    For the loads ``f = KC0 @ v``, with a random ``v``, the rigid-body
+    accelerations and the reactions vanish, and the displacements are ``v``
+    minus the rigid-body motion ``Phi @ v[bref]`` that brings the reference
+    dofs to zero.
+
+    Notes
+    -----
     Loads ``f = KC0 @ v``, for any ``v``, are balanced, since
-    `\boldsymbol{\Phi}^\top \boldsymbol{K}_{C0} = \boldsymbol{0}`: the
-    rigid-body accelerations and the reactions vanish, and the displacements
-    are ``v`` minus the rigid-body motion ``Phi @ v[bref]`` that brings the
-    reference dofs to zero.
+    `\boldsymbol{\Phi}^\top \boldsymbol{K}_{C0} = \boldsymbol{0}`.
     """
     prop, xs, KC0, M, beams = _free_beam()
     N = KC0.shape[0]

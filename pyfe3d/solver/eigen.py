@@ -51,9 +51,9 @@ and natural frequency
 .. math::
     (\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}
 
-The reason this module exists is that neither problem is safe to hand to
-:func:`scipy.sparse.linalg.eigsh` without preparation, and the two traps are
-easy to fall into and silent when they bite:
+Two properties of these problems require a preparation before
+:func:`scipy.sparse.linalg.eigsh` is called, without which it may return
+wrong eigenpairs without a warning:
 
 1. **The matrices are badly scaled.** A shell element mixes translations and
    rotations, so the diagonal of `\boldsymbol{K}_{C0}` spans many orders of magnitude,
@@ -291,8 +291,27 @@ def _estimate_mu_max(K, KG, max_iter=50, rel_tol=1.e-3):
 
     Notes
     -----
-    See :func:`estimate_cayley_sigma`, which multiplies this estimate by a
-    safety factor.
+    Power iterations on `\boldsymbol{K}^{-1} \boldsymbol{K}_G` in the inner
+    product of `\boldsymbol{K}`, from a fixed pseudo-random vector: with
+    `\boldsymbol{x}_i` normalized such that `\boldsymbol{x}_i^\top
+    \boldsymbol{K} \boldsymbol{x}_i = 1`,
+
+    .. math::
+
+        \boldsymbol{y}_i = \boldsymbol{K}^{-1} \boldsymbol{K}_G
+        \boldsymbol{x}_i, \qquad
+        |\mu|_i = \sqrt{|\boldsymbol{y}_i^\top \boldsymbol{K}
+        \boldsymbol{y}_i|}, \qquad
+        \boldsymbol{x}_{i+1} = \boldsymbol{y}_i
+
+    with one LU factorization of `\boldsymbol{K}`. The estimate is the
+    largest `|\mu|_i`, and the iterations stop when `|\mu|_i -
+    \max_{j<i} |\mu|_j \le` ``rel_tol`` `|\mu|_i`. ``None`` is returned when
+    `\boldsymbol{x}_i^\top \boldsymbol{K} \boldsymbol{x}_i \le 0`, when the
+    residual of the first linear solution exceeds `10^{-6}` of its
+    right-hand side, or when `|\mu|_i` is null or not finite.
+    :func:`estimate_cayley_sigma` multiplies this estimate by a safety
+    factor.
 
     """
     try:
@@ -1367,14 +1386,7 @@ def _eig_complex(a, b=None, left=False):
     :func:`scipy.linalg.eig`, through the complex LAPACK drivers
 
     The matrices are converted to complex, such that ``zgeev`` or ``zggev``
-    is used instead of ``dgeev`` or ``dggev``: with Intel MKL 2025.0.0 the
-    real drivers crash the Python process when computing the eigenvectors
-    of some matrices, which cannot be caught, e.g. with SciPy 1.17.1
-    :func:`scipy.linalg.eig` corrupts the heap and the process exits with
-    the code ``0xc0000374`` for the real 48 x 48 matrices of
-    ``test_eig_complex_mkl_crash_regression`` in
-    ``tests/test_solver_linear_buckling.py``. The complex drivers are not
-    affected, at the cost of the complex arithmetic. In the browser,
+    is used instead of ``dgeev`` or ``dggev``. In the browser,
     ``sys.platform == 'emscripten'`` (Pyodide), the real drivers are used.
 
     Parameters
@@ -1392,6 +1404,15 @@ def _eig_complex(a, b=None, left=False):
     w, v : np.ndarray
         Eigenvalues and eigenvectors of :func:`scipy.linalg.eig`, or ``w,
         vl, v`` with the left eigenvectors ``vl`` when ``left=True``.
+
+    Notes
+    -----
+    With Intel MKL 2025.0.0 the real drivers crash the Python process when
+    computing the eigenvectors of some matrices, which cannot be caught,
+    e.g. of the real 48 x 48 matrices of
+    ``test_eig_complex_mkl_crash_regression`` in
+    ``tests/test_solver_linear_buckling.py``. The complex drivers are not
+    affected, at the cost of the complex arithmetic.
 
     """
     if sys.platform != 'emscripten':
@@ -1516,13 +1537,10 @@ def _splu(A):
     r"""SuperLU factorization of ``A`` with partial pivoting, raising a
     ``RuntimeError`` when ``A`` is exactly singular
 
-    :func:`scipy.sparse.linalg.splu` warns only when it converts its input
-    to the CSC format, :class:`scipy.sparse.SparseEfficiencyWarning`, which
-    the conversion here avoids. As everywhere in :mod:`pyfe3d.solver`, no
-    :func:`warnings.catch_warnings` block is used: its exit resets the
-    registry of the warnings already shown, of every module, and the
-    warnings of the caller shown once per location would be shown again
-    after each call.
+    The input is converted to the CSC format before the factorization, such
+    that :func:`scipy.sparse.linalg.splu` does not emit its
+    :class:`scipy.sparse.SparseEfficiencyWarning`. No
+    :func:`warnings.catch_warnings` block is used.
 
     """
     return splu(csc_matrix(A))
@@ -2054,6 +2072,9 @@ def _sparse_first(analysis, strategies, verify, dense, dense_size,
     r"""Solver policy: the sparse solvers first, the dense solver as a last
     resort
 
+    The dense fallback keeps the analyses robust where ARPACK is
+    unreliable, whereas normal runs never pay for a dense solution.
+
     Parameters
     ----------
     analysis : str
@@ -2096,11 +2117,6 @@ def _sparse_first(analysis, strategies, verify, dense, dense_size,
     RuntimeError
         When no solver passed the verification, listing every attempted
         solver and the reason of its failure.
-
-    Notes
-    -----
-    The dense fallback keeps the analyses robust where ARPACK is
-    unreliable, whereas normal runs never pay for a dense solution.
 
     """
     if verify is None:
@@ -2164,34 +2180,21 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     them so, see :func:`.is_symmetric`.
 
     **Symmetric matrices.** ``K`` must be positive definite, which is
-    checked with ``check=True``. The sparse solvers are
-    :func:`scipy.sparse.linalg.eigsh` in Cayley mode, using the shift of
-    :func:`estimate_cayley_sigma`, or ``sigma`` when given, and then the
-    same with a 10 times larger shift; when the accurate eigenpairs of
-    either one miss load multipliers below the highest one, e.g. copies of
-    repeated ones, they are completed by deflated passes before the next
-    solver, see :func:`_complete_both_signs`. Each one computes the lowest
-    positive load multipliers and, when fewer than ``num_eigvalues`` exist, the
-    negative ones closest to zero, i.e. the critical load multipliers of the
-    reversed load, with ``-KG``, see :func:`_eigsh_both_signs`. The
-    eigenpairs are verified with the residual and inertia checks of
-    :func:`check_eigenpairs`, for both signs, see :func:`_check_both_signs`.
-    The dense fallback condenses out the degrees-of-freedom where ``KG`` has
-    null rows and solves the condensed problem with
-    :func:`scipy.linalg.eigh`, see :func:`_eigh_condensed`.
+    checked with ``check=True``. The lowest positive load multipliers are
+    computed and, when fewer than ``num_eigvalues`` exist, the negative ones
+    closest to zero, i.e. the critical load multipliers of the reversed
+    load, with ``-KG``. The eigenpairs are verified with the residual and
+    inertia checks of :func:`check_eigenpairs`, for both signs.
 
     **Unsymmetric matrices**, e.g. ``KG`` with the load stiffness of a
-    follower load, may have complex load multipliers. The sparse solver is a
-    search of shifts along the positive real axis with
-    :func:`scipy.sparse.linalg.eigs`, see :func:`_eigs_shift_search`, which
-    finds the lowest positive real load multiplier; the returned eigenpairs
-    are the ``num_eigvalues`` load multipliers nearest the last shift of the
-    search. Only the residuals are verified. The dense fallback,
-    :func:`_eig_condensed`, keeps the degrees-of-freedom where either the
-    row or the column of ``KG`` is not null; when none of its load
-    multipliers is positive and real, they are returned with a
-    :class:`RuntimeWarning`. Eigenvalues whose imaginary part is below
-    ``1e-8`` of their modulus are returned as real, with real eigenvectors.
+    follower load, may have complex load multipliers. The lowest positive
+    real load multiplier is sought, and the returned eigenpairs are the
+    ``num_eigvalues`` load multipliers nearest the last shift of the search
+    that finds it. Only the residuals are verified. When none of the load
+    multipliers of the dense solver is positive and real, they are returned
+    with a :class:`RuntimeWarning`. Eigenvalues whose imaginary part is
+    below ``1e-8`` of their modulus are returned as real, with real
+    eigenvectors.
 
     The sparse solvers run first and the dense solver is a last resort, see
     the solver policy of :mod:`pyfe3d.solver.eigen`.
@@ -2296,6 +2299,23 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     solved is the one of `\boldsymbol{P} \boldsymbol{K}_{C0} \boldsymbol{P}` and `\boldsymbol{P} \boldsymbol{K}_G \boldsymbol{P}`, with the same
     eigenvalues, see :func:`diagonal_preconditioner`; the verification
     always uses the original matrices.
+
+    For symmetric matrices the sparse solvers are
+    :func:`scipy.sparse.linalg.eigsh` in Cayley mode, using the shift of
+    :func:`estimate_cayley_sigma`, or ``sigma`` when given, and then the
+    same with a 10 times larger shift; when the accurate eigenpairs of
+    either one miss load multipliers below the highest one, e.g. copies of
+    repeated ones, they are completed by deflated passes before the next
+    solver, see :func:`_complete_both_signs`. Both signs are computed by
+    :func:`_eigsh_both_signs` and verified by :func:`_check_both_signs`.
+    The dense fallback condenses out the degrees-of-freedom where
+    `\boldsymbol{K}_G` has null rows and solves the condensed problem with
+    :func:`scipy.linalg.eigh`, see :func:`_eigh_condensed`. For unsymmetric
+    matrices the sparse solver is a search of shifts along the positive
+    real axis with :func:`scipy.sparse.linalg.eigs`, see
+    :func:`_eigs_shift_search`, and the dense fallback,
+    :func:`_eig_condensed`, keeps the degrees-of-freedom where either the
+    row or the column of `\boldsymbol{K}_G` is not null.
 
     A null row or column of `\boldsymbol{K}_{C0}` is a degree-of-freedom without
     stiffness, a modelling error: with the same null row or column of
@@ -2638,10 +2658,8 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
     ``K`` must have no null row or column, see :func:`.check_null_rows_cols`,
     whereas ``M`` may have null rows and columns, e.g. a lumped mass matrix
     without rotary inertia. The matrices are optionally preconditioned
-    with :func:`diagonal_preconditioner`, and the eigenvalues, the squares
-    of the circular frequencies, are computed in shift-invert mode with
-    ``sigma=-1.`` and ``which='LM'``, with :func:`scipy.sparse.linalg.eigsh`
-    for symmetric matrices and :func:`scipy.sparse.linalg.eigs` otherwise,
+    with :func:`diagonal_preconditioner`, and the eigenvalues are the
+    squares of the circular frequencies. The matrices may be unsymmetric,
     e.g. with the aerodynamic matrix of piston theory or the load stiffness
     of a follower load in ``K``. ``K`` and ``M`` are symmetric when
     ``symmetric=None`` finds them so, see :func:`.is_symmetric`. The number
@@ -2651,10 +2669,7 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
     residual of each eigenpair must not be larger than ``check_rtol``,
     unless its backward error is at the round-off, and, for symmetric
     matrices, no eigenvalue lower than the highest one returned may be
-    missing. For symmetric matrices with a ``K`` without negative pivots,
-    accurate eigenpairs that miss eigenvalues, e.g. copies of repeated
-    ones, are completed by deflated passes, see :func:`_complete_repeated`.
-    When the verification still fails or the sparse
+    missing. When the verification fails or the sparse
     solver raises an error, the dense solver of :func:`_dense_freq` is used
     as a last resort, with a :class:`DenseFallbackWarning`, see the solver
     policy of :mod:`pyfe3d.solver.eigen`.
@@ -2742,6 +2757,12 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
     when `\boldsymbol{K}_{C0}` is positive semi-definite and `\boldsymbol{M}` positive definite,
     factorizing `\boldsymbol{K}_{C0} + \boldsymbol{M}`, which is not singular when `\boldsymbol{K}_{C0}` is
     singular only because of unconstrained rigid-body modes that have mass.
+    The sparse solver, called with ``which='LM'``, is
+    :func:`scipy.sparse.linalg.eigsh` for symmetric matrices and
+    :func:`scipy.sparse.linalg.eigs` otherwise. For symmetric matrices with
+    a `\boldsymbol{K}_{C0}` without negative pivots, accurate eigenpairs
+    that miss eigenvalues, e.g. copies of repeated ones, are completed by
+    deflated passes before the verification, see :func:`_complete_repeated`.
 
     A null row or column of `\boldsymbol{K}_{C0}` is a degree-of-freedom without
     stiffness, a modelling error: with the same null row or column of
@@ -3372,11 +3393,9 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
     have null rows and columns. The matrices are optionally preconditioned
     with :func:`diagonal_preconditioner`.
 
-    The problem is linearized into a generalized eigenvalue problem of size
-    ``2*n``, the first companion form, solved with
-    :func:`scipy.sparse.linalg.eigs` in shift-invert mode, which finds the
-    eigenvalues nearest the shift ``sigma`` and factorizes the ``n`` by
-    ``n`` matrix ``sigma**2*M + sigma*C + K``, see :func:`_eigs_qep`. The
+    The eigenvalues nearest the shift ``sigma`` are computed, with a
+    factorization of the ``n`` by ``n`` matrix ``sigma**2*M + sigma*C + K``.
+    The
     eigenvalues of real matrices are real or come in complex conjugate
     pairs, and one eigenvalue per pair, the one with a positive imaginary
     part, is returned, with its eigenvector. The ``num_eigvalues``
@@ -3469,7 +3488,12 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
 
     Notes
     -----
-    The problem solved is
+    The problem is linearized into a generalized eigenvalue problem of size
+    `2 n`, the first companion form, solved with
+    :func:`scipy.sparse.linalg.eigs` in shift-invert mode, which finds the
+    eigenvalues nearest the shift `\sigma` and factorizes the `n \times n`
+    matrix `\sigma^2 \boldsymbol{M} + \sigma \boldsymbol{C} +
+    \boldsymbol{K}`, see :func:`_eigs_qep`. The problem solved is
 
     .. math::
 

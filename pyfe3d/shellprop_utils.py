@@ -3,8 +3,6 @@
 Shell property utils module (:mod:`pyfe3d.shellprop_utils`)
 ===========================================================
 
-Highly based on the `composites <https://saullocastro.github.io/composites/>`_. module.
-
 .. currentmodule:: pyfe3d.shellprop_utils
 
 Functions that create a :class:`.ShellProp` from the stacking sequence and

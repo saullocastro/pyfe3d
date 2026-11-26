@@ -1,11 +1,7 @@
 r"""Rigid offsets of warped Quad4 and Quad4R, attribute ``warp_offsets``
 
-With ``warp_offsets = 1``, the default, the flat element of a warped
-quadrilateral is linked to the nodes by rigid offsets, ``J`` of the
-element documentation, which transform the matrices and internal forces of
-the flat element, also with the von Kármán terms of ``nonlinear=1``, and add
-the eccentricity geometric stiffness ``K_E`` on the rotations. Checked
-here:
+Checked here, with ``J`` the rigid offsets of ``warp_offsets = 1``, the
+default, and ``K_E`` the eccentricity geometric stiffness (see the Notes):
 
 - flat elements: every matrix and force bit for bit equal with
   ``warp_offsets`` 0 and 1;
@@ -30,6 +26,12 @@ here:
 
 Notes
 -----
+With ``warp_offsets = 1``, the default, the flat element of a warped
+quadrilateral is linked to the nodes by rigid offsets, ``J`` of the
+element documentation, which transform the matrices and internal forces of
+the flat element, also with the von Kármán terms of ``nonlinear=1``, and add
+the eccentricity geometric stiffness ``K_E`` on the rotations.
+
 The relations checked are ``KC0 = J^T KC0_flat J``, ``M = J^T M_flat J``,
 ``fint = J^T fint_flat(J ue)``, also with the von Kármán terms of
 ``nonlinear=1``, ``KG = KG_flat(J ue) + K_E`` and ``KCNL = J^T
@@ -398,18 +400,24 @@ def fd_jacobian(func, u, h=1e-7):
 
 @pytest.mark.parametrize('name', NAMES)
 def test_warped_KG_corotational(name):
-    r"""``K_E`` against the co-rotational internal force of
-    :class:`.CorotationalShell` with ``warping='offsets'``, whose offsets
-    are exact: with the flat element on the projected nodes, its internal
-    force is ``f(u) = J(psi)^T f_flat(u_f(u))``, so that the tangent
-    ``K(lambda u0)``, from central differences of ``f``, is ``J^T K_flat
-    J`` plus the term of the derivative of ``J(psi)^T``. The derivative of
-    ``K`` along ``lambda`` at ``lambda = 0``, minus that of ``J(psi)^T
-    K_flat(u_f) J(psi)``, the initial-displacement terms, with ``K_flat``
-    from central differences of the internal force of a co-rotational flat
-    element on the projected nodes, at the exact ``u_f(lambda u0)``,
-    leaves the eccentricity term, linear in the forces of the flat
-    element: ``K_E`` of ``update_KG`` at ``u0``"""
+    r"""``K_E`` of ``update_KG`` at ``u0`` against the eccentricity term of
+    the co-rotational internal force of :class:`.CorotationalShell` with
+    ``warping='offsets'``, whose offsets are exact, obtained by central
+    differences (see the Notes), within a relative error of 1e-5
+
+    Notes
+    -----
+    With the flat element on the projected nodes, the internal force of
+    the co-rotational element is ``f(u) = J(psi)^T f_flat(u_f(u))``, so
+    that the tangent ``K(lambda u0)``, from central differences of ``f``,
+    is ``J^T K_flat J`` plus the term of the derivative of ``J(psi)^T``.
+    The derivative of ``K`` along ``lambda`` at ``lambda = 0``, minus that
+    of ``J(psi)^T K_flat(u_f) J(psi)``, the initial-displacement terms,
+    with ``K_flat`` from central differences of the internal force of a
+    co-rotational flat element on the projected nodes, at the exact
+    ``u_f(lambda u0)``, leaves the eccentricity term, linear in the forces
+    of the flat element: ``K_E`` of ``update_KG`` at ``u0``.
+    """
     prop = isotropic_plate(thickness=0.1, E=70e9, nu=0.3)
     rng = np.random.default_rng(6)
     u0 = rng.standard_normal(24)*1e-3
@@ -539,10 +547,16 @@ def test_twisted_cantilever_6x1(name):
     with offsets (``1.75261e-3, 5.41735e-3``, see
     ``tests/test_corotational_core.py``), without them they are more than
     70 % too small. Quad4R with offsets is 15.3 % too stiff
-    in ``uy`` and 1.9 % in ``uz``: its one-point membrane with the hourglass
-    stiffness of Brockman (1987) bends in its plane stiffly with one element
-    across the width, e.g. 0.40 of the beam solution for the untwisted
-    strip under the in-plane tip load with 6x1 elements, 0.72 with 12x2"""
+    in ``uy`` and 1.9 % in ``uz``.
+
+    Notes
+    -----
+    Quad4R is too stiff here because its one-point membrane with the
+    hourglass stiffness of Brockman (1987) bends in its plane stiffly with
+    one element across the width, e.g. 0.40 of the beam solution for the
+    untwisted strip under the in-plane tip load with 6x1 elements, 0.72
+    with 12x2.
+    """
     ref = {'y': 1.75261e-3, 'z': 5.41735e-3}
     tol = {'Quad4': {'y': 0.01, 'z': 0.01}, 'Quad4R': {'y': 0.16, 'z': 0.025}}
     on = twisted_tip(name, 6, 1, 1)
@@ -573,8 +587,8 @@ def test_macneal_harder_twisted_beam(name, nx, ny):
     for Quad4, 0.9978 and 0.9987 for Quad4R. With the MITC4 transverse
     shear of the default ``shear_model = 1``, Quad4 gives 0.9963 and 0.9974
     with 12x2 elements, and 0.9974 and 0.9980 with the one-point transverse
-    shear of ``shear_model = 0``, hence the tolerance of 0.4 %
-    (measured on 2026-10-30); the 96x16 values are the same to four digits.
+    shear of ``shear_model = 0``, hence the tolerance of 0.4 %;
+    the 96x16 values are the same to four digits.
 
     References
     ----------
@@ -862,7 +876,7 @@ def twisted_tip_nonlinear(name, kinematics, comp, loads, nx=12, ny=2):
 #: pre-determined by test_twisted_beam_von_karman; Quad4 with the default
 #: shear_model = 1, whose von Kármán terms take the slopes of
 #: w at the two-by-two points, 0.540811 and 0.524690 with the slopes at the
-#: centroid (measured on 2026-11-01); (0.541658, 0.539894) and (0.525850,
+#: centroid; (0.541658, 0.539894) and (0.525850,
 #: 0.525783) with the one-point transverse shear of shear_model = 0 and the
 #: slopes at the centroid
 TW_VK = {('Quad4', 2): (0.540710, 0.539268),

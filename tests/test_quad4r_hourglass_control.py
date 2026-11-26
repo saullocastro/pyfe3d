@@ -1,10 +1,8 @@
 r"""Verification of the hourglass control of :class:`pyfe3d.Quad4R`.
 
-The reduced integration of :class:`pyfe3d.Quad4R` samples the strains at the
-element centroid only, which leaves the element rank-deficient, and the
-missing rank is restored with the hourglass control of Brockman (1987),
+The hourglass control of :class:`pyfe3d.Quad4R` is that of Brockman (1987),
 whose Eq. (14) is quoted from, and is attributed here to, Belytschko and
-Tsay (1983), for the in-plane displacements, and with the physical
+Tsay (1983), for the in-plane displacements, and the physical
 stabilisation of Belytschko and Leviathan (1994) for the transverse
 displacement and the rotations.
 The tests check the implementation term by term against these references:
@@ -29,6 +27,10 @@ The tests check the implementation term by term against these references:
 
 Notes
 -----
+The reduced integration of :class:`pyfe3d.Quad4R` samples the strains at the
+element centroid only, which leaves the element rank-deficient, and the
+missing rank is restored with the hourglass control verified here.
+
 The tests check the implementation against Brockman [1]_ term by term.
 Writing `\boldsymbol{h} = [1, -1, 1, -1]^\top` for the hourglass pattern of the
 bilinear element, `\boldsymbol{s} = [1, 1, 1, 1]^\top`, and `A` for the element area,
@@ -141,13 +143,13 @@ calibration of Eq. (16):
    being an inverse area. Brockman introduces it deliberately, as "motivated
    by locking problems observed in elements with extremely small dimensions",
    and reports good behaviour "over a range of six orders of magnitude in the
-   planform dimension". Adopting Eq. (14) does not remove this: it removes
-   the dependence of the rigid-body and constant-strain states on the
-   artificial stiffness, so those are now reproduced exactly whatever the
-   unit of length, but the magnitude of the artificial stiffness itself still
+   planform dimension". The correction terms of Eq. (14) do not remove this:
+   they remove the dependence of the rigid-body and constant-strain states
+   on the artificial stiffness, so those are reproduced exactly whatever the
+   unit of length, but the magnitude of the artificial stiffness of Eq. (16)
    depends on that unit, and a response that legitimately contains hourglass
    components, which Brockman lists on p. 2348 as "torsional or inplane
-   bending modes", still moves with it. The dimensionally homogeneous
+   bending modes", moves with it. The dimensionally homogeneous
    stiffnesses used by pyfe3d remove that dependence, see
    :func:`test_hourglass_stiffness_is_independent_of_the_length_unit`.
 
@@ -217,11 +219,14 @@ HG_NAMES = {0: 'u = h', 1: 'v = h', 2: 'w = h', 3: 'rx = h', 4: 'ry = h'}
 def make_element(ncoords, K6ROT=0., xmat=(0., 0., 1.)):
     r"""A single Quad4R with its rotation matrix and probe already updated
 
-    The fictitious drilling penalty is switched off by default, because its
-    operator reads the in-plane translations and would otherwise add energy
-    to the in-plane hourglass patterns, which would mask the term being
-    verified. ``xmat`` is the material direction of
-    :meth:`pyfe3d.Quad4R.update_rotation_matrix`.
+    The fictitious drilling penalty is switched off by default. ``xmat`` is
+    the material direction of :meth:`pyfe3d.Quad4R.update_rotation_matrix`.
+
+    Notes
+    -----
+    The operator of the fictitious drilling penalty reads the in-plane
+    translations and would otherwise add energy to the in-plane hourglass
+    patterns, which would mask the term being verified.
 
     """
     probe = Quad4RProbe()
@@ -268,6 +273,8 @@ def element_xy(probe):
 def to_global(el, ue_element):
     r"""Bring a displacement vector from element to global coordinates
 
+    Notes
+    -----
     The columns of the matrix of :func:`rotation` are the element axes, so
     a vector in element coordinates is brought to global ones by that
     matrix, not by its transpose; most patterns mapped by the tests are
@@ -345,14 +352,18 @@ def homogeneous_stiffnesses(area, E=E_BROCKMAN, t=T_BROCKMAN):
 
     The stiffnesses of the hourglass modes of the in-plane displacements
     `u` and `v`: Eq. (16a) of Brockman (1987) with his factor `1/(1 +
-    1/A)` replaced by the area itself, which is what the dimensions
-    require, see the rubric "Hourglass control of the membrane" of the
-    :mod:`pyfe3d.quad4r` documentation. There is no stiffness of this kind
+    1/A)` replaced by the area itself. There is no stiffness of this kind
     for `w`, `r_x` and `r_y`: Brockman's Eq. (16b) is not used, and their
     hourglass modes have the physical stabilisation of the transverse shear
     and of the bending of Belytschko and Leviathan (1994), see
     :func:`test_transverse_shear_matches_belytschko_leviathan` and
     :func:`test_bending_stabilisation_matches_belytschko_leviathan`.
+
+    Notes
+    -----
+    Replacing the factor `1/(1 + 1/A)` by the area itself is what the
+    dimensions require, see the rubric "Hourglass control of the membrane"
+    of the :mod:`pyfe3d.quad4r` documentation.
 
     """
     return {0: 0.1*E*t*area, 1: 0.1*E*t*area}
@@ -438,18 +449,22 @@ def test_hourglass_operator_equals_second_derivative_of_N():
 def test_generalized_stiffnesses_are_dimensionally_homogeneous():
     r"""The generalized stiffnesses actually implemented, one at a time
 
-    The hourglass stiffnesses of `u` and `v` of Quad4R are those of
+    The slope with ``hgfactor`` of the energy of the hourglass patterns of
+    `u` and `v` is compared with the implemented stiffnesses, those of
     Brockman's Eq. (16a) with his `1/(1 + 1/A)` replaced by the area itself,
-    which is what the dimensions of `K_{ij} = A E^{(h)} \gamma_i \gamma_j`
-    require, see the rubric "Hourglass control of the membrane" of the
-    :mod:`pyfe3d.quad4r` documentation and :func:`homogeneous_stiffnesses`.
-    The hourglass modes of `w`, `r_x` and `r_y` have no such stiffness, see
+    see :func:`homogeneous_stiffnesses`. Two elements of very different
+    areas are used, so the area factor is exercised. The hourglass modes of
+    `w`, `r_x` and `r_y` have no such stiffness, see
     :func:`test_transverse_shear_matches_belytschko_leviathan`.
 
-    The energy of each hourglass pattern is linear in the corresponding
-    ``hgfactor``, which is what makes the stiffnesses separable, and the
-    slope must be the implemented value. Two elements of very different
-    areas are used, so the area factor is exercised.
+    Notes
+    -----
+    Replacing `1/(1 + 1/A)` by the area itself is what the dimensions of
+    `K_{ij} = A E^{(h)} \gamma_i \gamma_j` require, see the rubric
+    "Hourglass control of the membrane" of the :mod:`pyfe3d.quad4r`
+    documentation. The energy of each hourglass pattern is linear in the
+    corresponding ``hgfactor``, which is what makes the stiffnesses
+    separable, and the slope must be the implemented value.
 
     """
     prop = isotropic_plate(thickness=T_BROCKMAN, E=E_BROCKMAN,
@@ -497,17 +512,21 @@ def test_five_hourglass_patterns_are_spurious_without_stabilisation():
 def test_stabilisation_restores_the_rank_of_a_rectangular_element():
     r"""Brockman's p. 2347 mode count, on a rectangle
 
+    With the stabilisation off, the element matrix is singular in the six
+    proper rigid-body motions plus the five hourglass patterns plus the
+    twisting mode, 12 zero eigenvalues. With it on, only the rigid-body
+    motions remain, 6 zero eigenvalues.
+
+    Notes
+    -----
     Of the twenty-four degrees-of-freedom of ``Quad4R``, Brockman's plate
     accounts for twenty, the drilling rotation being absent from his
-    element. With the stabilisation off, the element matrix is singular in
-    the six proper rigid-body motions plus the five hourglass patterns plus
-    the twisting mode. With it on, only the rigid-body motions remain, the
-    drilling rotations being held by their own operator: the stabilisation
-    of the transverse shear of Belytschko and Leviathan (1994), used in
-    place of Brockman's control of `w`, also stiffens the twisting mode,
-    which Brockman's does not, see :func:`test_twisting_mode_is_stabilised`;
-    with Brockman's control of `w` the twisting mode remains, 7 zero
-    eigenvalues.
+    element; the drilling rotations are held by their own operator. The
+    stabilisation of the transverse shear of Belytschko and Leviathan
+    (1994), used in place of Brockman's control of `w`, also stiffens the
+    twisting mode, which Brockman's does not, see
+    :func:`test_twisting_mode_is_stabilised`; with Brockman's control of
+    `w` the twisting mode remains, 7 zero eigenvalues.
 
     """
     prop = isotropic_plate(thickness=T_BROCKMAN, E=E_BROCKMAN,
@@ -528,17 +547,17 @@ def test_stabilisation_restores_the_rank_of_a_rectangular_element():
 def test_twisting_mode_is_stabilised():
     r"""Brockman's Eq. (13) and his remark attributing it to Hughes
 
-    The twisting mode of Brockman (1987), Eq. (13), is not an hourglass
-    pattern, so Brockman's stabilisation does not reach it. Brockman notes
-    that it "cannot occur in a mesh of two or more elements, as shown by
-    Hughes", Hughes (1980), which is checked here by counting the zero
-    eigenvalues of a two-element mesh; on a single rectangle and
-    parallelogram the mode is checked to carry no energy without the
-    stabilisation and a positive energy with it.
+    Brockman notes that the twisting mode of Brockman (1987), Eq. (13),
+    "cannot occur in a mesh of two or more elements, as shown by Hughes",
+    Hughes (1980), which is checked here by counting the zero eigenvalues
+    of a two-element mesh; on a single rectangle and parallelogram the mode
+    is checked to carry no energy without the stabilisation and a positive
+    energy with it.
 
     Notes
     -----
-    Brockman's Eq. (13) is
+    The twisting mode is not an hourglass pattern, so Brockman's
+    stabilisation does not reach it. Brockman's Eq. (13) is
 
     .. math::
         w = \frac{1}{4}(\boldsymbol{s}^\top \boldsymbol{y}) x
@@ -631,6 +650,21 @@ def test_twisting_mode_is_stabilised():
 def test_hourglass_strains_orthogonal_to_linear_fields():
     r"""Brockman's p. 2348 orthogonality claim, for both operators
 
+    The products `\boldsymbol{\gamma}^\top \boldsymbol{s}`,
+    `\boldsymbol{\gamma}^\top \boldsymbol{x}` and `\boldsymbol{\gamma}^\top
+    \boldsymbol{y}` are checked on four shapes for the operator of Eq. (15)
+    of Brockman (1987) and for the operator used by the element, Eq. (15)
+    corrected by the two terms of Eq. (14): the latter satisfies all three
+    orthogonality conditions on any shape, the former the last two only on
+    the parallelograms, where the two operators are the same.
+
+    The two operators are built here from the element geometry rather than
+    read out of the element matrix, so that the property is checked on the
+    formulas. :func:`test_rigid_body_rotation_energy` checks the consequence
+    on the assembled element matrix.
+
+    Notes
+    -----
     The scheme relies on the hourglass strains vanishing for the rigid-body
     motions and the uniform-strain states, which requires
     `\boldsymbol{\gamma}^\top \boldsymbol{s} = \boldsymbol{\gamma}^\top \boldsymbol{x} =
@@ -638,12 +672,11 @@ def test_hourglass_strains_orthogonal_to_linear_fields():
     always holds and the other two hold only while the element is a
     parallelogram. The operator used by the element, Eq. (15) corrected by
     the two terms of Eq. (14), satisfies all three on any shape, which is
-    what this test establishes.
-
-    The two operators are built here from the element geometry rather than
-    read out of the element matrix, so that the property is checked on the
-    formulas. :func:`test_rigid_body_rotation_energy` checks the consequence
-    on the assembled element matrix.
+    what this test establishes. The element uses Eq. (14) in the
+    normalisation of Eq. (15), so that the calibration of Eq. (16) is
+    preserved. The hourglass energy is unchanged by the correction, because
+    the centroidal sums of the derivatives against `\boldsymbol{h}` vanish,
+    and on a parallelogram the correction terms vanish.
 
     """
     for name, ncoords, regular in [('rectangle', RECTANGLE, True),
@@ -657,7 +690,7 @@ def test_hourglass_strains_orthogonal_to_linear_fields():
         # NOTE Eq. (14) as quoted by Brockman, dimensionless
         g14 = H - H.dot(x)*b1 - H.dot(y)*b2
         # NOTE what the element uses, Eq. (14) in the normalisation of
-        #      Eq. (15), so that the calibration of Eq. (16) is preserved
+        #      Eq. (15)
         gused = gamma_tilde(el, probe)/4.*g14
         scale = np.abs(g15).max()*max(np.abs(x).max(), np.abs(y).max())
         print(name, 'Eq.15', g15.dot(S), g15.dot(x), g15.dot(y),
@@ -671,13 +704,11 @@ def test_hourglass_strains_orthogonal_to_linear_fields():
         assert abs(g14.dot(y)) < 1e-14*max(np.abs(y).max(), 1.), name
         assert abs(gused.dot(x)) < 1e-14*max(scale, 1.), name
         assert abs(gused.dot(y)) < 1e-14*max(scale, 1.), name
-        # NOTE the hourglass energy is unchanged by the correction, because
-        #      the centroidal sums of the derivatives against h vanish
+        # NOTE the hourglass energy is unchanged by the correction
         assert np.isclose(gused.dot(H), g15.dot(H), rtol=1e-12), name
         if regular:
             # NOTE on a parallelogram the correction terms vanish and the
-            #      two operators are the same, which is what keeps every
-            #      regular mesh bit-identical
+            #      two operators are the same
             assert np.allclose(gused, g15, rtol=1e-12, atol=0.), name
         else:
             # NOTE Eq. (15) alone would not filter the linear fields here
@@ -688,10 +719,16 @@ def test_rigid_body_rotation_energy():
     r"""The consequence of the previous test on the rigid-body motions
 
     All six rigid-body motions carry exactly no energy, on any element shape,
-    because the hourglass strains of Eq. (14) are orthogonal to them. With
-    the operator of Eq. (15) alone the rotation about the normal would pick
-    up about 2.5e-4 of the largest entry of the element matrix on the
-    distorted element used here.
+    with the stabilisation on and off.
+
+    Notes
+    -----
+    The rigid-body motions carry no energy because the hourglass strains of
+    Eq. (14) are orthogonal to them, see
+    :func:`test_hourglass_strains_orthogonal_to_linear_fields`. With the
+    operator of Eq. (15) alone the rotation about the normal would pick up
+    about 2.5e-4 of the largest entry of the element matrix on the distorted
+    element used here.
 
     """
     prop = isotropic_plate(thickness=T_BROCKMAN, E=E_BROCKMAN,
@@ -799,19 +836,22 @@ def patch_solution(cls, Data, Probe, scale=1., hgfactor=1.):
 def test_constant_strain_patch_test_on_an_irregular_mesh():
     r"""The constant-strain patch test
 
-    ``Quad4R`` reproduces the uniform strain state of MacNeal and Harder's
-    irregular patch exactly, whether the stabilisation is on or off, because
-    the hourglass strains of Eq. (14) are orthogonal to the uniform strain
-    states, see :func:`test_hourglass_strains_orthogonal_to_linear_fields`.
-    ``Quad4`` is exact too, and the agreement of the three is what shows that
-    both the reduced integration and its stabilisation are consistent.
-
-    With the operator of Eq. (15) alone the interior nodes of this patch came
-    out wrong by about eight per cent, which is what motivated adopting the
-    two correction terms.
+    ``Quad4R`` reproduces the uniform strain state of the irregular patch of
+    MacNeal and Harder (1985), Figure 2, exactly, whether the stabilisation
+    is off, on or 100 times stronger. ``Quad4`` is exact too.
 
     Notes
     -----
+    The patch test is passed because the hourglass strains of Eq. (14) are
+    orthogonal to the uniform strain states, see
+    :func:`test_hourglass_strains_orthogonal_to_linear_fields`, and it stays
+    exact however strong the stabilisation is made, which is the property
+    that Eq. (14) buys. The agreement of ``Quad4`` and of ``Quad4R`` with
+    the stabilisation on and off is what shows that both the reduced
+    integration and its stabilisation are consistent. With the operator of
+    Eq. (15) alone the interior nodes of this patch come out wrong by about
+    eight per cent.
+
     The patch is that of MacNeal and Harder (1985), Figure 2, a rectangle of
     0.24 by 0.12 split into five quadrilaterals by four arbitrarily placed
     interior nodes, ``PATCH_OUTER`` and ``PATCH_INNER``; the four corners
@@ -829,8 +869,7 @@ def test_constant_strain_patch_test_on_an_irregular_mesh():
     assert exact_q4 < 1e-12
     assert off < 1e-12
     assert on < 1e-12, on
-    # NOTE and it stays exact however strong the stabilisation is made,
-    #      which is the property that Eq. (14) buys
+    # NOTE and it stays exact however strong the stabilisation is made
     assert strong < 1e-12, strong
 
 
@@ -911,6 +950,18 @@ def cook_solution(scale=1., n=4):
 def test_hourglass_stiffness_is_independent_of_the_length_unit():
     r"""The homogeneous stiffnesses remove the unit dependence of Eq. (16)
 
+    The same physical problems are solved with the model written in the
+    metre, the millimetre, the micrometre and the kilometre, nine orders of
+    magnitude of length unit:
+
+    * the constant-strain patch test of :func:`patch_solution` is exact in
+      every unit, for ``Quad4R`` and for ``Quad4``;
+    * the tapered cantilever of Cook (1974), :func:`cook_solution` with 4
+      by 4 elements, gives the *same* tip displacement in every unit, with
+      a relative spread below 1e-8.
+
+    Notes
+    -----
     Brockman's `1/(1 + 1/A)` makes the artificial stiffness depend on the
     unit of length the model is written in, `1/A` being an inverse area. He
     introduces the factor knowingly, as "motivated by locking problems
@@ -922,16 +973,19 @@ def test_hourglass_stiffness_is_independent_of_the_length_unit():
     Replacing the factor by the area itself, as the dimensional argument in
     the :mod:`pyfe3d.quad4r` documentation requires, removes the dependence
     exactly rather than approximately. This test measures both halves of
-    that claim over nine orders of magnitude of length unit:
+    that claim:
 
     * the constant-strain patch test is exact in every unit, which is what
       the correction terms of Eq. (14) buy, with either factor;
     * Cook's in-plane bending problem, whose response legitimately contains
       the hourglass components Brockman lists on p. 2348 as "torsional or
-      inplane bending modes", gives the *same* answer in every unit. With
+      inplane bending modes", gives the same answer in every unit. With
       Brockman's factor it drifts by a fraction of a per cent at the metre
       and collapses at the kilometre, where the element areas are so small
       in that unit that Eq. (16) leaves almost no stabilisation at all.
+
+    The only residual variation of the tip displacement is the conditioning
+    of the linear solve at the extreme scalings, not the formulation.
 
     """
     for name, scale in [('metre', 1.), ('millimetre', 1.e3),
@@ -950,8 +1004,8 @@ def test_hourglass_stiffness_is_independent_of_the_length_unit():
     vals = np.array(list(cook.values()))
     spread = (vals.max() - vals.min())/abs(vals.mean())
     print('relative spread over nine orders of magnitude: %.3e' % spread)
-    # NOTE the only residual variation is the conditioning of the linear
-    #      solve at the extreme scalings, not the formulation
+    # NOTE tolerance for the conditioning of the linear solve at the extreme
+    #      scalings
     assert spread < 1e-8, spread
 
 
@@ -998,7 +1052,7 @@ def test_homogeneous_stiffnesses_agree_with_brockman_for_small_areas():
                   % (area, HG_NAMES[dof], hm[dof], br[dof], rel))
             assert rel < tol, (area, dof, rel)
     # NOTE and they diverge without bound in a unit that makes the areas
-    #      large, which is the unit dependence this change removes
+    #      large
     br = brockman_stiffnesses(1.e4)
     hm = homogeneous_stiffnesses(1.e4)
     assert hm[0]/br[0] > 1.e3
@@ -1007,12 +1061,16 @@ def test_homogeneous_stiffnesses_agree_with_brockman_for_small_areas():
 def strip_twist(hgfactor_physical=1., nx=6, ny=1):
     r"""Twist of the MacNeal and Harder (1985) 6 by 0.2 strip, reference 0.03208
 
-    The full reference is in the module documentation. The twist of a
-    one-element-wide strip is the hourglass pattern `w = xy`, whose answer
-    Brockman's control of `w` would set by the coefficient `E^{(h)}_w`.
     Root fully clamped, a unit torque applied as a pair of opposite
     transverse forces on the tip edge, and the returned value is the tip
     twist per unit width.
+
+    Notes
+    -----
+    The twist of a one-element-wide strip is the hourglass pattern `w =
+    xy`, whose answer Brockman's control of `w` would set by the
+    coefficient `E^{(h)}_w`. The full reference is in the module
+    documentation.
 
     """
     a, b, h = 6., 0.2, 0.1
@@ -1085,7 +1143,7 @@ def test_one_element_wide_strip_in_torsion():
     and the transverse shear have the physical stabilisation of Belytschko
     and Leviathan (1994) instead, and the 6x1 strip gives 0.941 times the reference,
     grade B, as the QUAD4 of MacNeal and Harder. Tip twist over 0.03208,
-    measured on 2026-10-29, the torque applied as the corner forces of this
+    the torque applied as the corner forces of this
     test (corner) or as normal forces proportional to the distance from the
     axis (distributed), with the default stabilisation
     (``hgfactor_physical = 1``) or 1/100 of it:
@@ -1129,7 +1187,7 @@ def test_one_element_wide_strip_in_torsion():
     low = strip_twist(hgfactor_physical=0.01)
     print('strip twist / reference: 6x1 %.4f, 12x4 %.4f, 6x1 with 1/100 of '
           'the stabilisation %.4g' % (one/ref, refined/ref, low/ref))
-    # NOTE values pre-determined by strip_twist on 2026-10-29
+    # NOTE values pre-determined by strip_twist
     assert np.isclose(one, 0.03017887108568292, rtol=1e-6)
     assert np.isclose(refined, 0.032672815829645464, rtol=1e-6)
     # NOTE grade B of MacNeal and Harder, p. 14
@@ -1208,6 +1266,9 @@ def bl94_shear_reference(x, y, Cs):
     ``KH`` the stabilisation of the nonconstant part of the assumed shear
     strains, their Eq. (4.13), and ``Kc`` the constant part of the assumed
     strains minus the one-point displacement-based shear, their Eq. (4.12).
+
+    Notes
+    -----
     The covariant strains of Dvorkin and Bathe (1984), ``e_xi`` at the
     tying points ``(0, -1)``, ``(0, 1)`` and ``e_eta`` at ``(-1, 0)``,
     ``(1, 0)``, are obtained from ``gamma_xz = w_x + r_y`` and ``gamma_yz =
@@ -1260,9 +1321,14 @@ def bl94_bending_reference(x, y, D):
     \eta) - \boldsymbol{\kappa}(0, 0)`, with `\kappa_{xx} = r_{y,x}`,
     `\kappa_{yy} = -r_{x,y}` and `\kappa_{xy} = r_{y,y} - r_{x,x}`,
     integrated with two by two Gauss points with the bending stiffness
-    ``D``: the derivatives of the shape functions are evaluated directly,
-    not through the decomposition `N_{I,x} = b_{xI} + h_{,x} \gamma_I` of
-    their Eq. (3.25) that the element uses, which gives the same field.
+    ``D``.
+
+    Notes
+    -----
+    The derivatives of the shape functions are evaluated directly, not
+    through the decomposition `N_{I,x} = b_{xI} + h_{,x} \gamma_I` of Eq.
+    (3.25) of Belytschko and Leviathan (1994) that the element uses, which
+    gives the same field.
 
     """
     XI = np.array([-1., 1., 1., -1.])
@@ -1416,13 +1482,15 @@ def test_constant_twist_patch_test():
     transverse shear, and Quad4R reproduces its energy, `2 D_{66} k^2`
     per unit area, exactly, for any mesh, length unit and ``hgfactor_physical``
 
-    The assumed shear strains of Belytschko and Leviathan (1994), see
-    :func:`test_transverse_shear_matches_belytschko_leviathan`, vanish for
-    this state, constant and nonconstant parts, so their stabilisation adds
-    no energy. See :func:`twist_patch_energy_ratio`.
+    See :func:`twist_patch_energy_ratio`.
 
     Notes
     -----
+    The assumed shear strains of Belytschko and Leviathan (1994), see
+    :func:`test_transverse_shear_matches_belytschko_leviathan`, vanish for
+    this state, constant and nonconstant parts, so their stabilisation adds
+    no energy.
+
     A control of the hourglass mode of `w` with Brockman's operator
     `\gamma^\top w = w_{,xy}` alone, which is `k` for this state, adds the
     fraction `0.6 (1 + \nu)/(1 + 1/A)` to the energy: 1.7798 times the exact
@@ -1647,13 +1715,20 @@ def test_laminate_zero_energy_modes():
     for each plate of :func:`laminates` on a rectangle and on a distorted
     element: without stabilisation the element matrix has 12 zero
     eigenvalues, the six rigid-body motions, the five hourglass patterns and
-    the twisting mode; with it, 6, the twisting mode being stiffened by the
+    the twisting mode; with it, 6. The matrix is scaled symmetrically by its
+    diagonal before the eigenvalues are counted, and the smallest non-zero
+    eigenvalue is checked to be well separated from the zero ones.
+
+    Notes
+    -----
+    With the stabilisation the twisting mode is stiffened by the
     stabilisation of the transverse shear, see
-    :func:`test_twisting_mode_is_stabilised`. The membrane and bending stiffnesses of these thin
-    laminates differ by many orders of magnitude, so the matrix is scaled
-    symmetrically by its diagonal before the eigenvalues are counted, which
-    does not change the number of zero eigenvalues, and the smallest
-    non-zero eigenvalue is then well separated from the zero ones.
+    :func:`test_twisting_mode_is_stabilised`. The membrane and bending
+    stiffnesses of these thin laminates differ by many orders of magnitude,
+    so the matrix is scaled symmetrically by its diagonal before the
+    eigenvalues are counted, which does not change the number of zero
+    eigenvalues, and the smallest non-zero eigenvalue is then well
+    separated from the zero ones.
 
     """
     for name, prop in laminates().items():

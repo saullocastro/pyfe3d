@@ -351,7 +351,44 @@ class FreeDofs(object):
 
     def _fext(self, inc, silent, c, lbd):
         r"""Load vector of the free degrees-of-freedom, see
-        :class:`FreeDofs`"""
+        :class:`FreeDofs`
+
+        Parameters
+        ----------
+        inc : float
+            Load factor that multiplies the returned vector.
+        silent : bool
+            Passed to the ``calc_fext`` of the full model.
+        c : np.ndarray or None
+            Configuration of the free degrees-of-freedom, or ``None``.
+        lbd : float or None
+            Load factor of the configuration ``c``, or ``None``.
+
+        Returns
+        -------
+        f : np.ndarray
+            Load vector, 1-D array of the size of the free
+            degrees-of-freedom.
+
+        Notes
+        -----
+        With `f` the free and `k` the known degrees-of-freedom,
+
+        .. math::
+
+            \boldsymbol{f} = inc \left( \boldsymbol{F}_{ext,f} -
+            \boldsymbol{K}_{T,fk} \bar{\boldsymbol{u}}_k \right)
+
+        where `\boldsymbol{F}_{ext}` is the ``calc_fext`` of the full model
+        with ``inc=1``, at the configuration of :meth:`full` when it
+        depends on the configuration and ``c`` is given, and
+        `\boldsymbol{K}_{T,fk}` the block of the tangent stiffness matrix
+        of the full model at ``c`` and ``lbd`` that couples the free
+        degrees-of-freedom to the prescribed displacements
+        `\bar{\boldsymbol{u}}_k` = ``uk``. The second term is present only
+        when ``c`` and ``lbd`` are given and ``uk`` is not null.
+
+        """
         kwargs = {}
         if c is not None and self.config_dependent:
             kwargs['c'] = self.full(c, 0. if lbd is None else lbd)

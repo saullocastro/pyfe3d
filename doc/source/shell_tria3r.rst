@@ -60,6 +60,8 @@ reference, with :class:`.Tria3DSG` in parentheses:
 - Scordelis-Lo roof of Belytschko et al. (1985), Table 3, `N \times N` on
   the quarter: 0.975, 0.989, 0.994,
   0.996 for `N` = 8, 16, 32, 64 (0.853, 0.952, 0.984, 0.994);
+- pinched cylinder of Belytschko et al. (1985): 0.564, 0.852, 0.961, 0.996
+  for `N` = 8, 16, 32, 64 (0.545, 0.843, 0.958, 0.996);
 - twisted beam of MacNeal and Harder (1985), out-of-plane load: 0.933,
   0.988, 0.997 with 12x2, 48x4 and 192x8 cells (0.817, 0.954, 0.990);
 - pinched hemisphere with an 18 degree hole of Belytschko et al. (1985): 0.288, 0.862, 0.998, 1.011
@@ -70,10 +72,11 @@ rotation of a facet is made of the rotations that bend its neighbours, and
 the edge modes turn them into membrane strain, which stiffens an
 inextensional deformation. The penalty model, ``drilling_model = 1``, which
 has no Allman field, gives 0.929 and 0.988 at `N` = 8 and 16, whereas
-reducing ``gamma_rz`` hundredfold does not change the stiffening: it is in
-the enrichment, not in the Hughes-Brezzi coefficient. It is gone at `N =
-32`. This is why :class:`.Tria3DSG` is the better triangle on a coarse
-mesh of a doubly curved shell. The assembly of
+reducing ``gamma_rz`` hundredfold leaves the element at 0.309 at `N` = 8:
+the stiffening is in the enrichment, not in the Hughes-Brezzi coefficient.
+It is gone at `N = 32`. This is why :class:`.Tria3R` is the recommended
+triangle and :class:`.Tria3DSG` the better one on a coarse mesh of a
+doubly curved shell, see :doc:`element_choice`. The assembly of
 :meth:`.Tria3R.update_KC0` takes about half the time of that of
 :class:`.Tria3DSG`.
 
@@ -103,27 +106,25 @@ flexible coarse mesh, and on a thin cylinder in buckling it can make a
 mode at two elements per wavelength the critical one. The measurements are
 in the Notes of :mod:`pyfe3d.tria3r`.
 
+The factor also leaves the element unable to reproduce a state of constant
+transverse shear: on an 8 by 8 patch, the stiffness against a transverse
+displacement field with all rotations at zero is `3 \times 10^{-1}`, `2
+\times 10^{-2}` and `1 \times 10^{-3}` of that of :class:`.Quad4` at
+`\ell/h` of 1.25, 6.25 and 25, see
+``tests/test_transverse_shear_stiffness.py``. The geometric stiffness
+matrix works on the slopes of `w`, which is that subspace, and the
+buckling loads of thin shells are the most affected.
+
 
 Zero-energy modes
 -----------------
 
-A single free element has seven zero-energy modes: the six rigid-body
-motions and the mode of the rotations
-
-.. math::
-
-    u = v = w = r_z = 0, \qquad r_x = c \, (x - x_c), \qquad
-    r_y = c \, (y - y_c)
-
-about the centroid `(x_c, y_c)`, without curvature, `{r_y}_{,x} =
-{r_x}_{,y} = 0` and `-{r_x}_{,x} + {r_y}_{,y} = 0`, and without transverse
-shear strain. The bending and the transverse shear of the triangle have nine
-degrees-of-freedom and at most five independent constant strains, three
-curvatures and two transverse shear strains, so at least four of their
-modes have no energy, three being rigid-body motions. As the twisting mode
-of the one-point quadrilateral, Eq. (13) of Brockman (1987), the mode exists
-for a single element only: in an assembled mesh the neighbouring elements
-restrain it, see the Notes of :mod:`pyfe3d.tria3r`.
+A single free element has, with either ``shear_model``, the seven
+zero-energy modes of :class:`.Tria3DSG`, see :doc:`shell_tria3dsg`: the six
+rigid-body motions and the mode of the rotations `r_x = c \, (x - x_c)`,
+`r_y = c \, (y - y_c)` about the centroid, without curvature and without
+transverse shear strain, which the neighbouring elements restrain in an
+assembled mesh, see the Notes of :mod:`pyfe3d.tria3r`.
 
 
 What the element computes

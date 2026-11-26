@@ -51,12 +51,19 @@ def test_linear_buckling_plate(plot=False, mode=0):
     solution of [3]_, Sec. 10.2.1, p. 277, Eq. (10.46).
 
     The buckling load must not depend on the orientation of the plate. With
-    30x14 elements it is 1.41 % above the reference, measured on 2026-10-29
+    30x14 elements it is 1.41 % above the reference,
     with the default stabilisation of Quad4R, the physical stabilisation of
     the bending and of the transverse shear of Belytschko and Leviathan
     (1994) [4]_, see :mod:`pyfe3d.quad4r`.
 
     The grade A, at most 2 %, is that of [5]_, p. 14.
+
+    With ``K6ROT = 1e4`` the thick plate (``h = 0.05`` m) has a worse
+    drilling-to-bending stiffness ratio, causing an ill-conditioned
+    ``KC0uu`` (condition number about 1e14);
+    :func:`pyfe3d.solver.linear_buckling` equilibrates the diagonal,
+    estimates the Cayley shift and verifies that no lower load multiplier
+    was missed.
 
     References
     ----------
@@ -151,10 +158,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
             quad.c2 = DOF*nid_pos[n2]
             quad.c3 = DOF*nid_pos[n3]
             quad.c4 = DOF*nid_pos[n4]
-            # NOTE The thick plate (h=0.05 m) has a worse drilling-to-bending
-            #      stiffness ratio with K6ROT=1e4, causing an ill-conditioned
-            #      KC0uu (condition number ~1e14). A diagonal preconditioner
-            #      is used in the eigensolver to normalise KC0 diagonal to 1.
+            # NOTE K6ROT = 1e4, see the Notes of the docstring
             quad.K6ROT = 1e4
             quad.init_k_KC0 = init_k_KC0
             quad.init_k_KG = init_k_KG
@@ -203,9 +207,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
 
         num_eig_lb = max(mode+1, 3)
 
-        # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
-        #      estimates the Cayley shift and verifies that no lower load
-        #      multiplier was missed, which a hardcoded shift does not
+        # NOTE lowest load multipliers, see the Notes of the docstring
         eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
 
         load_mult = eigvals[0]

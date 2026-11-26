@@ -13,9 +13,6 @@ Truss - Linear truss 3D element with analytical integration (:mod:`pyfe3d.truss`
 
 .. currentmodule:: pyfe3d.truss
 
-.. note:: The :class:`.BeamC` element is recommended because of the better
-          physical representation.
-
 .. note:: The :class:`.Truss` element does not support linear buckling
           analysis.
 
@@ -117,9 +114,6 @@ cdef class Truss:
         ______   --> u  ->>- rx
         1    2
 
-
-    .. note:: The :class:`.BeamC` is recommended because of the better
-              physical representation.
 
     The constructor stores ``p`` in ``probe``, sets ``eid``, ``pid``,
     ``n1``, ``n2``, ``c1`` and ``c2`` to ``-1``, and sets the ``init_k_*``
@@ -260,6 +254,14 @@ cdef class Truss:
             u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`. Translations of
             dimension length and rotations, 1-D array of size ``6*M``.
 
+        Notes
+        -----
+        For each node, `\{u, v, w\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+        \{u, v, w\}^\top` and `\{r_x, r_y, r_z\}_e^\top =
+        \boldsymbol{T}_{3\times 3}^\top \{r_x, r_y, r_z\}^\top`, with
+        `\boldsymbol{T}_{3\times 3}` of :meth:`.update_rotation_matrix`,
+        whose columns are the element axes in global coordinates.
+
         """
         cdef int i, j
         cdef int c[2]
@@ -315,7 +317,9 @@ cdef class Truss:
         is normal to the `x` axis and to the vector obtained by a cyclic
         permutation of the components of the `x` axis, ``(xj, xk, xi)``, the
         `y` axis completes the right-handed system, and the three axes are
-        normalized.
+        normalized. An element whose `x` axis has three equal global
+        components gives a null `z` axis and a rotation matrix with ``nan``
+        entries.
 
 
         Parameters
@@ -325,6 +329,36 @@ cdef class Truss:
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
             y_2, z_2, ..., x_M, y_M, z_M`. Dimension length, 1-D array of size
             ``3*M``.
+
+        Notes
+        -----
+        With `\boldsymbol{x}_1` and `\boldsymbol{x}_2` the positions of the
+        two nodes, `\boldsymbol{e}_x = (\boldsymbol{x}_2 - \boldsymbol{x}_1) /
+        \|\boldsymbol{x}_2 - \boldsymbol{x}_1\| = \{e_{xi}, e_{xj},
+        e_{xk}\}^\top`, the off-axis vector `\boldsymbol{v}_{xy} = \{e_{xj},
+        e_{xk}, e_{xi}\}^\top` and
+
+        .. math::
+
+            \boldsymbol{e}_z = \frac{\boldsymbol{e}_x \times
+            \boldsymbol{v}_{xy}}{\|\boldsymbol{e}_x \times
+            \boldsymbol{v}_{xy}\|}, \qquad
+            \boldsymbol{e}_y = \boldsymbol{e}_z \times \boldsymbol{e}_x
+
+        and `\boldsymbol{T}_{3\times 3} = [\boldsymbol{e}_x, \boldsymbol{e}_y,
+        \boldsymbol{e}_z]`. The axis `\boldsymbol{e}_y` is thus the component
+        of `\boldsymbol{v}_{xy}` normal to `\boldsymbol{e}_x`, normalized.
+        The stiffness matrix, with axial and torsional terms only, does not
+        depend on the orientation of `\boldsymbol{e}_y` and
+        `\boldsymbol{e}_z` about the axis; the mass matrix depends on it
+        through the moments of the section, e.g. ``intrhoy`` and
+        ``intrhoz``, which are measured along these axes. A cyclic
+        permutation of the components leaves a vector unchanged only when the
+        three are equal: `\boldsymbol{v}_{xy}` is parallel to
+        `\boldsymbol{e}_x` for an element along the global direction
+        `\{1, 1, 1\}^\top`, where `\|\boldsymbol{e}_x \times
+        \boldsymbol{v}_{xy}\|` vanishes and the division gives the ``nan``
+        entries.
 
         """
         cdef double vxyi, vxyj, vxyk
@@ -400,6 +434,14 @@ cdef class Truss:
             y_2, z_2, ..., x_M, y_M, z_M`. Dimension length, 1-D array of size
             ``3*M``.
 
+        Notes
+        -----
+        For each node, `\{x, y, z\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+        \{x, y, z\}^\top`, with `\boldsymbol{T}_{3\times 3}` of
+        :meth:`.update_rotation_matrix`, whose columns are the element axes in
+        global coordinates. The element coordinates are thus measured from
+        the origin of the global system along the element axes.
+
         """
         cdef int i, j
         cdef int c[2]
@@ -442,6 +484,17 @@ cdef class Truss:
         The distance between the two nodes, computed from the coordinates
         ``probe.xe`` in the element coordinate system, is stored in the
         attribute ``length``. Called by :meth:`.update_probe_xe`.
+
+        Notes
+        -----
+        With the element coordinates `(x_i, y_i, z_i)` of nodes 1 and 2,
+
+        .. math::
+
+            L = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2 + (z_2 - z_1)^2}
+
+        which, the transformation to element coordinates being a rotation,
+        is the distance between the two nodes in global coordinates.
 
         """
         cdef double x1, x2, y1, y2, z1, z2

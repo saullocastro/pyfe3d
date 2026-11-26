@@ -46,7 +46,7 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
     0.33 % to 0.03 % below the reference, with 17x21 elements 0.40 % below to
     0.31 % above it, with 8x10 elements 0.78 % below to 2.43 % above it, with
     35x43 elements 0.14 to 0.31 % below it, with 53x65 elements 0.22 to 0.30 %
-    below it, converging to the Mindlin value above, measured on 2026-10-29
+    below it, converging to the Mindlin value above, 
     with the physical stabilisation of the bending and of the transverse shear
     of Belytschko and Leviathan (1994) [3]_ that Quad4R uses, see
     :mod:`pyfe3d.quad4r`.

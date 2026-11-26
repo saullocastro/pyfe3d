@@ -40,8 +40,8 @@ r_x, r_y\}`, which is exactly decoupled from the in-plane one for a flat
 element with `B = 0`, and the drilling enrichment acts only on the in-plane
 translations. They are therefore a property of the integration of the
 transverse shear of the plate formulation, measured in
-``test_quad4_spurious_shear_mode.py``. They predate the drilling work and are
-unrelated to it, which is why the assertion below compares the two drilling
+``test_quad4_spurious_shear_mode.py``. They are unrelated to the drilling
+formulation, which is why the assertion below compares the two drilling
 models against each other, besides checking the absolute count.
 
 References
@@ -117,6 +117,28 @@ def test_B1_rank_of_a_single_free_element():
 
     Those are the two in-plane translations and the rotation about the
     element normal. Any further zero would be a spurious in-plane mechanism.
+    The zero eigenvalues of the whole element matrix are also counted, for
+    the thick case: the two drilling models must agree and leave only the
+    six rigid-body modes.
+
+    Notes
+    -----
+    The null space of the whole element matrix is only counted for the
+    thick, well scaled case. For a thin plate the spectrum spans a factor of
+    the order of `(\ell/h)^2` between the membrane and the bending modes, so
+    the softest physical bending mode falls under any fixed relative
+    threshold and the count stops being meaningful, which is the
+    conditioning issue of a thin shell and not a rank defect.
+
+    The enrichment must not add any zero mode of its own. The absolute count
+    is a property of the transverse shear of the underlying plate
+    formulation: the assumed transverse shear strains of the MITC4 element,
+    the default ``shear_model = 1``, leave only the six rigid-body modes on
+    both shapes. With ``shear_model = 0`` the square, `h/\ell = 1`, gets
+    them as well, and the distorted quadrilateral, `h/\ell = 0.63`, the
+    one-point rule, which leaves eight. Those extra modes live entirely in
+    the out-of-plane block, which the enrichment leaves untouched, so the
+    meaningful assertion is that the two models agree.
 
     """
     for prop in (isotropic_plate(thickness=1., E=1., nu=0.3),
@@ -135,12 +157,7 @@ def test_B1_rank_of_a_single_free_element():
                 assert ev[3]/ev.max() > 1.e-11
 
     # NOTE the null space of the whole element matrix is only counted for the
-    #      thick, well scaled case. For a thin plate the spectrum spans a
-    #      factor of the order of (l/h)**2 between the membrane and the
-    #      bending modes, so the softest physical bending mode falls under
-    #      any fixed relative threshold and the count stops being meaningful,
-    #      which is the conditioning issue of a thin shell and not a rank
-    #      defect
+    #      thick, well scaled case, see the Notes
     prop = isotropic_plate(thickness=1., E=1., nu=0.3)
     for ncoords in (SQUARE, DISTORTED):
         counts = {}
@@ -150,16 +167,9 @@ def test_B1_rank_of_a_single_free_element():
             counts[drilling_model] = nzf
             print('full element, drilling_model %d: %d zeros'
                   % (drilling_model, nzf))
-        # the enrichment must not add any zero mode of its own. The absolute
-        # count is a property of the transverse shear of the underlying plate
-        # formulation: the assumed transverse shear strains of the MITC4
-        # element, the default shear_model = 1, leave only the six
-        # rigid-body modes on both shapes. With shear_model = 0 the square,
-        # h/l = 1, gets them as well, and the distorted quadrilateral,
-        # h/l = 0.63, the one-point rule, which leaves eight.
-        # Those extra modes live entirely in the out-of-plane block, which
-        # the enrichment leaves untouched, so the meaningful assertion is
-        # that the two models agree
+        # the enrichment must not add any zero mode of its own: the two
+        # models agree, and only the six rigid-body modes are left, see the
+        # Notes
         assert counts[0] == counts[1], counts
         assert counts[0] == 6, counts
 
@@ -207,12 +217,18 @@ def test_B2_spurious_allman_mode_is_removed():
 def test_B3_coplanar_mesh_is_not_singular_without_a_user_parameter():
     r"""A flat mesh loses its drilling singularity with K6ROT = 0
 
+    With the penalty switched off, the rows and columns of every drilling
+    degree-of-freedom of the unenriched formulation must be exactly zero,
+    and the physics-based stiffness must remove exactly one zero eigenvalue
+    per node, without any user parameter.
+
+    Notes
+    -----
     On a coplanar mesh the drilling rotation appears in no strain measure of
     the unenriched formulation, so with the penalty switched off the rows and
     columns of every drilling degree-of-freedom are exactly zero and the
     global matrix has one zero eigenvalue per node on top of the rigid-body
-    modes. The physics-based stiffness removes exactly those, without any
-    user parameter.
+    modes. The physics-based stiffness removes exactly those.
 
     The assertion is a difference of counts rather than positive
     definiteness of the constrained matrix, because this element has a
@@ -336,6 +352,15 @@ def quad4r_KC0(ncoords, prop, drilling_model=0, K6ROT=100., gamma_rz=-1.):
 def test_B6_quad4r_drilling_rank_and_energy():
     r"""The drilling stiffness of :class:`pyfe3d.Quad4R`
 
+    With either the physics-based coefficient `\gamma_{r_z} = A_{66}` or
+    the fictitious `K6ROT \cdot 10^{-6} A_{66}`, the in-plane block must
+    have three zero-energy modes over the twelve in-plane
+    degrees-of-freedom `u`, `v` and `r_z`, and the closed-form energy of
+    the uniform drilling state must be reproduced. With `\gamma_{r_z} = 0`
+    seven zero-energy modes must be left.
+
+    Notes
+    -----
     That element applies the regularised operator of Hughes and Brezzi
     (1989) without the enrichment of Allman (1984), see the module
     documentation of :mod:`pyfe3d.quad4r`, with either the physics-based

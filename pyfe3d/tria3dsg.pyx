@@ -38,9 +38,7 @@ in-plane bending, :class:`pyfe3d.tria3r.Tria3R` and :class:`pyfe3d.quad4.Quad4`
 carry one. :class:`pyfe3d.tria3r.Tria3R` takes, by
 default, the transverse shear field of this element, so the two triangles
 differ only in the membrane and drilling terms, see :mod:`pyfe3d.tria3r`.
-With its enriched membrane :class:`pyfe3d.tria3r.Tria3R` is the recommended
-triangle; this element is the better choice on a coarse mesh of a doubly
-curved shell, where it is the less stiff of the two. Geometrically nonlinear analyses with the von Kármán membrane
+Geometrically nonlinear analyses with the von Kármán membrane
 strains are supported by :meth:`.Tria3DSG.update_fint` with ``nonlinear=1``,
 :meth:`.Tria3DSG.update_KCNL` and :meth:`.Tria3DSG.update_KG`.
 
@@ -49,28 +47,12 @@ Notes
 The transverse shear field is obtained with the discrete shear gap (DSG)
 method of Bletzinger, Bischoff and Ramm (2000) [1]_.
 
-.. rubric:: Why this element exists
+.. rubric:: Shear locking and the optional stabilisation
 
-A transverse shear taken from a single point at the centroid, as in
-:class:`pyfe3d.tria3r.Tria3R` with ``shear_model = 0``, still locks;
-dividing the transverse shear stiffnesses by `1 + \alpha \ell^2/h^2`, e.g.
-with `\alpha = 0.7`, following Lyly, Stenberg and Vihinen (1993) [2]_,
-cures the locking only in part. On a thin plate the error that remains
-stalls under refinement at a value set by
-`\alpha`, -14 per cent on the deflection of a simply supported plate with
-`a/h = 1000`, see the Notes of :mod:`pyfe3d.tria3r`, and the factor leaves
-the element unable to reproduce a state of
-constant transverse shear: measured on an 8 by 8 patch, its stiffness
-against a transverse displacement field with all rotations at zero is
-`3 \times 10^{-1}`, `2 \times 10^{-2}` and `1 \times 10^{-3}` of the
-:class:`pyfe3d.quad4.Quad4` value at `\ell/h` of 1.25, 6.25 and 25. A
-Donnell geometric stiffness matrix works on `\partial w/\partial x`, which
-is exactly that subspace, so thin-shell buckling suffers badly. See
-``tests/test_transverse_shear_stiffness.py``.
-
-The DSG removes the locking in the operator instead of in the constitutive
-matrix, so no stabilisation parameter is needed and the transverse shear
-stiffness is used as the laminate gives it.
+A transverse shear field taken from the linear interpolation of `w`, `r_x`
+and `r_y` locks. The DSG removes the locking in the operator instead of in
+the constitutive matrix, so no stabilisation parameter is needed and the
+transverse shear stiffness is used as the laminate gives it.
 
 The algebraic stabilisation of Lyly, Stenberg and Vihinen (1993) [2]_, called
 Stenberg's method by Bischoff and Bletzinger (2004) [3]_ (Sec. 3.1), is
@@ -92,7 +74,8 @@ element's field with `\alpha = 0`, and the same remarks then apply to it.
 
 The default here is zero because the factor is unbounded in `\ell/h`, so any
 non-zero `\alpha` removes nearly all of the transverse shear stiffness on a
-practical shell mesh and with it the three properties listed above. The
+practical shell mesh and with it the properties of the discrete shear gap
+field listed below. The
 Notes of :class:`.Tria3DSG` carry the measurements and the recommended value
 of ``alpha_shear_locking``.
 
@@ -193,8 +176,7 @@ enrichment, integrates it with a single point at the centroid.
     enrichment of Allman (1984) [6]_ that :class:`pyfe3d.tria3r.Tria3R` and
     :class:`pyfe3d.quad4.Quad4` apply to the in-plane displacement field, so
     its membrane response in in-plane bending is the stiff one of the
-    constant-strain triangle. The element is aimed at the transverse shear
-    behaviour; for in-plane dominated problems prefer the enriched elements.
+    constant-strain triangle.
 
 .. rubric:: Geometrically nonlinear analysis
 
@@ -1440,8 +1422,8 @@ cdef class Tria3DSG:
         # NOTE the drilling term must be integrated with three points and
         #      not one: a single point supplies a single constraint, which
         #      leaves two of the three r_z degrees-of-freedom unconstrained
-        #      and two spurious modes that survive assembly. Measured
-        #      before this was fixed: an assembled patch had 8 zero
+        #      and two spurious modes that survive assembly: with one
+        #      point an assembled patch has 8 zero
         #      eigenvalues instead of 6. Tria3R integrates its drilling
         #      term fully for the same reason. The integrand is quadratic
         #      in the shape functions, so the three-point interior rule

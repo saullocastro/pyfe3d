@@ -242,8 +242,13 @@ def test_linear_buckling_plate():
     it with 60x18 elements, 4.31 % with 20x6 elements, 1.03 % with 40x12
     elements and 0.23 % with 80x24 elements; with the slopes at the
     centroid, 0.69 %, 6.81 %, 1.61 % and 0.37 % with ``centroid_slopes =
-    1``, and 0.41 %, 4.67 %, 1.09 % and 0.16 % with ``shear_model = 0``
-    (measured on 2026-11-01).
+    1``, and 0.41 %, 4.67 %, 1.09 % and 0.16 % with ``shear_model = 0``.
+
+    The load multiplier of :func:`.linear_buckling` and that of the
+    hand-rolled recipe are not bit-identical because the shift differs,
+    estimated in the former and hardcoded to 1 in the latter, so they agree
+    only to the tolerance requested of the eigensolver, which is 1e-9 in
+    both calls.
     """
     Nxx = -1.
     KC0uu, KGuu = plate_matrices(Nxx=Nxx, nx=61, ny=19)
@@ -261,10 +266,8 @@ def test_linear_buckling_plate():
     assert np.isclose(P_cr_theory, P_cr_calc, rtol=0.01)
 
     # NOTE the same answer as the recipe spelled out in the other tests of
-    #      this suite. The two are not bit-identical because the shift
-    #      differs, estimated here and hardcoded to 1 there, so they agree
-    #      only to the tolerance requested of the eigensolver, which is
-    #      1e-9 in both calls below
+    #      this suite, with the tolerance 1e-9 of the eigensolver in both
+    #      calls below
     lam_est, _ = linear_buckling(KC0uu, KGuu, num_eigvalues=4, tol=1e-9)
     P = diagonal_preconditioner(KC0uu)
     mu, _ = eigsh(A=P @ KGuu @ P, k=4, which='SM', M=P @ KC0uu @ P,

@@ -29,7 +29,12 @@ def solve(A, b, **kwargs):
     degrees-of-freedom, e.g. ``KC0uu = KC0[bu, :][:, bu]``: a null row or
     column, see :func:`.check_null_rows_cols`, and an exactly singular
     matrix raise an error instead of giving a solution with NaN values, as
-    :func:`scipy.sparse.linalg.spsolve` does.
+    :func:`scipy.sparse.linalg.spsolve` does with its
+    :class:`scipy.sparse.linalg.MatrixRankWarning`. The system is solved as
+    given: in a finite element model the known displacements are
+    partitioned out beforehand, and a null row or column of ``A`` is a
+    degree-of-freedom without stiffness, i.e. a modelling error, which is
+    reported instead of being removed.
 
     Parameters
     ----------
@@ -58,22 +63,6 @@ def solve(A, b, **kwargs):
     See Also
     --------
     linear_static : the linear static analysis based on it.
-
-    Notes
-    -----
-    The system `\boldsymbol{A} \boldsymbol{x} = \boldsymbol{b}` is solved as given. In a finite element
-    model the known displacements are partitioned out beforehand, and a null
-    row or column of `\boldsymbol{A}` is a degree-of-freedom without stiffness, i.e. a
-    modelling error, which is reported instead of being removed, see
-    :func:`.check_null_rows_cols`.
-
-    An exactly singular matrix is detected by the factorization, which
-    raises, instead of the :class:`scipy.sparse.linalg.MatrixRankWarning` and
-    the NaN values of :func:`scipy.sparse.linalg.spsolve`. Turning that
-    warning into an error needs a :func:`warnings.catch_warnings` block,
-    whose exit resets the registry of the warnings already shown, of every
-    module, such that the warnings of the caller shown once per location
-    would be shown again after each call.
 
     """
     A = csc_matrix(A)

@@ -29,7 +29,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
     Notes
     -----
     With this mesh the buckling load is 4.3 % above the exact solution of
-    Leissa (1969), Sec. 10.2.1, p. 277, Eq. (10.46), with the default ``shear_model = 1`` (measured on 2026-11-01);
+    Leissa (1969), Sec. 10.2.1, p. 277, Eq. (10.46), with the default ``shear_model = 1``;
     the convergence to that solution with the mesh is verified by the flat
     plate of :func:`test_solver.test_linear_buckling_plate`, the same
     element, plate, boundary conditions and given stress, where it is
@@ -150,7 +150,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
             
             # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
             #      estimates the Cayley shift and verifies that no lower load
-            #      multiplier was missed, which a hardcoded shift does not
+            #      multiplier was missed
             eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
 
             load_mult = eigvals[0]

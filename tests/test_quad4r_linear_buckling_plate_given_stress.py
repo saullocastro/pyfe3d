@@ -36,7 +36,7 @@ def test_linear_buckling(mode=0, refinement=3):
     (m*b/a + a/(m*b))**2``. With 92x44 elements the buckling load is above the
     reference by 0.11 %, with 62x30 elements 0.30 %, with 30x14 elements
     1.48 %, with 124x60 elements 0.02 %, with 186x90 elements 0.04 % below it,
-    measured on 2026-10-29 with the physical stabilisation of the bending and
+    with the physical stabilisation of the bending and
     of the transverse shear of Belytschko and Leviathan (1994) [2]_ that
     Quad4R uses, see :mod:`pyfe3d.quad4r`.
 
@@ -161,7 +161,7 @@ def test_linear_buckling(mode=0, refinement=3):
 
     # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
     #      estimates the Cayley shift and verifies that no lower load
-    #      multiplier was missed, which a hardcoded shift does not
+    #      multiplier was missed
     eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
 
     load_mult = eigvals[0]

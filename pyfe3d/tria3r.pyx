@@ -33,16 +33,7 @@ what distinguishes this element from :class:`pyfe3d.tria3dsg.Tria3DSG`. With
 ``shear_model = 0`` the transverse shear is sampled at the centroid and its
 stiffness divided by `1 + \alpha \ell^2/h^2`, e.g. with
 ``alpha_shear_locking = 0.7``; that field does not converge on thin plates
-and shells and is not recommended, see the Notes.
-
-:class:`.Tria3R` is the recommended triangle of pyfe3d. With the same
-transverse shear field, it gives the results of
-:class:`pyfe3d.tria3dsg.Tria3DSG` on flat plates in bending, buckling and
-vibration, is much better in in-plane bending, better on shells whose
-response mixes membrane and bending, and cheaper to assemble. The exception
-is a coarse mesh of a doubly curved shell, where its drilling enrichment
-makes it stiffer than :class:`pyfe3d.tria3dsg.Tria3DSG`, which is then the
-better choice; the measurements are in the Notes.
+and shells, see the Notes.
 
 The drilling rotation `r_z` is given stiffness by one of two models, selected
 with the ``drilling_model`` attribute of :class:`.Tria3R`: the physics-based
@@ -80,42 +71,19 @@ bending, the two give the same results to round-off, measured at `2 \times
 applies the factor below on top of the DSG field, exactly as
 :class:`.Tria3DSG` does, whose Notes give the measurements.
 
-Compared with :class:`.Tria3DSG`, the Allman membrane makes this element much
-better in in-plane bending, better on shells whose response mixes membrane
-and bending, and no worse on plates; on the coarse meshes of a doubly curved
-shell in inextensional bending it is stiffer. Measured with quadrilateral
-meshes split along the diagonal 1-3, normalised by the reference:
-
-- Cook's skew membrane, reference 23.956 of Felippa [11]_ (Sec. 9.3),
-  `n \times n` cells: 0.864, 0.948, 0.982 and 0.994 for `n` = 4, 8, 16 and
-  32, against 0.457, 0.713, 0.896 and 0.970 for :class:`.Tria3DSG`;
-- the Scordelis-Lo roof of Belytschko et al. [12]_ (Table 3), reference
-  0.3024, `N \times N` on the quarter: 0.975, 0.989, 0.994 and 0.996 for `N`
-  = 8, 16, 32 and 64, against 0.853, 0.952, 0.984 and 0.994;
-- the pinched cylinder of [12]_: 0.564, 0.852, 0.961 and 0.996, against
-  0.545, 0.843, 0.958 and 0.996;
-- the twisted beam of MacNeal and Harder [13]_ (Table 3), out-of-plane load:
-  0.933, 0.988 and 0.997 with 12x2, 48x4 and 192x8 cells, against 0.817,
-  0.954 and 0.990;
-- the pinched hemisphere with an 18 degree hole of [12]_, reference 0.0924:
-  0.288, 0.862, 0.998 and 1.011 for `N` = 8, 16, 32 and 64, against 0.451,
-  0.926, 0.998 and 1.009. On these coarse meshes of a doubly curved surface
-  the drilling rotation of one facet is made of the rotations that bend its
-  neighbours, and the edge modes of the Allman field turn them into
-  membrane strain, which stiffens an inextensional deformation. The
-  penalty drilling model, ``drilling_model = 1``, which has no Allman
-  field, gives 0.929 and 0.988 at `N` = 8 and 16, whereas reducing
-  ``gamma_rz`` hundredfold leaves this element at 0.309 at `N` = 8: the
-  stiffening is in the enrichment, not in the Hughes-Brezzi coefficient.
-  It is gone at `N = 32`.
-
-The assembly of :meth:`.Tria3R.update_KC0` takes about half the time of
-the one of :class:`.Tria3DSG`, 0.64 against 1.36 s for 80000 elements on
-one thread.
-
-These measurements are why :class:`.Tria3R` is the recommended triangle, and
-why :class:`.Tria3DSG` is the better choice on a coarse mesh of a doubly
-curved shell.
+The Allman membrane is the only difference from :class:`.Tria3DSG`. It
+improves the in-plane bending, e.g. of the skew membrane of Cook with the
+reference of Felippa [11]_ (Sec. 9.3), and the response of shells that mixes
+membrane and bending, e.g. of the Scordelis-Lo roof and the pinched cylinder
+of Belytschko et al. [12]_ and of the twisted beam of MacNeal and Harder
+[13]_. On a coarse mesh of a doubly curved surface in inextensional bending,
+e.g. the pinched hemisphere of [12]_, the drilling rotation of one facet is
+made of the rotations that bend its neighbours, and the edge modes of the
+Allman field turn them into membrane strain, which stiffens the
+deformation. This stiffening is in the enrichment, not in the Hughes-Brezzi
+coefficient: the penalty drilling model, ``drilling_model = 1``, which has
+no Allman field, does not show it, reducing ``gamma_rz`` hundredfold does
+not remove it, and it vanishes with mesh refinement.
 
 .. rubric:: Transverse shear with ``shear_model = 0``
 
@@ -162,8 +130,9 @@ centroid sample locks, and here the factor has to do the unlocking.
     The buckling load of that plate under a uniform compression, `a/h =
     1000`, stalls at +16.4 per cent and its first frequency at +8.0 per cent
     with `\alpha = 0.7`, where the default converges to +0.02 per cent. On
-    shells, with `\alpha = 0.7`, the hemisphere above stalls at 0.826 from
-    `N = 32` to 64 and the Scordelis-Lo roof is at 0.894 with `N = 64`. A
+    shells, with `\alpha = 0.7` and `N \times N` cells split in two, the
+    pinched hemisphere of [12]_ stalls at 0.826 of the reference from `N =
+    32` to 64 and the Scordelis-Lo roof is at 0.894 with `N = 64`. A
     larger `\alpha` moves the stall at the price of a much too flexible
     coarse mesh, and on a thin cylinder in buckling the large factor admits
     a mode at two elements per wavelength, the mesh Nyquist limit, that
@@ -254,11 +223,9 @@ meaningless. The penalty energy is defined per element as:
     U_{r_z} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
 
 where `10^{-6}` is a scaling factor suggested by MSC Nastran's approach
-(CQUAD4) to make the artificial drilling stiffness sufficiently small.
-AUTODESK NASTRAN's quick reference guide recommends `K6ROT = 100` for static
-analysis. For modal solutions, `K6ROT = 10^4` is suggested. MSC NASTRAN's
-quick reference guide states that `K6ROT > 100` should not be used, thus
-contradicting AUTODESK NASTRAN. The rotation `r_z` represents the drilling
+(CQUAD4) to make the artificial drilling stiffness sufficiently small. The
+values of ``K6ROT`` are discussed in the Notes of :class:`.Tria3R`. The
+rotation `r_z` represents the drilling
 degree-of-freedom in element's coordinates, whereas `\theta_z` the in-plane
 rotation strain, defined as `\theta_z = \frac{1}{2}\left(v_{,x} -
 u_{,y}\right)`, such that the penalty is built from the operator
@@ -275,14 +242,6 @@ motions and all constant-strain states exactly. `A_{66}` is assumed constant
 over the element. This term is integrated with the three-point rule. The
 approach herein presented is very similar to the one presented in Eq. 2.20 of
 [6]_.
-
-**Choosing between them.** The physics-based model is the default because it
-is the one that is correct when the drilling moment is part of the load path,
-when shells are connected to beams or stiffeners that must transmit in-plane
-moments, or when the mesh is too coarse for the unenriched membrane response
-to be trusted. It is markedly more accurate in in-plane bending: on Cook's
-skew membrane with a four by four mesh of split quadrilaterals it gives 20.7
-against the reference 23.9, where the penalty gives 11.3.
 
 .. rubric:: Zero-energy modes of a single element
 

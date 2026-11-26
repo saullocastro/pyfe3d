@@ -135,9 +135,14 @@ def CUS_C():
 def tip_closed_form(C, L, f):
     r"""Tip displacements of a cantilever with the sectional stiffness ``C``
 
-    Derived here. Clamped at `x = 0`, loaded at `x = L` by ``f`` `=
-    \{P_x, P_y, P_z, T, M_y, M_z\}`, work-conjugate to `\{u, v, w, r_x,
-    r_y, r_z\}`. The strain energy `\frac{1}{2} \int_0^L
+    Clamped at `x = 0`, loaded at `x = L` by ``f`` `= \{P_x, P_y, P_z, T,
+    M_y, M_z\}`, work-conjugate to `\{u, v, w, r_x, r_y, r_z\}`. Without
+    couplings, `v(L) = P_y L^3/(3 C_{44}) + P_y L/C_{11}`, Eq. (1.2) of
+    Bathe, Finite Element Procedures, 2014, p. 5.
+
+    Notes
+    -----
+    Derived here. The strain energy `\frac{1}{2} \int_0^L
     \boldsymbol{\epsilon}^\top \boldsymbol{C} \boldsymbol{\epsilon} dx`,
     with `\boldsymbol{\epsilon} = \{u_{,x}, v_{,x} - r_z, w_{,x} + r_y,
     {r_x}_{,x}, -{r_z}_{,x}, {r_y}_{,x}\}`, gives with the virtual work the
@@ -151,8 +156,7 @@ def tip_closed_form(C, L, f):
     `\boldsymbol{S} = \boldsymbol{C}^{-1}`, and, integrating with zero
     displacements at `x = 0`, `r_z = -\int \epsilon_4`, `r_y = \int
     \epsilon_5`, `v = \int (\epsilon_1 + r_z)` and `w = \int (\epsilon_2 -
-    r_y)`. Without couplings, `v(L) = P_y L^3/(3 C_{44}) + P_y L/C_{11}`,
-    Eq. (1.2) of Bathe, Finite Element Procedures, 2014, p. 5.
+    r_y)`.
     """
     S = np.linalg.inv(C)
     Px, Py, Pz, T, My, Mz = f
@@ -355,7 +359,7 @@ def test_BeamC_exact_with_any_coupling():
     """One BeamC gives the closed form :func:`tip_closed_form` of the six
     tip loads for each single coupling of 0.3 times the square root of the
     product of the diagonal entries, for a ``C`` with all 21 entries
-    non-zero and for the CUS box; measured on 2026-10-31, the largest
+    non-zero and for the CUS box; the largest
     error is 2.7e-15 of the largest tip displacement for the single
     couplings, 2.0e-15 for the 21 entries and 5.4e-16 for the CUS box,
     against 7.5e-3 to 8.9e-2 (single couplings other than ``C[0, 3]``) and
@@ -507,7 +511,7 @@ def test_general_shape_functions_uncoupled(base):
     the square root of ``C[1, 1]*C[5, 5]`` switches to their general
     evaluation from ``inv(C)``, see the notes of :class:`pyfe3d.beamc.BeamC`,
     which gives the same matrices and internal forces to round-off;
-    measured on 2026-10-31 up to 1.3e-14 of the largest entry, for the
+    the differences are up to 1.3e-14 of the largest entry, for the
     nonlinear stiffness matrix KCNL"""
     p = general_prop()
     if base == 'attributes':
@@ -663,7 +667,7 @@ def test_coupled_frequencies_CUS():
     mass integrals of :func:`coupled_mass` scaled by 1e-5: BeamC converges
     as the square of the element length to the frequencies of BeamLR,
     extrapolated with Richardson's rule from 256 and 1024 elements;
-    measured on 2026-10-31, the relative errors of the first eight
+    the relative errors of the first eight
     frequencies are 3.2e-5 to 1.7e-2 with 16 BeamC elements and 2.0e-6 to
     1.1e-3 with 64, the error of 1024 BeamLR elements being at most 1.1e-5.
     Without the couplings, i.e. with the diagonal of ``C`` and of the mass

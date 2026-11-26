@@ -1063,8 +1063,14 @@ def test_spring_triad_projector():
 def test_spring_base_tangent():
     r"""At ``u = 0`` the tangent of a zero-length spring and of an axial
     spring along its axis equals ``KC0``; that of a spring with transverse
-    stiffnesses between distinct nodes differs, because the linear element
-    does not balance the moments of its transverse forces"""
+    stiffnesses between distinct nodes differs
+
+    Notes
+    -----
+    The tangent of the spring with transverse stiffnesses between distinct
+    nodes differs from ``KC0`` because the linear element does not balance
+    the moments of its transverse forces.
+    """
     for case, equal in (('Spring_zero_length', True), ('Spring_axis', True),
                         ('Spring_triad', False)):
         w = single_new(case)
@@ -1119,9 +1125,9 @@ def new_mixed_model():
 
 
 def test_new_mixed_model_tangent_fd():
-    r"""``calc_kC + calc_kG`` of a model with the new elements and the three
-    kinematics equal to central differences of ``calc_fint``, plus a
-    zero-length spring in a model of its own"""
+    r"""``calc_kC + calc_kG`` of a model with the elements of ``NEW`` and
+    the three kinematics equal to central differences of ``calc_fint``,
+    plus a zero-length spring in a model of its own"""
     model, X = new_mixed_model()
     rng = np.random.default_rng(24)
     u = 0.02*rng.standard_normal(model.N)
@@ -1281,9 +1287,15 @@ def test_cr_von_karman_tangent_fd(name, case):
 def test_cr_von_karman_against_linear(name):
     r"""At ``u = 0`` the tangent with ``local='von_karman'`` equals that
     with ``'linear'``; at a large deformed configuration both give the same
-    force and tangent to round-off for the shells and BeamLR, whose von
-    Kármán terms vanish in the CR frame (see :class:`CorotationalShell`),
-    and differ for BeamC; the probe is left unchanged"""
+    force and tangent to round-off for the shells and BeamLR, and differ
+    for BeamC; the probe is left unchanged
+
+    Notes
+    -----
+    The von Kármán terms of the shells and of BeamLR vanish in the CR frame
+    (see :class:`CorotationalShell`), hence the same force and tangent as
+    with ``'linear'``.
+    """
     wv, wl = single_vk(name), single_vk(name, local='linear')
     n6 = wv.dofs.size
     fv, KMv, KGv = wv.evaluate(np.zeros(n6))
@@ -1321,9 +1333,15 @@ def test_cr_von_karman_quad4_centroid_slopes(shear_model):
     of the element is left at its value. The element itself, at the
     deformational displacements ``d`` of the wrapper and with the default
     ``centroid_slopes = 0``, gives von Kármán terms with ``shear_model =
-    1``, the slopes at the two-by-two points, under which the hourglass
-    pattern of the transverse translations of ``d`` has a slope, and none
-    with ``shear_model = 0`` (derived here)"""
+    1`` and none with ``shear_model = 0``
+
+    Notes
+    -----
+    With ``shear_model = 1`` and ``centroid_slopes = 0`` the element takes
+    the slopes at the two-by-two points, under which the hourglass pattern
+    of the transverse translations of ``d`` has a slope, hence its von
+    Kármán terms; with ``shear_model = 0`` there are none (derived here).
+    """
     base = single('Quad4')
     elem = base.elem
     elem.shear_model = shear_model

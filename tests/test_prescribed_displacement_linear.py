@@ -172,7 +172,7 @@ def test_partition_by_hand():
     u = solve_by_partition(KC0, bu, bk, uk, f)
     P, P_EB = tip_force(delta, prop, L)
     # NOTE reactions from the second row of the partition and from
-    #      update_fint, step 7 of the overview
+    #      update_fint
     R_partition = np.zeros(N)
     R_partition[bk] = (KC0[bk, :][:, bu] @ u[bu] + KC0[bk, :][:, bk] @ uk[bk]
                        - f[bk])

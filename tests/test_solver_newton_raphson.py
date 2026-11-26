@@ -1,8 +1,7 @@
 r"""Tests for :mod:`pyfe3d.solver.newton_raphson`, against analytic problems and dense reference solutions
 
-All problems have an exact tangent stiffness matrix ``kT = kC + kG`` that is
-the Jacobian of ``fint``, such that full Newton-Raphson must converge
-quadratically near the solution. The problems of ``analytic_problems.py``,
+All problems have an exact tangent stiffness matrix ``kT = kC + kG``, the
+Jacobian of ``fint``. The problems of ``analytic_problems.py``,
 hardening springs, the shallow von Mises truss of Crisfield (1991), Sec. 1.2,
 Eq. (1.7), and a linear problem, are checked against the equilibrium, the
 solution of a plain dense Newton-Raphson, the exact apex deflection of the
@@ -12,6 +11,9 @@ covered.
 
 Notes
 -----
+The tangent stiffness matrix being the Jacobian of ``fint``, full
+Newton-Raphson must converge quadratically near the solution.
+
 With the internal force of the shallow truss theory of [1]_, Sec. 1.2, Eq.
 (1.7), two bars, ``EA/l**3 = 1`` and the rise ``z = 1``, the apex
 deflection ``w``, positive towards the base, satisfies ``F(w) = w**3 -
@@ -152,7 +154,9 @@ def test_nr_softening_with_step_cutting():
     Notes
     -----
     The reference apex deflection is ``exact_apex_deflection(0.99)``, the
-    root of the shallow truss equilibrium given in the module Notes.
+    root of the shallow truss equilibrium given in the module Notes. With
+    the tolerance 1e-6 of the residual and the tangent at 0.99 of the limit
+    load, about 1/4 of the initial one, the error in ``w`` is below 1e-5.
     """
     p = von_mises_truss(frac=0.99)
     # plain Newton needs 5 corrections to reach relTOL=1e-6 at full load, a
@@ -165,8 +169,7 @@ def test_nr_softening_with_step_cutting():
     np.testing.assert_allclose(p.an.cs[-1], ref, rtol=1e-6)
     # the converged apex deflection is before the limit point
     assert p.an.cs[-1][0] < 1 - 1/np.sqrt(3)
-    # NOTE rtol of the residual 1e-6, the tangent at 0.99 of the limit load
-    #      is about 1/4 of the initial one: the error in w is below 1e-5
+    # NOTE error in w below 1e-5, see Notes
     np.testing.assert_allclose(p.an.cs[-1][0], exact_apex_deflection(0.99),
                                rtol=1e-5)
 
@@ -311,10 +314,16 @@ def inconsistent_tangent(factor=0.1):
 
 
 def test_nr_line_search_shortens_a_too_long_direction(capsys):
-    r"""With a direction 10 times too long, `\phi(1) = 81 \phi(0)` for a
+    r"""With a direction 10 times too long, the line search shortens the
+    step to `\eta = 0.1`, which recovers the Newton step: the run converges
+    to the reference solution, logging the step length
+
+    Notes
+    -----
+    With a direction 10 times too long, `\phi(1) = 81 \phi(0)` for a
     nearly linear residual, and the minimum of the quadratic interpolation
-    is cut to its safeguard, `\eta = 0.1`, which recovers the Newton step:
-    the run converges to the reference solution, logging the step length"""
+    is cut to its safeguard, `\eta = 0.1`.
+    """
     p, h = inconsistent_tangent()
     p.analysis(initialInc=1., line_search=True)
     p.an.static(NLgeom=True, silent=False)

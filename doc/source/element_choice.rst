@@ -242,8 +242,9 @@ Beams, truss and spring
         :doc:`cross_sectional_analysis`.
     * - :class:`.Truss`
       - Axial and torsional stiffness only, linear analyses and mass matrix,
-        without geometric stiffness matrix, hence no linear buckling. The
-        documentation of :mod:`.truss` recommends :class:`.BeamC` instead.
+        without geometric stiffness matrix, hence no linear buckling.
+        :class:`.BeamC` is recommended instead, because of its better
+        physical representation.
     * - :class:`.Spring`
       - Six constant stiffnesses, ``kxe, kye, kze, krxe, krye, krze``,
         between the same dofs of two nodes, in the element coordinate
@@ -252,7 +253,7 @@ Beams, truss and spring
 
 The cross section of the beams and of the truss is given by a
 :class:`.BeamProp`, whose integrals are taken in the element coordinate
-system, see :doc:`shell_properties`. Its orientation is defined by the
+system, see :doc:`beam_properties`. Its orientation is defined by the
 vector ``vxyi, vxyj, vxyk`` of ``update_rotation_matrix``, see
 :doc:`conventions`. The beams have a transverse shear modulus for each
 plane of bending, ``G12`` for the element `xy` plane and ``G13`` for the

@@ -427,11 +427,7 @@ def abar_ts(stack, plyts, G13, G23):
 def test_lamination_parameters_three_dimensional_constants(material, layup):
     r"""Both routes give the plane-stress stiffnesses when e3 is given
 
-    The shell elements are plane stress, `\sigma_{33} = 0`: the reduced
-    stiffnesses depend on E1, E2, nu12, G12, G13 and G23 only (Reddy, 2003,
-    Eq. (2.4.4), p. 101; Jones, 1999, Eqs. (2.64) and (2.66), p. 72), and the
-    invariants of Tsai and Pagano are those of the reduced stiffnesses
-    (Jones, 1999, Eq. (2.99), p. 86). :func:`.laminated_plate` and
+    :func:`.laminated_plate` and
     :func:`.shellprop_from_LaminationParameters`, with the lamination
     parameters of the same layup, must give A, B and D of the classical
     lamination theory, ``clt_abd``, and the constant-strain transverse shear
@@ -442,6 +438,12 @@ def test_lamination_parameters_three_dimensional_constants(material, layup):
 
     Notes
     -----
+    The shell elements are plane stress, `\sigma_{33} = 0`: the reduced
+    stiffnesses depend on E1, E2, nu12, G12, G13 and G23 only (Reddy, 2003,
+    Eq. (2.4.4), p. 101; Jones, 1999, Eqs. (2.64) and (2.66), p. 72), and the
+    invariants of Tsai and Pagano are those of the reduced stiffnesses
+    (Jones, 1999, Eq. (2.99), p. 86).
+
     At constant lamination parameters `A` is linear in `h` and `D` cubic,
     such that `\partial A/\partial h = A/h` and `\partial D/\partial h = 3
     D/h`.
@@ -736,17 +738,24 @@ def test_not_positive_definite_rejected():
 def test_singular_ABD_positive_diagonal(thetadeg):
     r"""Singular ABD with a positive diagonal
 
+    For a single ply with ``g12 = 0`` at an angle other than 0 or 90
+    degrees, whose ``A`` and ``D`` are singular with all diagonal terms
+    positive, ``calc_equivalent_properties`` must detect the singular ABD by
+    the condition number of the ABD matrix scaled by its diagonal, see its
+    Notes, raising ``LinAlgError``, a ``ValueError``. At 0 degrees ``A66 =
+    D66 = 0`` exactly, rejected by the diagonal check. ``[0/90]`` is
+    accepted with a tiny but finite ``A66``. With ``g12 > 0`` all are
+    accepted.
+
+    Notes
+    -----
     A single ply with ``g12 = 0`` has a plane-stress stiffness of rank 2, so
     ``A`` and ``D`` are singular in any axes, while at an angle other than 0
     or 90 degrees all their diagonal terms are positive. The equivalent
-    properties are undefined, and ``calc_equivalent_properties`` must
-    detect it by the condition number of the ABD matrix scaled by its
-    diagonal, see its Notes, raising ``LinAlgError``, a ``ValueError``. At 0
-    degrees ``A66 = D66 = 0`` exactly, rejected by the diagonal check. The
-    scaling makes the check blind to a decoupled term that vanishes only to
-    round-off: ``[0/90]`` has ``A66`` of the order of ``E1 cos^2(90 deg)
-    h``, about 1e-22 N/m, decoupled from the other terms, and is accepted
-    with a tiny but finite ``g12``. With ``g12 > 0`` all are accepted.
+    properties are undefined. The scaling makes the check blind to a
+    decoupled term that vanishes only to round-off: ``[0/90]`` has ``A66``
+    of the order of ``E1 cos^2(90 deg) h``, about 1e-22 N/m, decoupled from
+    the other terms, and is accepted.
     """
     lamprop = (142e9, 8.7e9, 0.28, 0., 5e9, 3e9)
     A, B, D = clt_abd([thetadeg], [1e-3], [lamprop])
@@ -770,19 +779,23 @@ def test_singular_ABD_positive_diagonal(thetadeg):
 def test_singular_ABD_offset_invariant():
     r"""The conditioning check does not depend on the offset
 
+    A singular laminate, a single ply at 45 degrees with ``g12 = 0``, is
+    rejected for every offset, up to ``offset/h = 1e7``, and regular
+    laminates are accepted, with the equivalent properties computed from the
+    stored matrix. Without plies, from lamination parameters, the laminate
+    is accepted up to ``offset/h = 1e4``.
+
+    Notes
+    -----
     The condition number of the scaled ABD matrix about the reference
     surface grows as ``(offset/h)**2``, 1.6e10 at ``offset/h = 1e4``, and
     is round-off noise near the threshold 1e12 from ``offset/h = 1e5``,
-    which made ``tests/test_shellprop_shear_corrections.py::
-    test_large_offset`` platform-dependent. The check uses the matrix about
-    the mid-surface, see the Notes of ``calc_equivalent_properties``: a
-    singular laminate, a single ply at 45 degrees with ``g12 = 0``, is
-    rejected for every offset, and regular laminates are accepted, with the
-    equivalent properties computed from the stored matrix, as before.
-    Without plies, from lamination parameters, the stored matrix is shifted
-    back, which with the lamination parameters of
-    ``calc_lamination_parameters``, carrying the round-off of the cubes of
-    the heights, is accurate up to ``offset/h = 1e4``.
+    which would make a check with that matrix platform-dependent. The check
+    uses the matrix about the mid-surface, see the Notes of
+    ``calc_equivalent_properties``. Without plies, from lamination
+    parameters, the stored matrix is shifted back, which with the lamination
+    parameters of ``calc_lamination_parameters``, carrying the round-off of
+    the cubes of the heights, is accurate up to ``offset/h = 1e4``.
     """
     singular = (142e9, 8.7e9, 0.28, 0., 5e9, 3e9)
     CFRP = (138.0, 9.3, 0.3, 4.6, 4.6, 2.3)
@@ -800,7 +813,7 @@ def test_singular_ABD_offset_invariant():
                                    offset=offset, shear_correction='constant')
             # NOTE the equivalent properties, about the reference surface,
             #      fall as (h/offset)**2 and are round-off from offset/h =
-            #      1e5, unchanged
+            #      1e5
             assert np.isfinite(prop.e1)
             if abs(offset) <= 1e4:
                 assert prop.e1 > 0
@@ -862,13 +875,20 @@ def test_singular_ABD_any_platform(platform, monkeypatch):
 def test_zero_young_modulus_errors():
     r"""Undefined Poisson's ratios with a zero Young modulus
 
+    ``read_laminaprop`` raises ``ValueError`` for ``E_i = 0`` with ``E_j >
+    0`` and ``nu_ij != 0``, by the restriction of Jones (1999), Eq. (2.51),
+    p. 69. With ``E_i = E_j = 0`` any ``nu_ij`` is accepted. A laminate of
+    antiplane cores only is rejected as singular, with and without shear
+    correction.
+
+    Notes
+    -----
     A positive-definite material has ``|nu_ij| < (E_i/E_j)**0.5`` (Jones,
     1999, Eq. (2.51), p. 69), such that ``E_i = 0`` with ``E_j > 0``
-    requires ``nu_ij = 0``; otherwise ``nu_ji = nu_ij E_j/E_i`` is undefined
-    and ``read_laminaprop`` raises ``ValueError``. With ``E_i = E_j = 0``
-    any ``nu_ij`` is accepted. A laminate of antiplane cores only has no
-    in-plane and bending stiffness, and its equivalent properties and its
-    shear correction factors are undefined.
+    requires ``nu_ij = 0``; otherwise ``nu_ji = nu_ij E_j/E_i`` is
+    undefined. A laminate of antiplane cores only has no in-plane and
+    bending stiffness, and its equivalent properties and its shear
+    correction factors are undefined.
     """
     for lamprop, match in [
             ((0., 8.7e9, 0.28, 5e9, 5e9, 3e9), 'requires nu12 = 0'),

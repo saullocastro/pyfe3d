@@ -8,13 +8,15 @@ Mindlin solution, Seide and Stowell (1950), Eq. (1), for a thick plate,
 checkerboard content of `w` in the buckling mode, which detects a spurious
 hourglass mode; a third test checks that the geometric stiffness KG is the
 one-point quadrature of its integrand and gives no geometric stiffness to
-the hourglass pattern of `w`. KG of :class:`pyfe3d.Quad4R`, and the
-geometrically nonlinear terms that share its quadrature, take the slopes
-`w_{,x}` and `w_{,y}` at the centroid; slopes taken at the two-by-two
-points instead give large negative errors, see the Notes.
+the hourglass pattern of `w`.
 
 Notes
 -----
+KG of :class:`pyfe3d.Quad4R`, and the geometrically nonlinear terms that
+share its quadrature, take the slopes `w_{,x}` and `w_{,y}` at the
+centroid; slopes taken at the two-by-two points instead give large negative
+errors.
+
 With the slopes `w_{,x}` and `w_{,y}` at the two-by-two Gauss-Legendre
 points, the hourglass pattern of `w`, `w = \xi \eta` with zero rotations,
 has the geometric stiffness of the full quadrature, whereas KC0, integrated

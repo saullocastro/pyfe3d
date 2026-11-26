@@ -420,10 +420,10 @@ def test_C2_twist_of_the_strip():
     table of ``test_torsion_of_a_one_element_wide_strip`` in
     ``test_quad4_spurious_shear_mode.py``. Following the policy of the tests
     whose reference is not reached on the coarse mesh used, the twists are
-    compared with the values pre-determined by this same test, on
-    2026-10-29 for ``shear_model = 0``, 0.032684006858721734 and
-    0.033975948654968564 with two and four elements across, and on
-    2026-10-30 for ``shear_model = 1``, with ``rtol = 1e-6`` for the
+    compared with the values pre-determined by this same test,
+    for ``shear_model = 0``, 0.032684006858721734 and
+    0.033975948654968564 with two and four elements across, and
+    for ``shear_model = 1``, with ``rtol = 1e-6`` for the
     round-off of the linear solution, whose condition number is about 1e9
     (eigmin/eigmax above; the same strip assembled in
     ``test_quad4_spurious_shear_mode.py`` agrees within 1e-12), and with

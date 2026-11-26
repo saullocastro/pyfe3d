@@ -50,8 +50,7 @@ stiffnesses:
 - ``GJ``, the torsional stiffness; it reads ``G*J`` until it is set.
 
 Once set, each keeps its value independently of ``G`` and ``J``, until it
-is deleted, e.g. ``del prop.G12``. A property given with ``G`` and ``J``
-alone keeps the meaning it had before these attributes existed.
+is deleted, e.g. ``del prop.G12``.
 
 
 Shear correction and torsion

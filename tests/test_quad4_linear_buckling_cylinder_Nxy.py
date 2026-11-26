@@ -86,11 +86,29 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     the paper, so ``-Tcr`` is compared with the positive intercepts. Running
     the same model with ``Nxy > 0`` gives the negative intercepts.
 
+    The element normal of this mesh points outwards and the element x axis
+    is the cylinder axis, so the plies of Table 4, from inwards to
+    outwards, are listed from the bottom to the top of the laminate. That
+    the sign conventions of the ply angles and of the torque agree with
+    those of the paper is shown by the tables below: ``Nxy < 0`` reproduces
+    the positive-torque intercepts of Fig. 13 and ``Nxy > 0`` the negative
+    ones, for both laminates.
+
+    The rigid axial translation is removed with a single node at
+    mid-length. Holding the axial displacement of the whole ring of nodes
+    at mid-length and both rotations at the edges is not CC2. That ring
+    constraint stiffens the torsional mode, whose buckles are inclined
+    helices crossing the mid-length: at ``ntheta = 80`` it raises ``Tcr``
+    of Z11 from -18980.9 to -22193.3 Nm, +16.9 per cent, and holding the
+    rotation about the radial direction at the edges adds another 1.1 per
+    cent. Together they make the converged values exceed Fig. 13 by 16 per
+    cent (Z11) and 23 per cent (Z33), -19214.0 and -11110.4 Nm at ``ntheta
+    = 320``.
+
     Measured with this test, with ``ntheta = 80*refinement`` elements around
     the circumference and nearly square elements, ``|Tcr|`` in Nm and its
     relative difference to the intercept of Fig. 13 of the same sign, with
-    the wall time of the test, both laminates, on a machine shared with
-    other jobs::
+    the approximate wall time of the test, both laminates::
 
         refinement ntheta elements  Z11, Nxy < 0      Z33, Nxy < 0     time
            0.5       40      480   26567.1 +58.1 %   17343.1 +88.5 %     1 s
@@ -112,7 +130,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
     Rows 1 and 2 of the first table are those of the default ``shear_model
     = 1`` of Quad4, the assumed transverse shear strains of the MITC4
-    element (measured on 2026-10-30); the other rows, and the
+    element; the other rows, and the
     second table, were measured with the one-point transverse shear,
     ``shear_model = 0``, which gave 18773.5 and 10788.3 Nm with
     ``refinement=1`` and 17162.0 and 9543.3 Nm with ``refinement=2``, 0.005
@@ -150,14 +168,9 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     1(1), 1985, pp. 3-20, https://doi.org/10.1016/0168-874X(85)90003-4.
 
     """
-    # NOTE stacking sequences from Table 4 of the reference paper, from inwards to
-    #      outwards. The element normal of this mesh points outwards and the
-    #      element x axis is the cylinder axis, so the plies are listed from
-    #      the bottom to the top of the laminate. That the sign conventions
-    #      of the ply angles and of the torque agree with those of the paper
-    #      is shown by the table of the docstring: Nxy < 0 reproduces the
-    #      positive-torque intercepts of Fig. 13 and Nxy > 0 the negative
-    #      ones, for both laminates
+    # NOTE stacking sequences from Table 4 of the reference paper, from
+    #      inwards to outwards, i.e. from the bottom to the top of the
+    #      laminate, see the Notes of the docstring
     stacks = {
         'Z11' : [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37],
         'Z33' : [0, 0, 19, -19, 37, -37, 45, -45, 51, -51],
@@ -308,15 +321,8 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         # NOTE removing the rigid axial translation with a single node
         middle = np.where(isclose(z, L/2))[0]
         bk[2::DOF][middle[0]] = True
-        # NOTE holding the axial displacement of the whole ring of nodes at
-        #      mid-length and both rotations at the edges is not CC2. That
-        #      ring constraint stiffens the torsional mode, whose buckles are
-        #      inclined helices crossing the mid-length: at ntheta = 80 it
-        #      raised Tcr of Z11 from -18980.9 to -22193.3 Nm, +16.9 per
-        #      cent, and holding the rotation about the radial direction at
-        #      the edges added another 1.1 per cent. Together they made the
-        #      converged values exceed Fig. 13 by 16 per cent (Z11) and 23
-        #      per cent (Z33), -19214.0 and -11110.4 Nm at ntheta = 320
+        # NOTE a single node, not the whole ring at mid-length, see the Notes
+        #      of the docstring
 
         bu = ~bk
 
@@ -333,7 +339,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
         # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
         #      estimates the Cayley shift and verifies that no lower load
-        #      multiplier was missed, which a hardcoded shift does not
+        #      multiplier was missed
         eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
 
         eigvecs[bu] = eigvecsu
@@ -412,7 +418,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     circumferential waves. Measured with this test, with
     ``ntheta = 64*refinement`` elements around the circumference and nearly
     square elements, the critical ``N_xy`` in N/m and its ratio to the
-    reference, with the wall time on a machine shared with other jobs::
+    reference, with the approximate wall time::
 
         refinement  ntheta  elements    Nxy_cr    ratio    time
            0.5         32       640    727275.0   1.2311     1 s
@@ -424,8 +430,8 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
         extrapolated                              0.984
 
     Rows 1 and 2 are those of the default ``shear_model = 1`` of Quad4, the
-    assumed transverse shear strains of the MITC4 element
-    (measured on 2026-10-30); the other rows were measured with the
+    assumed transverse shear strains of the MITC4 element;
+    the other rows were measured with the
     one-point transverse shear, ``shear_model = 0``, which gave 613557.8 and
     589288.8 N/m for rows 1 and 2, 0.012 and 0.009 per cent less. The
     extrapolation fits ``a + c*ntheta**-p`` to the three finest meshes

@@ -24,8 +24,8 @@ The tests check, against the output of Listing 7-3 (pp. 198-205):
   Eq. (5), plus the moments of the offsets, they give zero rigid-body
   accelerations, `\boldsymbol{\Phi}^\top \boldsymbol{F}_{tot} =
   \boldsymbol{0}`, zero reactions at the reference support, and the forces of
-  element 101, which carries only the weight of the 1500 lb mass at GRID 97:
-  bending moment -1.5e4 lb ft at end B and shear 1.5e3 lb;
+  element 101, those of the weight of the 1500 lb mass at GRID 97: bending
+  moment -1.5e4 lb ft at end B and shear 1.5e3 lb;
 - the same box forces, applied as Nastran applies them, at the box centres
   with their moments about the midchord (pp. 20 and 186), and transferred
   with the linear splines SPLINE2 1501 and 1601 of the deck (emulated by
@@ -47,7 +47,8 @@ modes are those of the statically determinate support, the rigid-body
 accelerations balance the applied loads with the inertia loads, and the
 displacements are relative to the support. With a balanced load set the
 accelerations and the reactions of the support vanish, which is the check
-of the subcase 2 box forces.
+of the subcase 2 box forces. Element 101 carries only the weight of the
+1500 lb mass at GRID 97, which gives its bending moment and shear.
 
 References
 ----------
@@ -401,7 +402,23 @@ def spline2_matrix(model, grids, cid, pts, dz=0., dtor=1., dthx=-1.,
     r"""Interpolation matrix of the linear (beam) spline SPLINE2 of Nastran
 
     The spline is a beam along the `y` axis of the coordinate system
-    ``cid`` (a key of ``CORD2R``), with bending flexibility `1/EI = 1` and
+    ``cid`` (a key of ``CORD2R``), with torsional flexibility `1/GJ` =
+    ``dtor``, rigid arms along its `x` axis and the attachment flexibilities
+    ``dz``, ``dthx``, ``dthy`` (a negative ``dthx`` or ``dthy`` means no
+    attachment), which interpolates the deflection `w` and the rotations
+    `\varphi_x` (about the spline `x` axis) and `\psi` (about the spline `y`
+    axis) at the points ``pts`` from the structural grids ``grids``.
+
+    Returns ``G`` such that `(w, \varphi_x, \psi)` at the point `k` are
+    ``G[3*k:3*k + 3] @ u``, with ``u`` over all degrees of freedom of
+    ``model``; the structural degrees of freedom used are `u_z` and, where
+    attached, the components of the rotation along the spline `x` and `y`
+    axes. Loads at the points, normal forces and moments, give the
+    structural loads ``G.T @ Fk`` (Eq. 2-25 of Rodden and Johnson 1994).
+
+    Notes
+    -----
+    The spline is a beam with bending flexibility `1/EI = 1` and
     torsional flexibility `1/GJ` = ``dtor``, and rigid arms along its `x`
     axis: a point at the spline coordinates `(x, y)` has the deflection `w =
     w_b(y) - x \psi(y)` and the rotations `\varphi_x = w_b'(y)` (about the
@@ -418,15 +435,6 @@ def spline2_matrix(model, grids, cid, pts, dz=0., dtor=1., dthx=-1.,
     diagonal, gives `\boldsymbol{a}` and `\boldsymbol{P}`, and the
     deflections and rotations at the points ``pts``.
 
-    Returns ``G`` such that `(w, \varphi_x, \psi)` at the point `k` are
-    ``G[3*k:3*k + 3] @ u``, with ``u`` over all degrees of freedom of
-    ``model``; the structural degrees of freedom used are `u_z` and, where
-    attached, the components of the rotation along the spline `x` and `y`
-    axes. Loads at the points, normal forces and moments, give the
-    structural loads ``G.T @ Fk`` (Eq. 2-25 of Rodden and Johnson 1994).
-
-    Notes
-    -----
     Rodden and Johnson (1994): interpolation and force transformation, Eqs.
     2-22 to 2-25, pp. 33-35; theory of linear splines, Eqs. 2-44 to 2-54,
     pp. 38-41; attachment flexibilities, Eqs. 2-55 to 2-59, p. 41; rigid
@@ -644,9 +652,14 @@ def test_spline2_transfer_resultant():
     r"""SPLINE2 1501 and 1601 conserve the resultant normal force and its
     moments: arbitrary normal forces and moments at arbitrary points of the
     two panels give nodal loads with the same resultant about the centre of
-    gravity (derived here: the spline reproduces the rigid-body motions of
-    the grids, Rodden and Johnson 1994, `\boldsymbol{R}_i`, p. 43; by virtual
-    work, Eq. 2-25, p. 35, the resultant is conserved)"""
+    gravity
+
+    Notes
+    -----
+    Derived here: the spline reproduces the rigid-body motions of the grids,
+    Rodden and Johnson (1994), `\boldsymbol{R}_i`, p. 43; by virtual work,
+    Eq. 2-25, p. 35, the resultant is conserved.
+    """
     model = build_model()
     rng = np.random.default_rng(1)
     canard, wing = box_points()

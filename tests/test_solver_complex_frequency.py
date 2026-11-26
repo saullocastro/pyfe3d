@@ -265,7 +265,17 @@ def test_rigid_body_modes(damped):
     eigenvalue without damping, returned as two eigenvalues null up to the
     round-off, which pass the residual check relative to the matrix-norm
     scale, without the dense fallback; with damping `\lambda = 0` and
-    `\lambda = -c/m`"""
+    `\lambda = -c/m`
+
+    Notes
+    -----
+    With `\boldsymbol{C} = c \boldsymbol{I}` and `\boldsymbol{M} = m
+    \boldsymbol{I}`, each undamped mode `\omega_j` is a single
+    degree-of-freedom, `m \lambda^2 + c \lambda + m \omega_j^2 = 0`: the
+    rigid-body mode, `\omega_j = 0`, gives `\lambda = 0` and `\lambda =
+    -c/m`, and the other modes `\lambda = -c/(2 m) \pm i \sqrt{\omega_j^2 -
+    (c/(2 m))^2}`, with `c = 0.5` and `m = 1` here.
+    """
     n = 30
     K = 100.*(2*np.eye(n) - np.eye(n, k=1) - np.eye(n, k=-1))
     K[0, 0] = K[-1, -1] = 100.

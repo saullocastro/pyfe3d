@@ -212,7 +212,7 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
 
     error = abs(w.max()/wmax_ref - 1)
     if refinement == 1:
-        # NOTE pre-determined by this test with refinement=1 on 2026-10-29
+        # NOTE pre-determined by this test with refinement=1
         assert np.isclose(w.max(), 3.8417365230339226e-05, rtol=1e-6)
         assert error <= 0.50
     elif refinement < 4:
