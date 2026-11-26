@@ -481,15 +481,8 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
 
     When ``ncv`` is capped at ``max_ncv``, see :func:`arpack_max_ncv`, and
     ``k`` is larger than ``(max_ncv - 1)//2``, i.e. 15, the eigenpairs are
-    computed in passes of at most 15 eigenpairs, each with ``ncv=max_ncv``.
-    The first pass is a call in the requested mode. The following passes
-    use the shift-invert mode about the shift ``sigma_d`` given by
-    :func:`_deflation_shift`, with the eigenvectors of the previous passes
-    deflated from the operator, and each of them returns the next
-    eigenvalues by increasing `w`. Each pass factorizes ``A - sigma_d*M``
-    with SuperLU, and every call starts from :func:`start_kwargs`. The
-    eigenvectors of all the passes are finally combined with a
-    Rayleigh-Ritz projection, see :func:`_rayleigh_ritz`, such that they are
+    computed in passes of at most 15 eigenpairs, each with ``ncv=max_ncv``
+    and its own factorization, see the Notes. The eigenvectors are
     ``M``-orthonormal also across the passes.
 
     Parameters
@@ -534,8 +527,9 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
     With ``k`` close to ``ncv`` ARPACK converges very slowly, not at all, or
     misses eigenvalues, e.g. ``k=31`` and ``ncv=32``.
 
+    The first pass is a call in the requested mode.
     The passes after the first one use the shift-invert mode about
-    `\sigma_d`, the middle of the largest gap between the last five
+    `\sigma_d`, given by :func:`_deflation_shift`, the middle of the largest gap between the last five
     eigenvalues found, with the eigenvectors `\boldsymbol{V}` of the previous passes
     deflated from the operator:
 
@@ -550,6 +544,10 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
     ARPACK applies the operator to `\boldsymbol{M} \boldsymbol{x}`; for an eigenvector `\boldsymbol{v}_i` of `\boldsymbol{V}`,
     `(\boldsymbol{A} - \sigma_d \boldsymbol{M})^{-1} \boldsymbol{M} \boldsymbol{v}_i = \boldsymbol{v}_i/(w_i - \sigma_d)` and,
     `\boldsymbol{V}` being `\boldsymbol{M}`-orthonormal, `(\boldsymbol{I} - \boldsymbol{V} \boldsymbol{V}^\top \boldsymbol{M}) \boldsymbol{v}_i = \boldsymbol{0}`.
+    Each pass factorizes `\boldsymbol{A} - \sigma_d \boldsymbol{M}` with SuperLU, and every call
+    starts from :func:`start_kwargs`. The eigenvectors of all the passes
+    are finally combined with a Rayleigh-Ritz projection, see
+    :func:`_rayleigh_ritz`.
 
     References
     ----------

@@ -26,14 +26,32 @@ cdef double PSD_TOL = 1e-10
 
 
 cdef int _positive_semidefinite6(double *A) noexcept nogil:
-    # NOTE 1 when the symmetric 6x6 matrix A, stored row by row, is positive
-    #      semi-definite, 0 otherwise. A row with a zero diagonal entry must
-    #      be zero, since the 2x2 minor [[0, a], [a, d]] is negative for any
-    #      a != 0. The other rows and columns are scaled to a unit diagonal
-    #      and factorized by the Cholesky factorization with diagonal
-    #      pivoting, which stops when the largest remaining pivot is at most
-    #      PSD_TOL; the remaining Schur complement must then be zero to
-    #      PSD_TOL
+    r"""Whether a symmetric 6x6 matrix is positive semi-definite
+
+    Parameters
+    ----------
+    A : double *
+        The matrix, 36 entries stored row by row; it is not modified.
+
+    Returns
+    -------
+    int
+        ``1`` when ``A`` is positive semi-definite to the tolerance
+        ``PSD_TOL``, ``0`` otherwise.
+
+    Notes
+    -----
+    A row with a zero diagonal entry must be zero, since the 2x2 minor
+    `a_{ii} a_{jj} - a_{ij}^2` with `a_{ii} = 0` is negative for any
+    `a_{ij} \ne 0`. The other rows and columns are scaled to a unit
+    diagonal, `b_{ij} = a_{ij}/\sqrt{a_{ii} a_{jj}}`, and factorized by the
+    Cholesky factorization with diagonal pivoting, each step taking the
+    Schur complement of the largest diagonal entry. The factorization stops
+    when the largest remaining pivot is at most ``PSD_TOL``; the matrix is
+    positive semi-definite when all the entries of the remaining Schur
+    complement are then zero to ``PSD_TOL``.
+
+    """
     cdef int i, j, k, n, p
     cdef int idx[6]
     cdef double d, s

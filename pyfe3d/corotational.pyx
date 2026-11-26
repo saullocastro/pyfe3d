@@ -519,7 +519,34 @@ cdef inline void _columns_frame(const double *e1, const double *e3,
 cdef void _minimal_rotation_c(const double *a, const double *b,
                               double *R) noexcept nogil:
     r"""Rotation of the smallest angle that maps the unit vector ``a`` onto
-    the unit vector ``b``"""
+    the unit vector ``b``
+
+    Parameters
+    ----------
+    a, b : const double *
+        Unit vectors, 3 entries each.
+    R : double *
+        Output, the rotation matrix, 9 entries stored row by row.
+
+    Notes
+    -----
+    `\boldsymbol{R}` is the rotation matrix of the rotation vector `\theta
+    \boldsymbol{n}`, see :func:`expso3`, with
+
+    .. math::
+
+        \boldsymbol{n} = \frac{\boldsymbol{a} \times
+        \boldsymbol{b}}{\|\boldsymbol{a} \times \boldsymbol{b}\|}, \qquad
+        \theta = \operatorname{atan2}(\|\boldsymbol{a} \times
+        \boldsymbol{b}\|, \boldsymbol{a} \cdot \boldsymbol{b})
+
+    When `\|\boldsymbol{a} \times \boldsymbol{b}\| < 10^{-14}` the axis is
+    not defined: for `\boldsymbol{a} \cdot \boldsymbol{b} > 0` the identity
+    is returned, otherwise the rotation of `\pi` about `\boldsymbol{a}
+    \times \boldsymbol{e}_k`, normalized, with `\boldsymbol{e}_k` the global
+    axis of the smallest `|a_k|`.
+
+    """
     cdef double axis[3]
     cdef double n[3]
     cdef double ek[3]
@@ -3943,6 +3970,16 @@ class CorotationalModel(object):
         configuration-dependent moments of :meth:`add_moment`, see
         :class:`CorotationalModel`.
 
+        :class:`pyfe3d.solver.Analysis` treats the load as
+        configuration-dependent when ``calc_fext`` declares ``c`` in its
+        signature, see :func:`pyfe3d.solver.callbacks.accepts_kwarg`, and a
+        linear static analysis then iterates on the load. The returned
+        callable declares ``c`` only when configuration-dependent moments
+        (``kind='fixed_axes'`` or ``'follower'`` of :meth:`add_moment`) are
+        present; otherwise ``c`` is accepted as a keyword argument and
+        ignored. The attribute is read when it is passed to
+        :class:`pyfe3d.solver.Analysis`, so add the moments before.
+
         Returns
         -------
         calc_fext : callable
@@ -3953,18 +3990,6 @@ class CorotationalModel(object):
             degrees-of-freedom for the configuration-dependent moments,
             ``None`` (default) giving the reference vector, with these
             moments at the base configuration.
-
-        Notes
-        -----
-        :class:`pyfe3d.solver.Analysis` treats the load as
-        configuration-dependent when ``calc_fext`` declares ``c`` in its
-        signature, see :func:`pyfe3d.solver.callbacks.accepts_kwarg`, and a
-        linear static analysis then iterates on the load. The returned
-        callable declares ``c`` only when configuration-dependent moments
-        (``kind='fixed_axes'`` or ``'follower'`` of :meth:`add_moment`) are
-        present; otherwise ``c`` is accepted as a keyword argument and
-        ignored. The attribute is read when it is passed to
-        :class:`pyfe3d.solver.Analysis`, so add the moments before.
 
         """
         if self._moments:

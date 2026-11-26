@@ -78,11 +78,7 @@ def apply_inertia_relief(KC0, M, fext, bref, bfix=None,
     pivot_rtol : float, optional
         ``KC0uu`` is taken as singular when the smallest pivot of its
         factorization is at most ``pivot_rtol`` times the largest. Default
-        ``1.e-13``: a rigid-body mode left free by the supports gives a
-        pivot of the order of the round-off, below ``1.e-15`` times the
-        largest, whereas the beam models of the tests, up to 200 elements,
-        and the airplane of ``tests/test_inertia_relief_ha144a.py`` have
-        ratios above ``1.e-7``.
+        ``1.e-13``, see the Notes.
 
     Returns
     -------
@@ -194,6 +190,12 @@ def apply_inertia_relief(KC0, M, fext, bref, bfix=None,
     `\boldsymbol{u}_u`. The methods for large singular systems without a
     reference support, which compute the null space of `\boldsymbol{K}_{C0}`
     during the factorization, are discussed in [3]_, Secs. 1-4.
+
+    The default of ``pivot_rtol`` separates two ranges: a rigid-body mode
+    left free by the supports gives a pivot of the order of the round-off,
+    below `10^{-15}` times the largest, whereas the beam models of the
+    tests, up to 200 elements, and the airplane of
+    ``tests/test_inertia_relief_ha144a.py`` have ratios above `10^{-7}`.
 
     References
     ----------
